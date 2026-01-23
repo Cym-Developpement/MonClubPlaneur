@@ -116,8 +116,13 @@ class wiki extends Model
     public static function getPageNameReplace()
     {
         $userLevel = self::getUserLevel();
-        $sql = "SELECT DISTINCT id, pageName FROM wiki WHERE deleted_at IS NULL AND levelRead <= $userLevel ORDER BY pageName DESC";
-        $data = DB::select(DB::raw($sql));
+        $data = DB::table('wiki')
+            ->select('id', 'pageName')
+            ->whereNull('deleted_at')
+            ->where('levelRead', '<=', $userLevel)
+            ->orderBy('pageName', 'DESC')
+            ->distinct()
+            ->get();
         return $data;
     }
 
