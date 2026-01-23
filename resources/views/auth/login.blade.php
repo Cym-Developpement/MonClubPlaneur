@@ -65,9 +65,31 @@
                             </div>
                         </div>
                     </form>
+                    <hr>
+                    <h6>Info LFCT : </h6>
+                    <p id="infoAirfield"></p>
+                    
+                    <hr>
+                    <div class="text-center">
+                        <h6>Informations utiles :</h6>
+                        <a href="{{ route('tarifs-public') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-euro-sign"></i> Consulter nos tarifs
+                        </a>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        $.get("https://flightbook.glidernet.org/api/logbook/lfct/{{ date('Y-m-d') }}", function(data) {
+            console.log(data.airfield.time_info);
+            time = data.airfield.time_info;
+            console.log(data);
+            $('#infoAirfield').html('Lever du soleil : '+time.sunrise+' coucher du soleil : '+time.sunset);
+        });
+    });
+</script>
 @endsection

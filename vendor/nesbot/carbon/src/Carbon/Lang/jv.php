@@ -9,22 +9,35 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Josh Soref
  * - tgfjt
  * - JD Isaacks
  */
 return [
-    'year' => '{1}setaun|]1,Inf[:count taun',
-    'month' => '{1}sewulan|]1,Inf[:count wulan',
-    'week' => '{1}sakminggu|]1,Inf[:count minggu',
-    'day' => '{1}sedinten|]1,Inf[:count dinten',
-    'hour' => '{1}setunggal jam|]1,Inf[:count jam',
-    'minute' => '{1}setunggal menit|]1,Inf[:count menit',
-    'second' => '{1}sawetawis detik|]1,Inf[:count detik',
+    'year' => ':count taun',
+    'a_year' => '{1}setaun|[-Inf,Inf]:count taun',
+    'month' => ':count wulan',
+    'a_month' => '{1}sewulan|[-Inf,Inf]:count wulan',
+    'week' => ':count minggu',
+    'a_week' => '{1}sakminggu|[-Inf,Inf]:count minggu',
+    'day' => ':count dina',
+    'a_day' => '{1}sedina|[-Inf,Inf]:count dina',
+    'hour' => ':count jam',
+    'a_hour' => '{1}setunggal jam|[-Inf,Inf]:count jam',
+    'minute' => ':count menit',
+    'a_minute' => '{1}setunggal menit|[-Inf,Inf]:count menit',
+    'second' => ':count detik',
+    'a_second' => '{0,1}sawetawis detik|[-Inf,Inf]:count detik',
     'ago' => ':time ingkang kepengker',
     'from_now' => 'wonten ing :time',
+    'diff_today' => 'Dinten',
+    'diff_yesterday' => 'Kala',
+    'diff_yesterday_regexp' => 'Kala(?:\\s+wingi)?(?:\\s+pukul)?',
+    'diff_tomorrow' => 'Mbenjang',
+    'diff_tomorrow_regexp' => 'Mbenjang(?:\\s+pukul)?',
+    'diff_today_regexp' => 'Dinten(?:\\s+puniko)?(?:\\s+pukul)?',
     'formats' => [
         'LT' => 'HH.mm',
         'LTS' => 'HH.mm.ss',
@@ -41,7 +54,7 @@ return [
         'lastWeek' => 'dddd [kepengker pukul] LT',
         'sameElse' => 'L',
     ],
-    'meridiem' => function ($hour) {
+    'meridiem' => static function ($hour) {
         if ($hour < 11) {
             return 'enjing';
         }

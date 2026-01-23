@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Takuya Sawada
  * - Atsushi Tanaka
@@ -21,6 +21,9 @@
  * - toyama satoshi
  * - atakigawa
  */
+
+use Carbon\CarbonInterface;
+
 return [
     'year' => ':count年',
     'y' => ':count年',
@@ -35,12 +38,14 @@ return [
     'minute' => ':count分',
     'min' => ':count分',
     'second' => ':count秒',
-    'a_second' => '{1}数秒|]1,Inf[:count秒',
+    'a_second' => '{1}数秒|[-Inf,Inf]:count秒',
     's' => ':count秒',
     'ago' => ':time前',
     'from_now' => ':time後',
     'after' => ':time後',
     'before' => ':time前',
+    'diff_now' => '今',
+    'diff_today' => '今日',
     'diff_yesterday' => '昨日',
     'diff_tomorrow' => '明日',
     'formats' => [
@@ -54,7 +59,7 @@ return [
     'calendar' => [
         'sameDay' => '[今日] LT',
         'nextDay' => '[明日] LT',
-        'nextWeek' => function (\Carbon\CarbonInterface $current, \Carbon\CarbonInterface $other) {
+        'nextWeek' => static function (CarbonInterface $current, \Carbon\CarbonInterface $other) {
             if ($other->week !== $current->week) {
                 return '[来週]dddd LT';
             }
@@ -62,7 +67,7 @@ return [
             return 'dddd LT';
         },
         'lastDay' => '[昨日] LT',
-        'lastWeek' => function (\Carbon\CarbonInterface $current, \Carbon\CarbonInterface $other) {
+        'lastWeek' => static function (CarbonInterface $current, \Carbon\CarbonInterface $other) {
             if ($other->week !== $current->week) {
                 return '[先週]dddd LT';
             }
@@ -71,15 +76,11 @@ return [
         },
         'sameElse' => 'L',
     ],
-    'ordinal' => function ($number, $period) {
-        switch ($period) {
-            case 'd':
-            case 'D':
-            case 'DDD':
-                return $number.'日';
-            default:
-                return $number;
-        }
+    'ordinal' => static function ($number, $period) {
+        return match ($period) {
+            'd', 'D', 'DDD' => $number.'日',
+            default => $number,
+        };
     },
     'meridiem' => ['午前', '午後'],
     'months' => ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],

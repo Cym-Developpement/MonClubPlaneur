@@ -1,7 +1,7 @@
 <?php
 namespace App\library;
 
-use App\alert;
+use App\Models\alert;
 /**
  * 
  */

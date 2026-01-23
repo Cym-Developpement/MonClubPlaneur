@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Red Hat, Pune    bug-glibc-locales@gnu.org
  */
@@ -22,6 +22,7 @@ return array_replace_recursive(require __DIR__.'/en.php', [
     'weekdays' => ['आयतार', 'सोमार', 'मंगळवार', 'बुधवार', 'बेरेसतार', 'शुकरार', 'शेनवार'],
     'weekdays_short' => ['आयतार', 'सोमार', 'मंगळवार', 'बुधवार', 'बेरेसतार', 'शुकरार', 'शेनवार'],
     'weekdays_min' => ['आयतार', 'सोमार', 'मंगळवार', 'बुधवार', 'बेरेसतार', 'शुकरार', 'शेनवार'],
+    'first_day_of_week' => 0,
     'day_of_first_week_of_year' => 1,
     'meridiem' => ['म.पू.', 'म.नं.'],
 

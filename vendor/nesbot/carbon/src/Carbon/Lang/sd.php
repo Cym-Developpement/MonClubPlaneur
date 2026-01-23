@@ -8,6 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 $months = [
     'جنوري',
     'فيبروري',
@@ -33,27 +34,30 @@ $weekdays = [
     'ڇنڇر',
 ];
 
-\Symfony\Component\Translation\PluralizationRules::set(function ($number) {
-    return $number === 1 ? 0 : 1;
-}, 'sd');
-
 /*
  * Authors:
  * - Narain Sagar
  * - Sawood Alam
- * - Narain Sagar
  */
 return [
-    'year' => 'هڪ سال|:count سال',
-    'month' => 'هڪ مهينو|:count مهينا',
-    'week' => 'ھڪ ھفتو|:count هفتا',
-    'day' => 'هڪ ڏينهن|:count ڏينهن',
-    'hour' => 'هڪ ڪلاڪ|:count ڪلاڪ',
-    'minute' => 'هڪ منٽ|:count منٽ',
-    'second' => 'چند سيڪنڊ|:count سيڪنڊ',
+    'year' => ':count '.'سال',
+    'a_year' => '{1}'.'هڪ سال'.'|:count '.'سال',
+    'month' => ':count '.'مهينا',
+    'a_month' => '{1}'.'هڪ مهينو'.'|:count '.'مهينا',
+    'week' => ':count '.'هفتا',
+    'a_week' => '{1}'.'ھڪ ھفتو'.'|:count '.'هفتا',
+    'day' => ':count '.'ڏينهن',
+    'a_day' => '{1}'.'هڪ ڏينهن'.'|:count '.'ڏينهن',
+    'hour' => ':count '.'ڪلاڪ',
+    'a_hour' => '{1}'.'هڪ ڪلاڪ'.'|:count '.'ڪلاڪ',
+    'minute' => ':count '.'منٽ',
+    'a_minute' => '{1}'.'هڪ منٽ'.'|:count '.'منٽ',
+    'second' => ':count '.'سيڪنڊ',
+    'a_second' => '{1}'.'چند سيڪنڊ'.'|:count '.'سيڪنڊ',
     'ago' => ':time اڳ',
     'from_now' => ':time پوء',
     'diff_yesterday' => 'ڪالهه',
+    'diff_today' => 'اڄ',
     'diff_tomorrow' => 'سڀاڻي',
     'formats' => [
         'LT' => 'HH:mm',

@@ -15,12 +15,10 @@ namespace Symfony\Component\Mime\Header;
  * A Simple MIME Header.
  *
  * @author Chris Corbyn
- *
- * @experimental in 4.3
  */
 class UnstructuredHeader extends AbstractHeader
 {
-    private $value;
+    private string $value;
 
     public function __construct(string $name, string $value)
     {
@@ -32,15 +30,12 @@ class UnstructuredHeader extends AbstractHeader
     /**
      * @param string $body
      */
-    public function setBody($body)
+    public function setBody(mixed $body): void
     {
         $this->setValue($body);
     }
 
-    /**
-     * @return string
-     */
-    public function getBody()
+    public function getBody(): string
     {
         return $this->getValue();
     }
@@ -56,7 +51,7 @@ class UnstructuredHeader extends AbstractHeader
     /**
      * Set the (unencoded) value of this header.
      */
-    public function setValue(string $value)
+    public function setValue(string $value): void
     {
         $this->value = $value;
     }

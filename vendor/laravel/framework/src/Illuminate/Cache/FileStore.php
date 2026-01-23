@@ -3,11 +3,14 @@
 namespace Illuminate\Cache;
 
 use Exception;
+use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Store;
+use Illuminate\Contracts\Filesystem\LockTimeoutException;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Filesystem\LockableFile;
 use Illuminate\Support\InteractsWithTime;
 
-class FileStore implements Store
+class FileStore implements Store, LockProvider
 {
     use InteractsWithTime, RetrievesMultipleKeys;
 
@@ -26,22 +29,37 @@ class FileStore implements Store
     protected $directory;
 
     /**
+     * The file cache lock directory.
+     *
+     * @var string|null
+     */
+    protected $lockDirectory;
+
+    /**
+     * Octal representation of the cache file permissions.
+     *
+     * @var int|null
+     */
+    protected $filePermission;
+
+    /**
      * Create a new file cache store instance.
      *
      * @param  \Illuminate\Filesystem\Filesystem  $files
      * @param  string  $directory
-     * @return void
+     * @param  int|null  $filePermission
      */
-    public function __construct(Filesystem $files, $directory)
+    public function __construct(Filesystem $files, $directory, $filePermission = null)
     {
         $this->files = $files;
         $this->directory = $directory;
+        $this->filePermission = $filePermission;
     }
 
     /**
      * Retrieve an item from the cache by key.
      *
-     * @param  string|array  $key
+     * @param  string  $key
      * @return mixed
      */
     public function get($key)
@@ -53,7 +71,7 @@ class FileStore implements Store
      * Store an item in the cache for a given number of seconds.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @param  int  $seconds
      * @return bool
      */
@@ -65,7 +83,52 @@ class FileStore implements Store
             $path, $this->expiration($seconds).serialize($value), true
         );
 
-        return $result !== false && $result > 0;
+        if ($result !== false && $result > 0) {
+            $this->ensurePermissionsAreCorrect($path);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Store an item in the cache if the key doesn't exist.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @param  int  $seconds
+     * @return bool
+     */
+    public function add($key, $value, $seconds)
+    {
+        $this->ensureCacheDirectoryExists($path = $this->path($key));
+
+        $file = new LockableFile($path, 'c+');
+
+        try {
+            $file->getExclusiveLock();
+        } catch (LockTimeoutException) {
+            $file->close();
+
+            return false;
+        }
+
+        $expire = $file->read(10);
+
+        if (empty($expire) || $this->currentTime() >= $expire) {
+            $file->truncate()
+                ->write($this->expiration($seconds).serialize($value))
+                ->close();
+
+            $this->ensurePermissionsAreCorrect($path);
+
+            return true;
+        }
+
+        $file->close();
+
+        return false;
     }
 
     /**
@@ -76,16 +139,38 @@ class FileStore implements Store
      */
     protected function ensureCacheDirectoryExists($path)
     {
-        if (! $this->files->exists(dirname($path))) {
-            $this->files->makeDirectory(dirname($path), 0777, true, true);
+        $directory = dirname($path);
+
+        if (! $this->files->exists($directory)) {
+            $this->files->makeDirectory($directory, 0777, true, true);
+
+            // We're creating two levels of directories (e.g. 7e/24), so we check them both...
+            $this->ensurePermissionsAreCorrect($directory);
+            $this->ensurePermissionsAreCorrect(dirname($directory));
         }
+    }
+
+    /**
+     * Ensure the created node has the correct permissions.
+     *
+     * @param  string  $path
+     * @return void
+     */
+    protected function ensurePermissionsAreCorrect($path)
+    {
+        if (is_null($this->filePermission) ||
+            intval($this->files->chmod($path), 8) == $this->filePermission) {
+            return;
+        }
+
+        $this->files->chmod($path, $this->filePermission);
     }
 
     /**
      * Increment the value of an item in the cache.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return int
      */
     public function increment($key, $value = 1)
@@ -101,7 +186,7 @@ class FileStore implements Store
      * Decrement the value of an item in the cache.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return int
      */
     public function decrement($key, $value = 1)
@@ -113,12 +198,44 @@ class FileStore implements Store
      * Store an item in the cache indefinitely.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return bool
      */
     public function forever($key, $value)
     {
         return $this->put($key, $value, 0);
+    }
+
+    /**
+     * Get a lock instance.
+     *
+     * @param  string  $name
+     * @param  int  $seconds
+     * @param  string|null  $owner
+     * @return \Illuminate\Contracts\Cache\Lock
+     */
+    public function lock($name, $seconds = 0, $owner = null)
+    {
+        $this->ensureCacheDirectoryExists($this->lockDirectory ?? $this->directory);
+
+        return new FileLock(
+            new static($this->files, $this->lockDirectory ?? $this->directory, $this->filePermission),
+            $name,
+            $seconds,
+            $owner
+        );
+    }
+
+    /**
+     * Restore a lock instance using the owner identifier.
+     *
+     * @param  string  $name
+     * @param  string  $owner
+     * @return \Illuminate\Contracts\Cache\Lock
+     */
+    public function restoreLock($name, $owner)
+    {
+        return $this->lock($name, 0, $owner);
     }
 
     /**
@@ -130,7 +247,11 @@ class FileStore implements Store
     public function forget($key)
     {
         if ($this->files->exists($file = $this->path($key))) {
-            return $this->files->delete($file);
+            return tap($this->files->delete($file), function ($forgotten) use ($key) {
+                if ($forgotten && $this->files->exists($file = $this->path("illuminate:cache:flexible:created:{$key}"))) {
+                    $this->files->delete($file);
+                }
+            });
         }
 
         return false;
@@ -148,7 +269,9 @@ class FileStore implements Store
         }
 
         foreach ($this->files->directories($this->directory) as $directory) {
-            if (! $this->files->deleteDirectory($directory)) {
+            $deleted = $this->files->deleteDirectory($directory);
+
+            if (! $deleted || $this->files->exists($directory)) {
                 return false;
             }
         }
@@ -170,10 +293,12 @@ class FileStore implements Store
         // just return null. Otherwise, we'll get the contents of the file and get
         // the expiration UNIX timestamps from the start of the file's contents.
         try {
-            $expire = substr(
-                $contents = $this->files->get($path, true), 0, 10
-            );
-        } catch (Exception $e) {
+            if (is_null($contents = $this->files->get($path, true))) {
+                return $this->emptyPayload();
+            }
+
+            $expire = substr($contents, 0, 10);
+        } catch (Exception) {
             return $this->emptyPayload();
         }
 
@@ -188,7 +313,7 @@ class FileStore implements Store
 
         try {
             $data = unserialize(substr($contents, 10));
-        } catch (Exception $e) {
+        } catch (Exception) {
             $this->forget($key);
 
             return $this->emptyPayload();
@@ -218,7 +343,7 @@ class FileStore implements Store
      * @param  string  $key
      * @return string
      */
-    protected function path($key)
+    public function path($key)
     {
         $parts = array_slice(str_split($hash = sha1($key), 2), 0, 2);
 
@@ -256,6 +381,32 @@ class FileStore implements Store
     public function getDirectory()
     {
         return $this->directory;
+    }
+
+    /**
+     * Set the working directory of the cache.
+     *
+     * @param  string  $directory
+     * @return $this
+     */
+    public function setDirectory($directory)
+    {
+        $this->directory = $directory;
+
+        return $this;
+    }
+
+    /**
+     * Set the cache directory where locks should be stored.
+     *
+     * @param  string|null  $lockDirectory
+     * @return $this
+     */
+    public function setLockDirectory($lockDirectory)
+    {
+        $this->lockDirectory = $lockDirectory;
+
+        return $this;
     }
 
     /**

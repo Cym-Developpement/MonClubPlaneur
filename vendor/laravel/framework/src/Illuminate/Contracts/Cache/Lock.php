@@ -17,14 +17,16 @@ interface Lock
      *
      * @param  int  $seconds
      * @param  callable|null  $callback
-     * @return bool
+     * @return mixed
+     *
+     * @throws \Illuminate\Contracts\Cache\LockTimeoutException
      */
     public function block($seconds, $callback = null);
 
     /**
      * Release the lock.
      *
-     * @return void
+     * @return bool
      */
     public function release();
 

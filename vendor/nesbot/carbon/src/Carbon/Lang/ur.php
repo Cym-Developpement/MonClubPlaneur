@@ -8,6 +8,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 $months = [
     'جنوری',
     'فروری',
@@ -45,19 +46,33 @@ $weekdays = [
  * - hafezdivandari
  * - Hossein Jabbari
  * - nimamo
+ * - Usman Zahid
  */
 return [
-    'year' => 'ایک سال|:count سال',
-    'month' => 'ایک ماہ|:count ماہ',
-    'week' => ':count ہفتے',
-    'day' => 'ایک دن|:count دن',
-    'hour' => 'ایک گھنٹہ|:count گھنٹے',
-    'minute' => 'ایک منٹ|:count منٹ',
-    'second' => 'چند سیکنڈ|:count سیکنڈ',
+    'year' => ':count '.'سال',
+    'a_year' => 'ایک سال|:count سال',
+    'month' => ':count '.'ماہ',
+    'a_month' => 'ایک ماہ|:count ماہ',
+    'week' => ':count '.'ہفتے',
+    'day' => ':count '.'دن',
+    'a_day' => 'ایک دن|:count دن',
+    'hour' => ':count '.'گھنٹے',
+    'a_hour' => 'ایک گھنٹہ|:count گھنٹے',
+    'minute' => ':count '.'منٹ',
+    'a_minute' => 'ایک منٹ|:count منٹ',
+    'second' => ':count '.'سیکنڈ',
+    'a_second' => 'چند سیکنڈ|:count سیکنڈ',
     'ago' => ':time قبل',
     'from_now' => ':time بعد',
     'after' => ':time بعد',
     'before' => ':time پہلے',
+    'diff_now' => 'اب',
+    'diff_today' => 'آج',
+    'diff_today_regexp' => 'آج(?:\\s+بوقت)?',
+    'diff_yesterday' => 'گزشتہ کل',
+    'diff_yesterday_regexp' => 'گذشتہ(?:\\s+روز)?(?:\\s+بوقت)?',
+    'diff_tomorrow' => 'آئندہ کل',
+    'diff_tomorrow_regexp' => 'کل(?:\\s+بوقت)?',
     'formats' => [
         'LT' => 'HH:mm',
         'LTS' => 'HH:mm:ss',

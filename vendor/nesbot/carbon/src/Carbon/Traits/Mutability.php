@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * This file is part of the Carbon package.
  *
@@ -8,6 +10,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace Carbon\Traits;
 
 use Carbon\Carbon;
@@ -20,40 +23,22 @@ use Carbon\CarbonImmutable;
  */
 trait Mutability
 {
+    use Cast;
+
     /**
      * Returns true if the current class/instance is mutable.
-     *
-     * @return bool
      */
-    public static function isMutable()
+    public static function isMutable(): bool
     {
         return false;
     }
 
     /**
      * Returns true if the current class/instance is immutable.
-     *
-     * @return bool
      */
-    public static function isImmutable()
+    public static function isImmutable(): bool
     {
         return !static::isMutable();
-    }
-
-    /**
-     * Cast the current instance into the given class.
-     *
-     * @param string $className The $className::instance() method will be called to cast the current object.
-     *
-     * @return object
-     */
-    public function cast(string $className)
-    {
-        if (!method_exists($className, 'instance')) {
-            throw new \InvalidArgumentException("$className has not the instance() method needed to cast the date.");
-        }
-
-        return $className::instance($this);
     }
 
     /**

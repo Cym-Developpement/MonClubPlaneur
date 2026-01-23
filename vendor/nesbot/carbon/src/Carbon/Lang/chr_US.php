@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Cherokee Nation Joseph Erb josepherb7@gmail.com
  */
@@ -22,8 +22,9 @@ return array_replace_recursive(require __DIR__.'/en.php', [
     'weekdays' => ['ᎤᎾᏙᏓᏆᏍᎬ', 'ᎤᎾᏙᏓᏉᏅᎯ', 'ᏔᎵᏁᎢᎦ', 'ᏦᎢᏁᎢᎦ', 'ᏅᎩᏁᎢᎦ', 'ᏧᎾᎩᎶᏍᏗ', 'ᎤᎾᏙᏓᏈᏕᎾ'],
     'weekdays_short' => ['ᏆᏍᎬ', 'ᏉᏅᎯ', 'ᏔᎵᏁ', 'ᏦᎢᏁ', 'ᏅᎩᏁ', 'ᏧᎾᎩ', 'ᏈᏕᎾ'],
     'weekdays_min' => ['ᏆᏍᎬ', 'ᏉᏅᎯ', 'ᏔᎵᏁ', 'ᏦᎢᏁ', 'ᏅᎩᏁ', 'ᏧᎾᎩ', 'ᏈᏕᎾ'],
+    'first_day_of_week' => 0,
     'day_of_first_week_of_year' => 1,
-    'meridiem' => ['ᏌᎾᎴ', 'ᏒᎯᏱᎢᏗᏢ'],
+    'meridiem' => ['ᏌᎾᎴ', 'ᏒᎯᏱᎢᏗᏢ', 'ꮜꮎꮄ', 'ꮢꭿᏹꭲꮧꮲ'],
 
     'second' => ':count ᏐᎢ', // less reliable
     's' => ':count ᏐᎢ', // less reliable

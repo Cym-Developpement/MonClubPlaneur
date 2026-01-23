@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Ash
  * - François B
@@ -20,7 +20,11 @@
  * - Francesco Marasco
  * - Tizianoz93
  * - Davide Casiraghi (davide-casiraghi)
+ * - Pete Scopes (pdscopes)
  */
+
+use Carbon\CarbonInterface;
+
 return [
     'year' => ':count anno|:count anni',
     'a_year' => 'un anno|:count anni',
@@ -43,15 +47,25 @@ return [
     'second' => ':count secondo|:count secondi',
     'a_second' => 'alcuni secondi|:count secondi',
     's' => ':count sec.',
+    'millisecond' => ':count millisecondo|:count millisecondi',
+    'a_millisecond' => 'un millisecondo|:count millisecondi',
+    'ms' => ':countms',
+    'microsecond' => ':count microsecondo|:count microsecondi',
+    'a_microsecond' => 'un microsecondo|:count microsecondi',
+    'µs' => ':countµs',
     'ago' => ':time fa',
-    'from_now' => function ($time) {
-        return (preg_match('/^[0-9].+$/', $time) ? 'tra' : 'in')." $time";
+    'from_now' => static function ($time) {
+        return (preg_match('/^\d.+$/', $time) ? 'tra' : 'in')." $time";
     },
     'after' => ':time dopo',
     'before' => ':time prima',
     'diff_now' => 'proprio ora',
+    'diff_today' => 'Oggi',
+    'diff_today_regexp' => 'Oggi(?:\\s+alle)?',
     'diff_yesterday' => 'ieri',
+    'diff_yesterday_regexp' => 'Ieri(?:\\s+alle)?',
     'diff_tomorrow' => 'domani',
+    'diff_tomorrow_regexp' => 'Domani(?:\\s+alle)?',
     'diff_before_yesterday' => 'l\'altro ieri',
     'diff_after_tomorrow' => 'dopodomani',
     'period_interval' => 'ogni :interval',
@@ -70,13 +84,9 @@ return [
         'nextDay' => '[Domani alle] LT',
         'nextWeek' => 'dddd [alle] LT',
         'lastDay' => '[Ieri alle] LT',
-        'lastWeek' => function (\Carbon\CarbonInterface $date) {
-            switch ($date->dayOfWeek) {
-                case 0:
-                    return '[la scorsa] dddd [alle] LT';
-                default:
-                    return '[lo scorso] dddd [alle] LT';
-            }
+        'lastWeek' => static fn (CarbonInterface $date) => match ($date->dayOfWeek) {
+            0 => '[la scorsa] dddd [alle] LT',
+            default => '[lo scorso] dddd [alle] LT',
         },
         'sameElse' => 'L',
     ],
@@ -89,4 +99,13 @@ return [
     'first_day_of_week' => 1,
     'day_of_first_week_of_year' => 4,
     'list' => [', ', ' e '],
+    'ordinal_words' => [
+        'of' => 'di',
+        'first' => 'primo',
+        'second' => 'secondo',
+        'third' => 'terzo',
+        'fourth' => 'quarto',
+        'fifth' => 'quinto',
+        'last' => 'ultimo',
+    ],
 ];

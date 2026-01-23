@@ -12,14 +12,10 @@
                   <form method="post">
                     @csrf
                     <div class="input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text">Dates : </span>
-                      </div>
+                      <span class="input-group-text">Dates : </span>
                       <input type="text" value="{{ $dates[0] }}" placeholder="date début" class="form-control planches-datepicker" name="start">
                       <input type="text" value="{{ $dates[1] }}" placeholder="date fin" class="form-control planches-datepicker" name="end">
-                      <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Afficher</button>
-                      </div>
+                      <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Afficher</button>
                     </div>
                   </form>
                   <br>

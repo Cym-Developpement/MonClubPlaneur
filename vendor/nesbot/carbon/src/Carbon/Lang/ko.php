@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Kunal Marwaha
  * - FourwingsY
@@ -21,24 +21,35 @@
  * - Juwon Kim
  */
 return [
-    'year' => '{1}일 년|]1,Inf[:count년',
-    'y' => ':count 년',
-    'month' => '{1}한 달|]1,Inf[:count달',
-    'm' => ':count 개월',
-    'week' => ':count 주일',
-    'w' => ':count 주일',
-    'day' => '{1}하루|]1,Inf[:count일',
-    'd' => ':count 일',
-    'hour' => '{1}한 시간|]1,Inf[:count시간',
-    'h' => ':count 시간',
-    'minute' => '{1}1분|]1,Inf[:count분',
-    'min' => ':count 분',
-    'second' => '{1}몇 초|]1,Inf[:count초',
-    's' => ':count 초',
+    'year' => ':count년',
+    'a_year' => '{1}일년|[-Inf,Inf]:count년',
+    'y' => ':count년',
+    'month' => ':count개월',
+    'a_month' => '{1}한달|[-Inf,Inf]:count개월',
+    'm' => ':count개월',
+    'week' => ':count주',
+    'a_week' => '{1}일주일|[-Inf,Inf]:count 주',
+    'w' => ':count주일',
+    'day' => ':count일',
+    'a_day' => '{1}하루|[-Inf,Inf]:count일',
+    'd' => ':count일',
+    'hour' => ':count시간',
+    'a_hour' => '{1}한시간|[-Inf,Inf]:count시간',
+    'h' => ':count시간',
+    'minute' => ':count분',
+    'a_minute' => '{1}일분|[-Inf,Inf]:count분',
+    'min' => ':count분',
+    'second' => ':count초',
+    'a_second' => '{1}몇초|[-Inf,Inf]:count초',
+    's' => ':count초',
     'ago' => ':time 전',
     'from_now' => ':time 후',
-    'after' => ':time 이후',
-    'before' => ':time 이전',
+    'after' => ':time 후',
+    'before' => ':time 전',
+    'diff_now' => '지금',
+    'diff_today' => '오늘',
+    'diff_yesterday' => '어제',
+    'diff_tomorrow' => '내일',
     'formats' => [
         'LT' => 'A h:mm',
         'LTS' => 'A h:mm:ss',
@@ -55,20 +66,13 @@ return [
         'lastWeek' => '지난주 dddd LT',
         'sameElse' => 'L',
     ],
-    'ordinal' => function ($number, $period) {
-        switch ($period) {
-            case 'd':
-            case 'D':
-            case 'DDD':
-                return $number.'일';
-            case 'M':
-                return $number.'월';
-            case 'w':
-            case 'W':
-                return $number.'주';
-            default:
-                return $number;
-        }
+    'ordinal' => static function ($number, $period) {
+        return match ($period) {
+            'd', 'D', 'DDD' => $number.'일',
+            'M' => $number.'월',
+            'w', 'W' => $number.'주',
+            default => $number,
+        };
     },
     'meridiem' => ['오전', '오후'],
     'months' => ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],

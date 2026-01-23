@@ -8,9 +8,6 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-\Symfony\Component\Translation\PluralizationRules::set(function ($number) {
-    return $number === 1 ? 0 : 1;
-}, 'my');
 
 /*
  * Authors:
@@ -19,26 +16,34 @@
  * - Nay Lin Aung
  */
 return [
-    'year' => 'တစ်နှစ်|:count နှစ်',
+    'year' => ':count နှစ်',
+    'a_year' => '{1}တစ်နှစ်|[-Inf,Inf]:count နှစ်',
     'y' => ':count နှစ်',
-    'month' => 'တစ်လ|:count လ',
+    'month' => ':count လ',
+    'a_month' => '{1}တစ်လ|[-Inf,Inf]:count လ',
     'm' => ':count လ',
     'week' => ':count ပတ်',
     'w' => ':count ပတ်',
-    'day' => 'တစ်ရက်|:count ရက်',
+    'day' => ':count ရက်',
+    'a_day' => '{1}တစ်ရက်|[-Inf,Inf]:count ရက်',
     'd' => ':count ရက်',
-    'hour' => 'တစ်နာရီ|:count နာရီ',
+    'hour' => ':count နာရီ',
+    'a_hour' => '{1}တစ်နာရီ|[-Inf,Inf]:count နာရီ',
     'h' => ':count နာရီ',
-    'minute' => 'တစ်မိနစ်|:count မိနစ်',
+    'minute' => ':count မိနစ်',
+    'a_minute' => '{1}တစ်မိနစ်|[-Inf,Inf]:count မိနစ်',
     'min' => ':count မိနစ်',
-    'second' => 'စက္ကန်.အနည်းငယ်|:count စက္ကန့်',
+    'second' => ':count စက္ကန့်',
+    'a_second' => '{0,1}စက္ကန်.အနည်းငယ်|[-Inf,Inf]:count စက္ကန့်',
     's' => ':count စက္ကန့်',
     'ago' => 'လွန်ခဲ့သော :time က',
     'from_now' => 'လာမည့် :time မှာ',
     'after' => ':time ကြာပြီးနောက်',
     'before' => ':time မတိုင်ခင်',
     'diff_now' => 'အခုလေးတင်',
+    'diff_today' => 'ယနေ.',
     'diff_yesterday' => 'မနေ့က',
+    'diff_yesterday_regexp' => 'မနေ.က',
     'diff_tomorrow' => 'မနက်ဖြန်',
     'diff_before_yesterday' => 'တမြန်နေ့က',
     'diff_after_tomorrow' => 'တဘက်ခါ',

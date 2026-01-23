@@ -2,27 +2,21 @@
 
 namespace Illuminate\Database\Eloquent\Relations\Concerns;
 
+use BackedEnum;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Collection as BaseCollection;
 
 trait InteractsWithPivotTable
 {
     /**
-     * The cached copy of the currently attached pivot models.
-     *
-     * @var Collection
-     */
-    private $currentlyAttached;
-
-    /**
      * Toggles a model (or models) from the parent.
      *
      * Each existing model is detached, and non existing ones are attached.
      *
      * @param  mixed  $ids
-     * @param  bool   $touch
+     * @param  bool  $touch
      * @return array
      */
     public function toggle($ids, $touch = true)
@@ -72,8 +66,8 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs without detaching.
      *
-     * @param  \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Model|array  $ids
-     * @return array
+     * @param  \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Model|array|int|string  $ids
+     * @return array{attached: array, detached: array, updated: array}
      */
     public function syncWithoutDetaching($ids)
     {
@@ -83,9 +77,9 @@ trait InteractsWithPivotTable
     /**
      * Sync the intermediate tables with a list of IDs or collection of models.
      *
-     * @param  \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Model|array  $ids
-     * @param  bool   $detaching
-     * @return array
+     * @param  \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Model|array|int|string  $ids
+     * @param  bool  $detaching
+     * @return array{attached: array, detached: array, updated: array}
      */
     public function sync($ids, $detaching = true)
     {
@@ -93,23 +87,29 @@ trait InteractsWithPivotTable
             'attached' => [], 'detached' => [], 'updated' => [],
         ];
 
+        $records = $this->formatRecordsList($this->parseIds($ids));
+
+        if (empty($records) && ! $detaching) {
+            return $changes;
+        }
+
         // First we need to attach any of the associated models that are not currently
         // in this joining table. We'll spin through the given IDs, checking to see
         // if they exist in the array of current ones, and if not we will insert.
         $current = $this->getCurrentlyAttachedPivots()
-                        ->pluck($this->relatedPivotKey)->all();
-
-        $detach = array_diff($current, array_keys(
-            $records = $this->formatRecordsList($this->parseIds($ids))
-        ));
+            ->pluck($this->relatedPivotKey)->all();
 
         // Next, we will take the differences of the currents and given IDs and detach
         // all of the entities that exist in the "current" array but are not in the
         // array of the new IDs given to the method which will complete the sync.
-        if ($detaching && count($detach) > 0) {
-            $this->detach($detach);
+        if ($detaching) {
+            $detach = array_diff($current, array_keys($records));
 
-            $changes['detached'] = $this->castKeys($detach);
+            if (count($detach) > 0) {
+                $this->detach($detach, false);
+
+                $changes['detached'] = $this->castKeys($detach);
+            }
         }
 
         // Now we are finally ready to attach the new records. Note that we'll disable
@@ -123,11 +123,27 @@ trait InteractsWithPivotTable
         // have done any attaching or detaching, and if we have we will touch these
         // relationships if they are configured to touch on any database updates.
         if (count($changes['attached']) ||
-            count($changes['updated'])) {
+            count($changes['updated']) ||
+            count($changes['detached'])) {
             $this->touchIfTouching();
         }
 
         return $changes;
+    }
+
+    /**
+     * Sync the intermediate tables with a list of IDs or collection of models with the given pivot values.
+     *
+     * @param  \Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Model|array|int|string  $ids
+     * @param  array  $values
+     * @param  bool  $detaching
+     * @return array{attached: array, detached: array, updated: array}
+     */
+    public function syncWithPivotValues($ids, array $values, bool $detaching = true)
+    {
+        return $this->sync((new BaseCollection($this->parseIds($ids)))->mapWithKeys(function ($id) use ($values) {
+            return [$id => $values];
+        }), $detaching);
     }
 
     /**
@@ -138,9 +154,13 @@ trait InteractsWithPivotTable
      */
     protected function formatRecordsList(array $records)
     {
-        return collect($records)->mapWithKeys(function ($attributes, $id) {
+        return (new BaseCollection($records))->mapWithKeys(function ($attributes, $id) {
             if (! is_array($attributes)) {
                 [$id, $attributes] = [$attributes, []];
+            }
+
+            if ($id instanceof BackedEnum) {
+                $id = $id->value;
             }
 
             return [$id => $attributes];
@@ -152,7 +172,7 @@ trait InteractsWithPivotTable
      *
      * @param  array  $records
      * @param  array  $current
-     * @param  bool   $touch
+     * @param  bool  $touch
      * @return array
      */
     protected function attachNew(array $records, array $current, $touch = true)
@@ -186,20 +206,20 @@ trait InteractsWithPivotTable
      *
      * @param  mixed  $id
      * @param  array  $attributes
-     * @param  bool   $touch
+     * @param  bool  $touch
      * @return int
      */
     public function updateExistingPivot($id, array $attributes, $touch = true)
     {
-        if ($this->using && empty($this->pivotWheres) && empty($this->pivotWhereIns)) {
+        if ($this->using) {
             return $this->updateExistingPivotUsingCustomClass($id, $attributes, $touch);
         }
 
-        if (in_array($this->updatedAt(), $this->pivotColumns)) {
+        if ($this->hasPivotColumn($this->updatedAt())) {
             $attributes = $this->addTimestampsToAttachment($attributes, true);
         }
 
-        $updated = $this->newPivotStatementForId($this->parseId($id))->update(
+        $updated = $this->newPivotStatementForId($id)->update(
             $this->castAttributes($attributes)
         );
 
@@ -215,22 +235,18 @@ trait InteractsWithPivotTable
      *
      * @param  mixed  $id
      * @param  array  $attributes
-     * @param  bool   $touch
+     * @param  bool  $touch
      * @return int
      */
     protected function updateExistingPivotUsingCustomClass($id, array $attributes, $touch)
     {
-        $updated = $this->getCurrentlyAttachedPivots()
-                    ->where($this->foreignPivotKey, $this->parent->{$this->parentKey})
-                    ->where($this->relatedPivotKey, $this->parseId($id))
-                    ->first()
-                    ->fill($attributes)
-                    ->isDirty();
+        $pivot = $this->getCurrentlyAttachedPivotsForIds($id)->first();
 
-        $this->newPivot([
-            $this->foreignPivotKey => $this->parent->{$this->parentKey},
-            $this->relatedPivotKey => $this->parseId($id),
-        ], true)->fill($attributes)->save();
+        $updated = $pivot ? $pivot->fill($attributes)->isDirty() : false;
+
+        if ($updated) {
+            $pivot->save();
+        }
 
         if ($touch) {
             $this->touchIfTouching();
@@ -242,21 +258,21 @@ trait InteractsWithPivotTable
     /**
      * Attach a model to the parent.
      *
-     * @param  mixed  $id
+     * @param  mixed  $ids
      * @param  array  $attributes
-     * @param  bool   $touch
+     * @param  bool  $touch
      * @return void
      */
-    public function attach($id, array $attributes = [], $touch = true)
+    public function attach($ids, array $attributes = [], $touch = true)
     {
         if ($this->using) {
-            $this->attachUsingCustomClass($id, $attributes);
+            $this->attachUsingCustomClass($ids, $attributes);
         } else {
             // Here we will insert the attachment records into the pivot table. Once we have
             // inserted the records, we will touch the relationships if necessary and the
             // function will return. We can parse the IDs before inserting the records.
             $this->newPivotStatement()->insert($this->formatAttachRecords(
-                $this->parseIds($id), $attributes
+                $this->parseIds($ids), $attributes
             ));
         }
 
@@ -268,14 +284,14 @@ trait InteractsWithPivotTable
     /**
      * Attach a model to the parent using a custom class.
      *
-     * @param  mixed  $id
+     * @param  mixed  $ids
      * @param  array  $attributes
      * @return void
      */
-    protected function attachUsingCustomClass($id, array $attributes)
+    protected function attachUsingCustomClass($ids, array $attributes)
     {
         $records = $this->formatAttachRecords(
-            $this->parseIds($id), $attributes
+            $this->parseIds($ids), $attributes
         );
 
         foreach ($records as $record) {
@@ -312,10 +328,10 @@ trait InteractsWithPivotTable
     /**
      * Create a full attachment record payload.
      *
-     * @param  int    $key
+     * @param  int  $key
      * @param  mixed  $value
      * @param  array  $attributes
-     * @param  bool   $hasTimestamps
+     * @param  bool  $hasTimestamps
      * @return array
      */
     protected function formatAttachRecord($key, $value, $attributes, $hasTimestamps)
@@ -338,14 +354,14 @@ trait InteractsWithPivotTable
     protected function extractAttachIdAndAttributes($key, $value, array $attributes)
     {
         return is_array($value)
-                    ? [$key, array_merge($value, $attributes)]
-                    : [$value, $attributes];
+            ? [$key, array_merge($value, $attributes)]
+            : [$value, $attributes];
     }
 
     /**
      * Create a new pivot attachment record.
      *
-     * @param  int   $id
+     * @param  int  $id
      * @param  bool  $timed
      * @return array
      */
@@ -373,7 +389,7 @@ trait InteractsWithPivotTable
      * Set the creation and update timestamps on an attach record.
      *
      * @param  array  $record
-     * @param  bool   $exists
+     * @param  bool  $exists
      * @return array
      */
     protected function addTimestampsToAttachment(array $record, $exists = false)
@@ -383,7 +399,7 @@ trait InteractsWithPivotTable
         if ($this->using) {
             $pivotModel = new $this->using;
 
-            $fresh = $fresh->format($pivotModel->getDateFormat());
+            $fresh = $pivotModel->fromDateTime($fresh);
         }
 
         if (! $exists && $this->hasPivotColumn($this->createdAt())) {
@@ -403,7 +419,7 @@ trait InteractsWithPivotTable
      * @param  string  $column
      * @return bool
      */
-    protected function hasPivotColumn($column)
+    public function hasPivotColumn($column)
     {
         return in_array($column, $this->pivotColumns);
     }
@@ -417,7 +433,7 @@ trait InteractsWithPivotTable
      */
     public function detach($ids = null, $touch = true)
     {
-        if ($this->using && ! empty($ids) && empty($this->pivotWheres) && empty($this->pivotWhereIns)) {
+        if ($this->using) {
             $results = $this->detachUsingCustomClass($ids);
         } else {
             $query = $this->newPivotQuery();
@@ -432,7 +448,7 @@ trait InteractsWithPivotTable
                     return 0;
                 }
 
-                $query->whereIn($this->relatedPivotKey, (array) $ids);
+                $query->whereIn($this->getQualifiedRelatedPivotKeyName(), (array) $ids);
             }
 
             // Once we have all of the conditions set on the statement, we are ready
@@ -458,11 +474,10 @@ trait InteractsWithPivotTable
     {
         $results = 0;
 
-        foreach ($this->parseIds($ids) as $id) {
-            $results += $this->newPivot([
-                $this->foreignPivotKey => $this->parent->{$this->parentKey},
-                $this->relatedPivotKey => $id,
-            ], true)->delete();
+        $records = $this->getCurrentlyAttachedPivotsForIds($ids);
+
+        foreach ($records as $record) {
+            $results += $record->delete();
         }
 
         return $results;
@@ -475,27 +490,51 @@ trait InteractsWithPivotTable
      */
     protected function getCurrentlyAttachedPivots()
     {
-        return $this->currentlyAttached ?: $this->newPivotQuery()->get()->map(function ($record) {
-            $class = $this->using ? $this->using : Pivot::class;
+        return $this->getCurrentlyAttachedPivotsForIds();
+    }
 
-            return (new $class)->setRawAttributes((array) $record, true);
-        });
+    /**
+     * Get the pivot models that are currently attached, filtered by related model keys.
+     *
+     * @param  mixed  $ids
+     * @return \Illuminate\Support\Collection
+     */
+    protected function getCurrentlyAttachedPivotsForIds($ids = null)
+    {
+        return $this->newPivotQuery()
+            ->when(! is_null($ids), fn ($query) => $query->whereIn(
+                $this->getQualifiedRelatedPivotKeyName(), $this->parseIds($ids)
+            ))
+            ->get()
+            ->map(function ($record) {
+                $class = $this->using ?: Pivot::class;
+
+                $pivot = $class::fromRawAttributes($this->parent, (array) $record, $this->getTable(), true);
+
+                return $pivot
+                    ->setPivotKeys($this->foreignPivotKey, $this->relatedPivotKey)
+                    ->setRelatedModel($this->related);
+            });
     }
 
     /**
      * Create a new pivot model instance.
      *
      * @param  array  $attributes
-     * @param  bool   $exists
+     * @param  bool  $exists
      * @return \Illuminate\Database\Eloquent\Relations\Pivot
      */
     public function newPivot(array $attributes = [], $exists = false)
     {
+        $attributes = array_merge(array_column($this->pivotValues, 'value', 'column'), $attributes);
+
         $pivot = $this->related->newPivot(
             $this->parent, $attributes, $this->table, $exists, $this->using
         );
 
-        return $pivot->setPivotKeys($this->foreignPivotKey, $this->relatedPivotKey);
+        return $pivot
+            ->setPivotKeys($this->foreignPivotKey, $this->relatedPivotKey)
+            ->setRelatedModel($this->related);
     }
 
     /**
@@ -527,7 +566,7 @@ trait InteractsWithPivotTable
      */
     public function newPivotStatementForId($id)
     {
-        return $this->newPivotQuery()->whereIn($this->relatedPivotKey, $this->parseIds($id));
+        return $this->newPivotQuery()->whereIn($this->getQualifiedRelatedPivotKeyName(), $this->parseIds($id));
     }
 
     /**
@@ -535,25 +574,29 @@ trait InteractsWithPivotTable
      *
      * @return \Illuminate\Database\Query\Builder
      */
-    protected function newPivotQuery()
+    public function newPivotQuery()
     {
         $query = $this->newPivotStatement();
 
         foreach ($this->pivotWheres as $arguments) {
-            call_user_func_array([$query, 'where'], $arguments);
+            $query->where(...$arguments);
         }
 
         foreach ($this->pivotWhereIns as $arguments) {
-            call_user_func_array([$query, 'whereIn'], $arguments);
+            $query->whereIn(...$arguments);
         }
 
-        return $query->where($this->foreignPivotKey, $this->parent->{$this->parentKey});
+        foreach ($this->pivotWhereNulls as $arguments) {
+            $query->whereNull(...$arguments);
+        }
+
+        return $query->where($this->getQualifiedForeignPivotKeyName(), $this->parent->{$this->parentKey});
     }
 
     /**
      * Set the columns on the pivot table to retrieve.
      *
-     * @param  array|mixed  $columns
+     * @param  mixed  $columns
      * @return $this
      */
     public function withPivot($columns)
@@ -577,12 +620,14 @@ trait InteractsWithPivotTable
             return [$value->{$this->relatedKey}];
         }
 
-        if ($value instanceof Collection) {
+        if ($value instanceof EloquentCollection) {
             return $value->pluck($this->relatedKey)->all();
         }
 
-        if ($value instanceof BaseCollection) {
-            return $value->toArray();
+        if ($value instanceof BaseCollection || is_array($value)) {
+            return (new BaseCollection($value))
+                ->map(fn ($item) => $item instanceof Model ? $item->{$this->relatedKey} : $item)
+                ->all();
         }
 
         return (array) $value;
@@ -629,37 +674,30 @@ trait InteractsWithPivotTable
     /**
      * Cast the given pivot attributes.
      *
-     * @param  array $attributes
+     * @param  array  $attributes
      * @return array
      */
     protected function castAttributes($attributes)
     {
         return $this->using
-                    ? $this->newPivot()->fill($attributes)->getAttributes()
-                    : $attributes;
+            ? $this->newPivot()->fill($attributes)->getAttributes()
+            : $attributes;
     }
 
     /**
      * Converts a given value to a given type value.
      *
-     * @param  string $type
+     * @param  string  $type
      * @param  mixed  $value
      * @return mixed
      */
     protected function getTypeSwapValue($type, $value)
     {
-        switch (strtolower($type)) {
-            case 'int':
-            case 'integer':
-                return (int) $value;
-            case 'real':
-            case 'float':
-            case 'double':
-                return (float) $value;
-            case 'string':
-                return (string) $value;
-            default:
-                return $value;
-        }
+        return match (strtolower($type)) {
+            'int', 'integer' => (int) $value,
+            'real', 'float', 'double' => (float) $value,
+            'string' => (string) $value,
+            default => $value,
+        };
     }
 }

@@ -2,13 +2,13 @@
 
 namespace Illuminate\Database\Events;
 
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Contracts\Database\Events\MigrationEvent as MigrationEventContract;
+use Illuminate\Database\Migrations\Migration;
 
 abstract class MigrationEvent implements MigrationEventContract
 {
     /**
-     * An migration instance.
+     * A migration instance.
      *
      * @var \Illuminate\Database\Migrations\Migration
      */
@@ -26,7 +26,6 @@ abstract class MigrationEvent implements MigrationEventContract
      *
      * @param  \Illuminate\Database\Migrations\Migration  $migration
      * @param  string  $method
-     * @return void
      */
     public function __construct(Migration $migration, $method)
     {

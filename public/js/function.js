@@ -1,4 +1,6 @@
 feather.replace();
+var landingDatePicker;
+var takeOffDatePicker;
 document.addEventListener("DOMContentLoaded", function() {
   ;(function ($) { $.fn.datepicker.language['fr'] = {
 	    days: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
@@ -47,7 +49,20 @@ document.addEventListener("DOMContentLoaded", function() {
     	position: "bottom left"
 	});
 
-	$('.addFlightDatePicker').datepicker({
+	takeOffDatePicker = $('#adminAddFlightsTakeOff').datepicker({
+		language: 'fr',
+    	autoClose: true,
+    	showEvent: 'focus',
+    	timepicker: true,
+    	position: "bottom left",
+    	onSelect: function(formattedDate, date, inst){
+	        adminAddFlightTimeCalc();
+	        selectAtterissage();
+
+    	},
+	}).data('datepicker');
+
+	landingDatePicker = $('#adminAddFlightsLanding').datepicker({
 		language: 'fr',
     	autoClose: true,
     	showEvent: 'focus',
@@ -56,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function() {
     	onSelect: function(formattedDate, date, inst){
 	        adminAddFlightTimeCalc();
     	},
-	});
+	}).data('datepicker');
 
 	
 
@@ -239,6 +254,20 @@ function validTransactions(id)
 	});
 }
 
+function deleteTransactions(id)
+{
+	$.ajaxSetup({
+	    headers: {
+	        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+	    }
+	});
+
+	$.post( "deleteTransactionPost", { id: id})
+	  .done(function( data ) {
+	  	document.location.reload(false);
+	});
+}
+
 function displayNewTrDate(id)
 {
 	$('#currentTrDateBlock-'+id).fadeOut( "slow", function() {
@@ -291,36 +320,99 @@ function adminAddFlightTimeCalc()
 	}
 }
 
+function minToHM(minutes)
+{
+	if (minutes < 60) {
+            return "00h"+minutes.padStart(2, '0');
+        } else {
+            var hourR = parseInt((minutes/60), 10);
+            var minutesR = minutes-(hourR*60);
+            if (minutesR == 0) {
+                return hourR.toString().padStart(2, '0')+"h00";
+            } else {
+            	return hourR.toString().padStart(2, '0')+"h"+minutesR.toString().padStart(2, '0');
+            }
+        }
+}
+
 function priceAdminFlight()
 {
-	if ($('#adminAddFlightAircraft').val() == 0) {
-		console.log('CHOISIR AIRCRAFT');
-		$('.validNewAdminFlight').addAttr('disabled');
-		$( ".validNewAdminFlight" ).prop( "disabled", true );
-		$('#adminAddFlightTotalPrice').html("");
+	if ($('#adminAddFlightSimulation').val() == 0) {
+		if ($('#adminAddFlightAircraft').val() == 0) {
+			console.log('CHOISIR AIRCRAFT');
+			$( ".validNewAdminFlight" ).prop( "disabled", true );
+			$('#adminAddFlightTotalPrice').html("");
+			return;
+		}
+
+		$('#validLineFlightBoardPlane').html($('#adminAddFlightAircraft').find(':selected').attr('data-name'));
+
+		if ($('#adminAddFlightsTakeOff').val() == '') {
+			console.log('CHOISIR HEURE DECOLLAGE OU temps de vol');
+			$( ".validNewAdminFlight" ).prop( "disabled", true );
+			$('#adminAddFlightTotalPrice').html("");
+			return;
+		}	
+	}
+	
+
+	$('#validLineFlightBoardDate').html($('#adminAddFlightsTakeOff').val().substring(0,5));
+	$('#validLineFlightBoardtakeoff').html($('#adminAddFlightsTakeOff').val().substring(11));
+
+	$('#validLineFlightBoardSupervisor').html($('#userSupervisor').find(':selected').attr('data-name'));
+	$('#validLineFlightBoardtime').html(minToHM($('#adminAddFlightsTime2').val()));
+
+
+
+	let aircraft = $('#adminAddFlightAircraft').val();
+	let takeOffDate = $('#adminAddFlightsTakeOff').val();
+	let landingDate = $('#adminAddFlightsLanding').val();
+	let flightTime = $('#adminAddFlightsTime2').val();
+	let nbTakeOff = $('#adminAddFlightsTakeOff2').val();
+	let motorStart = ($('#adminAddFlightsMotorStart').val());
+	let motorEnd = ($('#adminAddFlightsMotorEnd').val());
+	let startType = $('#adminAddFlightsTakeOffType2').val();
+
+	$.ajaxSetup({
+	    headers: {
+	        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+	    }
+	});
+
+	$.get( "getPrice", { aircraft: aircraft, 
+						takeOffDate: takeOffDate, 
+						landingDate: landingDate, 
+						flightTime: flightTime, 
+						nbTakeOff: nbTakeOff, 
+						motorStart: motorStart, 
+						motorEnd: motorEnd,
+						startType: startType,
+						simulation: $('#adminAddFlightSimulation').val() } )
+	  .done(function( data ) {
+	  	const obj = JSON.parse(data);
+	  	//$('#adminAddFlightTotalPrice').html((obj[3]/100)+"€");
+	  	$('#adminAddFlightTotalPrice').html(new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format((obj[3]/100)));
+	    console.log(obj);
+	});
+
+	if ($('#adminAddFlightSimulation').val() == 1) {
 		return;
 	}
+	$('.validNewAdminFlight').removeAttr('disabled');
+	$('#validLineFlightBoardlanding').html($('#adminAddFlightsLanding').val().substring(11));
 
-	if ($('#adminAddFlightsTakeOff').val() == '') {
-		console.log('CHOISIR HEURE DECOLLAGE');
-		$( ".validNewAdminFlight" ).prop( "disabled", true );
-		$('#adminAddFlightTotalPrice').html("");
-		return;
-	}
 
-	var type = $('#adminAddFlightAircraft').find(':selected').attr('data-aircrafttype');
-
-	if (type == 1) {
+	/*if (type == 1) {
 		if ($('#adminAddFlightsMotorStart').val() == 0 || $('#adminAddFlightsMotorEnd').val() == 0 || $('#adminAddFlightsMotorStart').val()>$('#adminAddFlightsMotorEnd').val()) {
 			$('#adminAddFlightTotalPrice').html("");
 			return;
 		}
 
-		var totalTime = $('#adminAddFlightsTime2').val();
-		var nbTakeOff = $('#adminAddFlightsTakeOff2').val();
-		var basePrice = (($('#adminAddFlightAircraft').find(':selected').attr('data-price')/60)*100);
-		var motorPrice = $('#adminAddFlightAircraft').find(':selected').attr('data-motorprice');
-		var motorTime = (($('#adminAddFlightsMotorEnd').val()-$('#adminAddFlightsMotorStart').val())*100);
+		//var totalTime = $('#adminAddFlightsTime2').val();
+		//var nbTakeOff = $('#adminAddFlightsTakeOff2').val();
+		//var basePrice = (($('#adminAddFlightAircraft').find(':selected').attr('data-price')/60)*100);
+		//var motorPrice = $('#adminAddFlightAircraft').find(':selected').attr('data-motorprice');
+		
 
 		totalPrice = (basePrice*totalTime)+(motorTime*motorPrice);
 		totalPrice = Math.round(totalPrice);
@@ -335,15 +427,17 @@ function priceAdminFlight()
 			$('#adminAddFlightTotalPrice').html("");
 			return;
 		}
-		var totalTime = $('#adminAddFlightsTime2').val();
-		var nbTakeOff = $('#adminAddFlightsTakeOff2').val();
-		var basePrice = (($('#adminAddFlightAircraft').find(':selected').attr('data-price')/60)*100);
-		var startPrice = $('#adminAddFlightsTakeOffType2').find(':selected').attr('data-price');
+		//var totalTime = $('#adminAddFlightsTime2').val();
+		//var nbTakeOff = $('#adminAddFlightsTakeOff2').val();
+		//var basePrice = (($('#adminAddFlightAircraft').find(':selected').attr('data-price')/60)*100);
+		//var startPrice = $('#adminAddFlightsTakeOffType2').find(':selected').attr('data-price');
 		totalPrice = (basePrice*totalTime)+(nbTakeOff*startPrice);
 		totalPrice = Math.round(totalPrice);
 		$('.validNewAdminFlight').removeAttr('disabled');
 		$('#adminAddFlightTotalPrice').html((totalPrice/100)+"€");
-	}
+	}*/
+
+	
 }
 
 
@@ -393,10 +487,10 @@ function validNewAdminFlight(close)
 		endMotor = $('#adminAddFlightsMotorEnd').val();
 	}
 
-	
+	var supervisor = $('#userSupervisor').val();
 
 	$.post( "validNewAdminFlight", {user: user, userPay: userPay, aircraft: aircraft, aircraftType: aircraftType, takeOffDate: takeOffDate, landingDate: landingDate,
-									flightTime: flightTime, nbTakeOff: nbTakeOff, startType: startType, startMotor: startMotor, endMotor: endMotor})
+									flightTime: flightTime, nbTakeOff: nbTakeOff, startType: startType, startMotor: startMotor, endMotor: endMotor, supervisor: supervisor})
 	  .done(function( data ) {
 	  	console.log(data);
 	  	if (close) {
@@ -411,7 +505,7 @@ function selectFilterFlightBoard()
 {
 	var filter = $('#filterFlightBoard').val();
 	var newuri = window.location.href.split("#")[0].split("?")[0];
-	newuri = newuri + "?filterID="+filter;
+	newuri = newuri + "?filterID="+filter+"&year="+$('#filterFlightBoardYear').val();
 	window.location = newuri;
 }
 
@@ -438,4 +532,13 @@ function markReadAlert(id)
 	  	console.log(data);
 	});
 }
+
+function strToJsDate(strDate)
+{
+	let data = strDate.split(' ');
+	let year = data[0].split('/');
+	return new Date(year[2]+"/"+year[1]+"/"+year[0]+" "+data[1]);
+}
+
+
 

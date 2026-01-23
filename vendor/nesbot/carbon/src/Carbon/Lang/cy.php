@@ -9,33 +9,45 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - François B
  * - JD Isaacks
  * - Daniel Monaghan
  */
 return [
-    'year' => '{1}blwyddyn|]1,Inf[:count flynedd',
+    'year' => '{1}:count flwyddyn|[-Inf,Inf]:count flynedd',
+    'a_year' => '{1}blwyddyn|[-Inf,Inf]:count flynedd',
     'y' => ':countbl',
-    'month' => '{1}mis|]1,Inf[:count mis',
+    'month' => ':count mis',
+    'a_month' => '{1}mis|[-Inf,Inf]:count mis',
     'm' => ':countmi',
     'week' => ':count wythnos',
+    'a_week' => '{1}wythnos|[-Inf,Inf]:count wythnos',
     'w' => ':countw',
-    'day' => '{1}diwrnod|]1,Inf[:count diwrnod',
+    'day' => ':count diwrnod',
+    'a_day' => '{1}diwrnod|[-Inf,Inf]:count diwrnod',
     'd' => ':countd',
-    'hour' => '{1}awr|]1,Inf[:count awr',
+    'hour' => ':count awr',
+    'a_hour' => '{1}awr|[-Inf,Inf]:count awr',
     'h' => ':counth',
-    'minute' => '{1}munud|]1,Inf[:count munud',
+    'minute' => ':count munud',
+    'a_minute' => '{1}munud|[-Inf,Inf]:count munud',
     'min' => ':countm',
-    'second' => '{1}ychydig eiliadau|]1,Inf[:count eiliad',
+    'second' => ':count eiliad',
+    'a_second' => '{0,1}ychydig eiliadau|[-Inf,Inf]:count eiliad',
     's' => ':counts',
     'ago' => ':time yn ôl',
     'from_now' => 'mewn :time',
     'after' => ':time ar ôl',
     'before' => ':time o\'r blaen',
-    'diff_yesterday' => 'Ddoe',
-    'diff_tomorrow' => 'Yfory',
+    'diff_now' => 'nawr',
+    'diff_today' => 'Heddiw',
+    'diff_today_regexp' => 'Heddiw(?:\\s+am)?',
+    'diff_yesterday' => 'ddoe',
+    'diff_yesterday_regexp' => 'Ddoe(?:\\s+am)?',
+    'diff_tomorrow' => 'yfory',
+    'diff_tomorrow_regexp' => 'Yfory(?:\\s+am)?',
     'formats' => [
         'LT' => 'HH:mm',
         'LTS' => 'HH:mm:ss',
@@ -52,13 +64,14 @@ return [
         'lastWeek' => 'dddd [diwethaf am] LT',
         'sameElse' => 'L',
     ],
-    'ordinal' => function ($number) {
-        return $number.($number > 20
-            ? (in_array($number, [40, 50, 60, 80, 100]) ? 'fed' : 'ain')
-            : ([
-                '', 'af', 'il', 'ydd', 'ydd', 'ed', 'ed', 'ed', 'fed', 'fed', 'fed', // 1af to 10fed
-                'eg', 'fed', 'eg', 'eg', 'fed', 'eg', 'eg', 'fed', 'eg', 'fed', // 11eg to 20fed
-            ])[$number] ?? ''
+    'ordinal' => static function ($number) {
+        return $number.(
+            $number > 20
+                ? (\in_array((int) $number, [40, 50, 60, 80, 100], true) ? 'fed' : 'ain')
+                : ([
+                    '', 'af', 'il', 'ydd', 'ydd', 'ed', 'ed', 'ed', 'fed', 'fed', 'fed', // 1af to 10fed
+                    'eg', 'fed', 'eg', 'eg', 'fed', 'eg', 'eg', 'fed', 'eg', 'fed', // 11eg to 20fed
+                ])[$number] ?? ''
         );
     },
     'months' => ['Ionawr', 'Chwefror', 'Mawrth', 'Ebrill', 'Mai', 'Mehefin', 'Gorffennaf', 'Awst', 'Medi', 'Hydref', 'Tachwedd', 'Rhagfyr'],

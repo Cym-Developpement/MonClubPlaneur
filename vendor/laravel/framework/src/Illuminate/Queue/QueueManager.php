@@ -3,9 +3,9 @@
 namespace Illuminate\Queue;
 
 use Closure;
-use InvalidArgumentException;
 use Illuminate\Contracts\Queue\Factory as FactoryContract;
 use Illuminate\Contracts\Queue\Monitor as MonitorContract;
+use InvalidArgumentException;
 
 /**
  * @mixin \Illuminate\Contracts\Queue\Queue
@@ -37,7 +37,6 @@ class QueueManager implements FactoryContract, MonitorContract
      * Create a new queue manager instance.
      *
      * @param  \Illuminate\Contracts\Foundation\Application  $app
-     * @return void
      */
     public function __construct($app)
     {
@@ -100,6 +99,17 @@ class QueueManager implements FactoryContract, MonitorContract
     }
 
     /**
+     * Register an event listener for the daemon queue starting.
+     *
+     * @param  mixed  $callback
+     * @return void
+     */
+    public function starting($callback)
+    {
+        $this->app['events']->listen(Events\WorkerStarting::class, $callback);
+    }
+
+    /**
      * Register an event listener for the daemon queue stopping.
      *
      * @param  mixed  $callback
@@ -148,14 +158,26 @@ class QueueManager implements FactoryContract, MonitorContract
      *
      * @param  string  $name
      * @return \Illuminate\Contracts\Queue\Queue
+     *
+     * @throws \InvalidArgumentException
      */
     protected function resolve($name)
     {
         $config = $this->getConfig($name);
 
-        return $this->getConnector($config['driver'])
-                        ->connect($config)
-                        ->setConnectionName($name);
+        if (is_null($config)) {
+            throw new InvalidArgumentException("The [{$name}] queue connection has not been configured.");
+        }
+
+        $queue = $this->getConnector($config['driver'])
+            ->connect($config)
+            ->setConnectionName($name);
+
+        if (method_exists($queue, 'setConfig')) {
+            $queue->setConfig($config);
+        }
+
+        return $queue;
     }
 
     /**
@@ -169,7 +191,7 @@ class QueueManager implements FactoryContract, MonitorContract
     protected function getConnector($driver)
     {
         if (! isset($this->connectors[$driver])) {
-            throw new InvalidArgumentException("No connector for [$driver]");
+            throw new InvalidArgumentException("No connector for [$driver].");
         }
 
         return call_user_func($this->connectors[$driver]);
@@ -178,19 +200,19 @@ class QueueManager implements FactoryContract, MonitorContract
     /**
      * Add a queue connection resolver.
      *
-     * @param  string    $driver
+     * @param  string  $driver
      * @param  \Closure  $resolver
      * @return void
      */
     public function extend($driver, Closure $resolver)
     {
-        return $this->addConnector($driver, $resolver);
+        $this->addConnector($driver, $resolver);
     }
 
     /**
      * Add a queue connection resolver.
      *
-     * @param  string    $driver
+     * @param  string  $driver
      * @param  \Closure  $resolver
      * @return void
      */
@@ -203,7 +225,7 @@ class QueueManager implements FactoryContract, MonitorContract
      * Get the queue connection configuration.
      *
      * @param  string  $name
-     * @return array
+     * @return array|null
      */
     protected function getConfig($name)
     {
@@ -247,20 +269,37 @@ class QueueManager implements FactoryContract, MonitorContract
     }
 
     /**
-     * Determine if the application is in maintenance mode.
+     * Get the application instance used by the manager.
      *
-     * @return bool
+     * @return \Illuminate\Contracts\Foundation\Application
      */
-    public function isDownForMaintenance()
+    public function getApplication()
     {
-        return $this->app->isDownForMaintenance();
+        return $this->app;
+    }
+
+    /**
+     * Set the application instance used by the manager.
+     *
+     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @return $this
+     */
+    public function setApplication($app)
+    {
+        $this->app = $app;
+
+        foreach ($this->connections as $connection) {
+            $connection->setContainer($app);
+        }
+
+        return $this;
     }
 
     /**
      * Dynamically pass calls to the default connection.
      *
      * @param  string  $method
-     * @param  array   $parameters
+     * @param  array  $parameters
      * @return mixed
      */
     public function __call($method, $parameters)

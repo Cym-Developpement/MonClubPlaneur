@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - IBM Globalization Center of Competency, Yamato Software Laboratory  bug-glibc-locales@gnu.org
  */
@@ -22,5 +22,4 @@ return array_replace_recursive(require __DIR__.'/en.php', [
         'LLL' => 'DD MMM HH:mm',
         'LLLL' => 'MMMM DD, YYYY HH:mm',
     ],
-    'day_of_first_week_of_year' => 1,
 ]);

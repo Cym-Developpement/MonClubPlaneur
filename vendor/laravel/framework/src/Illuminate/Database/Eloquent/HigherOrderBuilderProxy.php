@@ -10,7 +10,7 @@ class HigherOrderBuilderProxy
     /**
      * The collection being operated on.
      *
-     * @var \Illuminate\Database\Eloquent\Builder
+     * @var \Illuminate\Database\Eloquent\Builder<*>
      */
     protected $builder;
 
@@ -24,8 +24,8 @@ class HigherOrderBuilderProxy
     /**
      * Create a new proxy instance.
      *
-     * @param Builder $builder
-     * @param string $method
+     * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
+     * @param  string  $method
      */
     public function __construct(Builder $builder, $method)
     {

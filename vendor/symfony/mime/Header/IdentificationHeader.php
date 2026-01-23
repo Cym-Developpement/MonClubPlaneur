@@ -18,18 +18,13 @@ use Symfony\Component\Mime\Exception\RfcComplianceException;
  * An ID MIME Header for something like Message-ID or Content-ID (one or more addresses).
  *
  * @author Chris Corbyn
- *
- * @experimental in 4.3
  */
 final class IdentificationHeader extends AbstractHeader
 {
-    private $ids = [];
-    private $idsAsAddresses = [];
+    private array $ids = [];
+    private array $idsAsAddresses = [];
 
-    /**
-     * @param string|array $ids
-     */
-    public function __construct(string $name, $ids)
+    public function __construct(string $name, string|array $ids)
     {
         parent::__construct($name);
 
@@ -37,19 +32,16 @@ final class IdentificationHeader extends AbstractHeader
     }
 
     /**
-     * @param string|array $body a string ID or an array of IDs
+     * @param string|string[] $body a string ID or an array of IDs
      *
      * @throws RfcComplianceException
      */
-    public function setBody($body)
+    public function setBody(mixed $body): void
     {
         $this->setId($body);
     }
 
-    /**
-     * @return array
-     */
-    public function getBody()
+    public function getBody(): array
     {
         return $this->getIds();
     }
@@ -57,11 +49,11 @@ final class IdentificationHeader extends AbstractHeader
     /**
      * Set the ID used in the value of this header.
      *
-     * @param string|array $id
+     * @param string|string[] $id
      *
      * @throws RfcComplianceException
      */
-    public function setId($id)
+    public function setId(string|array $id): void
     {
         $this->setIds(\is_array($id) ? $id : [$id]);
     }
@@ -83,7 +75,7 @@ final class IdentificationHeader extends AbstractHeader
      *
      * @throws RfcComplianceException
      */
-    public function setIds(array $ids)
+    public function setIds(array $ids): void
     {
         $this->ids = [];
         $this->idsAsAddresses = [];

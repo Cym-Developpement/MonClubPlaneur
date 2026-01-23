@@ -19,28 +19,14 @@ use Symfony\Component\DependencyInjection\Reference;
  * Registers custom mime types guessers.
  *
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @experimental in 4.3
  */
 class AddMimeTypeGuesserPass implements CompilerPassInterface
 {
-    private $mimeTypesService;
-    private $mimeTypeGuesserTag;
-
-    public function __construct(string $mimeTypesService = 'mime_types', string $mimeTypeGuesserTag = 'mime.mime_type_guesser')
+    public function process(ContainerBuilder $container): void
     {
-        $this->mimeTypesService = $mimeTypesService;
-        $this->mimeTypeGuesserTag = $mimeTypeGuesserTag;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function process(ContainerBuilder $container)
-    {
-        if ($container->has($this->mimeTypesService)) {
-            $definition = $container->findDefinition($this->mimeTypesService);
-            foreach ($container->findTaggedServiceIds($this->mimeTypeGuesserTag, true) as $id => $attributes) {
+        if ($container->has('mime_types')) {
+            $definition = $container->findDefinition('mime_types');
+            foreach ($container->findTaggedServiceIds('mime.mime_type_guesser', true) as $id => $attributes) {
                 $definition->addMethodCall('registerGuesser', [new Reference($id)]);
             }
         }

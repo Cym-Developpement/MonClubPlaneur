@@ -36,9 +36,11 @@ return [
     'a_second' => 'մի քանի վայրկյան|:count վայրկյան',
     's' => ':countվրկ',
     'ago' => ':time առաջ',
-    'from_now' => ':time ներկա պահից',
+    'from_now' => ':timeից',
     'after' => ':time հետո',
     'before' => ':time առաջ',
+    'diff_now' => 'հիմա',
+    'diff_today' => 'այսօր',
     'diff_yesterday' => 'երեկ',
     'diff_tomorrow' => 'վաղը',
     'formats' => [
@@ -57,18 +59,13 @@ return [
         'lastWeek' => '[անցած] dddd [օրը ժամը] LT',
         'sameElse' => 'L',
     ],
-    'ordinal' => function ($number, $period) {
-        switch ($period) {
-            case 'DDD':
-            case 'w':
-            case 'W':
-            case 'DDDo':
-                return $number.($number === 1 ? '-ին' : '-րդ');
-            default:
-                return $number;
-        }
+    'ordinal' => static function ($number, $period) {
+        return match ($period) {
+            'DDD', 'w', 'W', 'DDDo' => $number.($number === 1 ? '-ին' : '-րդ'),
+            default => $number,
+        };
     },
-    'meridiem' => function ($hour) {
+    'meridiem' => static function ($hour) {
         if ($hour < 4) {
             return 'գիշերվա';
         }
@@ -84,7 +81,7 @@ return [
     'months' => ['հունվարի', 'փետրվարի', 'մարտի', 'ապրիլի', 'մայիսի', 'հունիսի', 'հուլիսի', 'օգոստոսի', 'սեպտեմբերի', 'հոկտեմբերի', 'նոյեմբերի', 'դեկտեմբերի'],
     'months_standalone' => ['հունվար', 'փետրվար', 'մարտ', 'ապրիլ', 'մայիս', 'հունիս', 'հուլիս', 'օգոստոս', 'սեպտեմբեր', 'հոկտեմբեր', 'նոյեմբեր', 'դեկտեմբեր'],
     'months_short' => ['հնվ', 'փտր', 'մրտ', 'ապր', 'մյս', 'հնս', 'հլս', 'օգս', 'սպտ', 'հկտ', 'նմբ', 'դկտ'],
-    'months_regexp' => '/D[oD]?(\[[^\[\]]*\]|\s)+MMMM?/',
+    'months_regexp' => '/(D[oD]?(\[[^\[\]]*\]|\s)+MMMM?|L{2,4}|l{2,4})/',
     'weekdays' => ['կիրակի', 'երկուշաբթի', 'երեքշաբթի', 'չորեքշաբթի', 'հինգշաբթի', 'ուրբաթ', 'շաբաթ'],
     'weekdays_short' => ['կրկ', 'երկ', 'երք', 'չրք', 'հնգ', 'ուրբ', 'շբթ'],
     'weekdays_min' => ['կրկ', 'երկ', 'երք', 'չրք', 'հնգ', 'ուրբ', 'շբթ'],

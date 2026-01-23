@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Josh Soref
  * - Shakib Hossain
@@ -46,6 +46,7 @@ return [
     'after' => ':time পরে',
     'before' => ':time আগে',
     'diff_now' => 'এখন',
+    'diff_today' => 'আজ',
     'diff_yesterday' => 'গতকাল',
     'diff_tomorrow' => 'আগামীকাল',
     'period_recurrences' => ':count বার|:count বার',
@@ -68,7 +69,7 @@ return [
         'lastWeek' => '[গত] dddd, LT',
         'sameElse' => 'L',
     ],
-    'meridiem' => function ($hour) {
+    'meridiem' => static function ($hour) {
         if ($hour < 4) {
             return 'রাত';
         }

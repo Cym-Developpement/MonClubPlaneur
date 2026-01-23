@@ -13,13 +13,12 @@
  * Authors:
  * - Ghorban M. Tavakoly Pablo Saratxaga & Ghorban M. Tavakoly pablo@walon.org & gmt314@yahoo.com
  * - SuperManPHP
+ * - Maksat Meredow (isadma)
  */
-$transformDiff = function ($input) {
-    return strtr($input, [
-        'sekunt' => 'sekunt',
-        'hepde' => 'hepde',
-    ]);
-};
+$transformDiff = static fn (string $input) => strtr($input, [
+    'sekunt' => 'sekunt',
+    'hepde' => 'hepde',
+]);
 
 return array_replace_recursive(require __DIR__.'/en.php', [
     'formats' => [
@@ -27,9 +26,9 @@ return array_replace_recursive(require __DIR__.'/en.php', [
     ],
     'months' => ['Ýanwar', 'Fewral', 'Mart', 'Aprel', 'Maý', 'Iýun', 'Iýul', 'Awgust', 'Sentýabr', 'Oktýabr', 'Noýabr', 'Dekabr'],
     'months_short' => ['Ýan', 'Few', 'Mar', 'Apr', 'Maý', 'Iýn', 'Iýl', 'Awg', 'Sen', 'Okt', 'Noý', 'Dek'],
-    'weekdays' => ['Duşenbe', 'Sişenbe', 'Çarşenbe', 'Penşenbe', 'Anna', 'Şenbe', 'Ýekşenbe'],
-    'weekdays_short' => ['Duş', 'Siş', 'Çar', 'Pen', 'Ann', 'Şen', 'Ýek'],
-    'weekdays_min' => ['Duş', 'Siş', 'Çar', 'Pen', 'Ann', 'Şen', 'Ýek'],
+    'weekdays' => ['Ýekşenbe', 'Duşenbe', 'Sişenbe', 'Çarşenbe', 'Penşenbe', 'Anna', 'Şenbe'],
+    'weekdays_short' => ['Ýek', 'Duş', 'Siş', 'Çar', 'Pen', 'Ann', 'Şen'],
+    'weekdays_min' => ['Ýe', 'Du', 'Si', 'Ça', 'Pe', 'An', 'Şe'],
     'first_day_of_week' => 1,
     'day_of_first_week_of_year' => 1,
 
@@ -37,9 +36,9 @@ return array_replace_recursive(require __DIR__.'/en.php', [
     'y' => ':count ýyl',
     'a_year' => ':count ýyl',
 
-    'month' => 'aý :count',
-    'm' => 'aý :count',
-    'a_month' => 'aý :count',
+    'month' => ':count aý',
+    'm' => ':count aý',
+    'a_month' => ':count aý',
 
     'week' => ':count hepde',
     'w' => ':count hepde',
@@ -61,16 +60,8 @@ return array_replace_recursive(require __DIR__.'/en.php', [
     's' => ':count sekunt',
     'a_second' => ':count sekunt',
 
-    'ago' => function ($time) use ($transformDiff) {
-        return $transformDiff($time).' ozal';
-    },
-    'from_now' => function ($time) use ($transformDiff) {
-        return $transformDiff($time).' soňra';
-    },
-    'after' => function ($time) use ($transformDiff) {
-        return $transformDiff($time).' soň';
-    },
-    'before' => function ($time) use ($transformDiff) {
-        return $transformDiff($time).' öň';
-    },
+    'ago' => static fn (string $time) => $transformDiff($time).' ozal',
+    'from_now' => static fn (string $time) => $transformDiff($time).' soňra',
+    'after' => static fn (string $time) => $transformDiff($time).' soň',
+    'before' => static fn (string $time) => $transformDiff($time).' öň',
 ]);

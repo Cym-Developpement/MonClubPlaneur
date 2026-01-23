@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Kruy Vanna
  * - Sereysethy Touch
@@ -17,24 +17,37 @@
  * - Sovichet Tep
  */
 return [
-    'year' => '{1}មួយឆ្នាំ|]1,Inf[:count ឆ្នាំ',
+    'year' => ':count ឆ្នាំ',
+    'a_year' => '{1}មួយឆ្នាំ|[-Inf,Inf]:count ឆ្នាំ',
     'y' => ':count ឆ្នាំ',
-    'month' => '{1}មួយខែ|]1,Inf[:count ខែ',
+    'month' => ':count ខែ',
+    'a_month' => '{1}មួយខែ|[-Inf,Inf]:count ខែ',
     'm' => ':count ខែ',
-    'week' => ':count សប្ដាហ៍',
-    'w' => ':count សប្ដាហ៍',
-    'day' => '{1}មួយថ្ងៃ|]1,Inf[:count ថ្ងៃ',
+    'week' => ':count សប្តាហ៍',
+    'w' => ':count សប្តាហ៍',
+    'day' => ':count ថ្ងៃ',
+    'a_day' => '{1}មួយថ្ងៃ|[-Inf,Inf]:count ថ្ងៃ',
     'd' => ':count ថ្ងៃ',
-    'hour' => '{1}មួយម៉ោង|]1,Inf[:count ម៉ោង',
+    'hour' => ':count ម៉ោង',
+    'a_hour' => '{1}មួយម៉ោង|[-Inf,Inf]:count ម៉ោង',
     'h' => ':count ម៉ោង',
-    'minute' => '{1}មួយនាទី|]1,Inf[:count នាទី',
+    'minute' => ':count នាទី',
+    'a_minute' => '{1}មួយនាទី|[-Inf,Inf]:count នាទី',
     'min' => ':count នាទី',
-    'second' => '{1}ប៉ុន្មានវិនាទី|]1,Inf[:count វិនាទី',
+    'second' => ':count វិនាទី',
+    'a_second' => '{0,1}ប៉ុន្មានវិនាទី|[-Inf,Inf]:count វិនាទី',
     's' => ':count វិនាទី',
     'ago' => ':timeមុន',
     'from_now' => ':timeទៀត',
     'after' => 'នៅ​ក្រោយ :time',
     'before' => 'នៅ​មុន :time',
+    'diff_now' => 'ឥឡូវ',
+    'diff_today' => 'ថ្ងៃនេះ',
+    'diff_today_regexp' => 'ថ្ងៃនេះ(?:\\s+ម៉ោង)?',
+    'diff_yesterday' => 'ម្សិលមិញ',
+    'diff_yesterday_regexp' => 'ម្សិលមិញ(?:\\s+ម៉ោង)?',
+    'diff_tomorrow' => 'ថ្ងៃ​ស្អែក',
+    'diff_tomorrow_regexp' => 'ស្អែក(?:\\s+ម៉ោង)?',
     'formats' => [
         'LT' => 'HH:mm',
         'LTS' => 'HH:mm:ss',

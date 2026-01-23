@@ -5,15 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\library\alerts;
-use App\transaction;
-use App\transactionType;
-use App\User;
-use App\usersData;
-use App\aircraft;
-use App\sailplaneStartPrice;
-use App\flight;
-use App\flightDay;
-use App\usersAttributes;
+use App\Models\transaction;
+use App\Models\transactionType;
+use App\Models\User;
+use App\Models\usersData;
+use App\Models\aircraft;
+use App\Models\sailplaneStartPrice;
+use App\Models\flight;
+use App\Models\flightDay;
+use App\Models\usersAttributes;
+use App\Models\refundCategory;
 
 class HomeController extends Controller
 {
@@ -25,6 +26,11 @@ class HomeController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function wiki(Request $request)
+    {
+        return view('wiki');
     }
 
 
@@ -46,7 +52,7 @@ class HomeController extends Controller
      */
     public function index()
     {
-
+        Auth::user()->resetAdminAccess();
         $userData = $this->getUserData();
         $alerts = alerts::getAlertsList(Auth::user()->id);
         $transactions = array();
@@ -55,12 +61,18 @@ class HomeController extends Controller
                                         ->orderBy('id', 'ASC')
                                         ->get();
         foreach ($transactionsData as $key => $value) {
-            $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'quantity' => $value->quantity, 'valid' => $value->valid, 'observation' => $value->observation];
+            $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'quantity' => $value->quantity, 'valid' => $value->valid, 'observation' => $value->observation, 'year' => date('Y', $value->time)];
+        }
+
+        if (Auth::user()->can('admin')) {
+            $allUsers = User::where('id', '>', 0)->orderBy('name', 'asc')->get();
+        } else {
+            $allUsers = [];
         }
 
         $attributes = usersAttributes::where('userId', Auth::user()->id)->get();
         
-        return view('home', ['userAttributes' => $attributes, 'transactions' => $transactions, 'solde' => number_format(($this->getSolde(Auth::user()->id)/100), 2), 'userData' => $userData, 'alertsList' => $alerts]);
+        return view('home', ['userAttributes' => $attributes, 'transactions' => $transactions, 'solde' => number_format(($this->getSolde(Auth::user()->id)/100), 2), 'userData' => $userData, 'alertsList' => $alerts, 'allUsers' => $allUsers]);
     }
 
     /**
@@ -72,7 +84,7 @@ class HomeController extends Controller
     {
 
         $selectedUser = 0;
-        $users = User::where('name', '<>', '')->orderBy('name', 'asc')->get();
+        $users = User::where('name', '<>', '')->where('state', 1)->orderBy('name', 'asc')->get();
         $transactions = array();
         if (isset($request->selectUserInTransaction)) {
 
@@ -98,17 +110,13 @@ class HomeController extends Controller
                                             ->orderBy('id', 'ASC')
                                             ->get();
             foreach ($transactionsUser as $key => $value) {
-                $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation];
+                $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation, 'valid' => $value->valid, 'year' => date('Y', $value->time)];
             }
         }
 
-        $transactionType = array();
 
-        $transactionTypeData = transactionType::all();
-        foreach ($transactionTypeData as $key => $value) {
-            $value->name = $value->name.' '.date('Y');
-            $transactionType[] = $value;
-        }
+        $transactionType = transactionType::all();
+        
 
         $aircraft = aircraft::all();
         $sailplaneStartPrice = sailplaneStartPrice::all();
@@ -411,4 +419,123 @@ class HomeController extends Controller
     {
         alerts::markAsRead(Auth::user()->id, $request->id);
     }
+
+    public function getPrice(Request $request)
+    {
+        $aircraft = aircraft::find($request->aircraft);
+        $start = strtotime(str_replace('/', '-', $request->takeOffDate));
+        $end = strtotime(str_replace('/', '-', $request->landingDate));
+        $price = $aircraft->price($start, $end, $request->flightTime, $request->startType, $request->motorStart, $request->motorEnd, $request->nbTakeOff, $request->simulation);
+        return json_encode($price);
+    }
+
+    public function getAddFlightInfoTime(Request $request)
+    {
+
+        $time = strtotime(str_replace('/', '-', $request->startDate));
+        $landingTime = $time+($request->flightTime*60);
+        
+        
+        $aircraft = aircraft::find($request->aircraft);
+        //return json_encode([$time, $landingTime]);
+        $existFlight = flight::selectRaw('*, (flightTimestamp+(60*totalTime)) AS landingTimestamp')->
+            where('aircraftId', $aircraft->id)->whereRaw("(
+            (landingTimestamp >= $time AND landingTimestamp <= $landingTime) 
+            OR (flightTimestamp >= $time AND flightTimestamp <= $landingTime)
+            OR (landingTimestamp >= $time AND landingTimestamp <= $landingTime)
+        )")->get();
+
+        //return json_encode([$existFlight->toArray(), $time, $landingTime]);
+        
+        
+        if (count($existFlight) > 0) {
+            return json_encode(['error', 'Un vol est dèjà enregistré sur cette période']);
+        }
+
+        if ($aircraft->type == 2) {
+            return json_encode(['ok', 0, 0]);
+        }
+
+        if ($aircraft->type == 1) {
+            $lastFlight = flight::where('aircraftId', $aircraft->id)
+                            ->where('flightTimestamp', '<', $time)
+                            ->orderBy('flightTimestamp', 'desc')
+                            ->first();
+            $nextFlight = flight::where('aircraftId', $aircraft->id)
+                            ->where('flightTimestamp', '>', $landingTime)
+                            ->orderBy('flightTimestamp', 'asc')
+                            ->first();
+            $lastIndex = (is_null($lastFlight)) ? 0 : $lastFlight->real_motor_end_time;
+            $nextIndex = (is_null($nextFlight)) ? 0 : $nextFlight->real_motor_start_time;
+            return json_encode(['ok', $lastIndex, $nextIndex]);
+        }
+    }
+
+    /**
+     * Afficher la page de transfert entre pilotes
+     */
+    public function transfer()
+    {
+        $users = User::where('state', 1)
+                    ->where('id', '<>', Auth::id())
+                    ->orderBy('name')
+                    ->get();
+        
+        $currentBalance = (Auth::user()->updateSolde()/100);
+        
+        return view('transfer', compact('users', 'currentBalance'));
+    }
+
+    /**
+     * Traiter le transfert entre pilotes
+     */
+    public function processTransfer(Request $request)
+    {
+        $request->validate([
+            'recipient_id' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:0.01|max:10000',
+            'message' => 'nullable|string|max:255'
+        ]);
+
+        $sender = Auth::user();
+        $recipient = User::findOrFail($request->recipient_id);
+        $amount = $request->amount;
+
+        // Vérifier que l'utilisateur ne se transfère pas à lui-même
+        if ($sender->id === $recipient->id) {
+            return redirect()->back()->with('error', 'Vous ne pouvez pas vous transférer de l\'argent à vous-même.');
+        }
+
+        // Vérifier que le pilote a suffisamment de fonds
+        $currentBalance = ($sender->updateSolde()/100);
+
+        if ($currentBalance < $amount) {
+            return redirect()->back()->with('error', 'Solde insuffisant. Votre solde actuel est de ' . number_format($currentBalance, 2) . ' €.');
+        }
+
+        try {
+            // Transaction de débit pour l'expéditeur
+            transaction::add(
+                $sender->id,
+                -($amount*100),
+                'Transfert vers ' . $recipient->name,
+                $request->message ? $request->message : null
+            );
+
+            // Transaction de crédit pour le destinataire
+            transaction::add(
+                $recipient->id,
+                ($amount*100),
+                'Transfert reçu de ' . $sender->name,
+                $request->message ? $request->message : null
+            );
+
+            return redirect()->route('home')->with('success', 'Transfert de ' . number_format($amount, 2) . ' € vers ' . $recipient->name . ' effectué avec succès.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Une erreur est survenue lors du transfert. Veuillez réessayer.');
+        }
+    }
+
+
 }

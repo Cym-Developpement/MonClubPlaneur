@@ -16,16 +16,14 @@ interface LocaleAwareInterface
     /**
      * Sets the current locale.
      *
-     * @param string $locale The locale
+     * @return void
      *
      * @throws \InvalidArgumentException If the locale contains invalid characters
      */
-    public function setLocale($locale);
+    public function setLocale(string $locale);
 
     /**
      * Returns the current locale.
-     *
-     * @return string The locale
      */
-    public function getLocale();
+    public function getLocale(): string;
 }

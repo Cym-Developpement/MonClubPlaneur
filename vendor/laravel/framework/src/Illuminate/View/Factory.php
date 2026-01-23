@@ -2,21 +2,21 @@
 
 namespace Illuminate\View;
 
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use InvalidArgumentException;
-use Illuminate\Support\Traits\Macroable;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\View\Engines\EngineResolver;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\View\Factory as FactoryContract;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Traits\Macroable;
+use Illuminate\View\Engines\EngineResolver;
+use InvalidArgumentException;
 
 class Factory implements FactoryContract
 {
     use Macroable,
         Concerns\ManagesComponents,
         Concerns\ManagesEvents,
+        Concerns\ManagesFragments,
         Concerns\ManagesLayouts,
         Concerns\ManagesLoops,
         Concerns\ManagesStacks,
@@ -84,12 +84,32 @@ class Factory implements FactoryContract
     protected $renderCount = 0;
 
     /**
+     * The "once" block IDs that have been rendered.
+     *
+     * @var array
+     */
+    protected $renderedOnce = [];
+
+    /**
+     * The cached array of engines for paths.
+     *
+     * @var array
+     */
+    protected $pathEngineCache = [];
+
+    /**
+     * The cache of normalized names for views.
+     *
+     * @var array
+     */
+    protected $normalizedNameCache = [];
+
+    /**
      * Create a new view factory instance.
      *
      * @param  \Illuminate\View\Engines\EngineResolver  $engines
      * @param  \Illuminate\View\ViewFinderInterface  $finder
      * @param  \Illuminate\Contracts\Events\Dispatcher  $events
-     * @return void
      */
     public function __construct(EngineResolver $engines, ViewFinderInterface $finder, Dispatcher $events)
     {
@@ -104,8 +124,8 @@ class Factory implements FactoryContract
      * Get the evaluated view contents for the given view.
      *
      * @param  string  $path
-     * @param  \Illuminate\Contracts\Support\Arrayable|array   $data
-     * @param  array   $mergeData
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $data
+     * @param  array  $mergeData
      * @return \Illuminate\Contracts\View\View
      */
     public function file($path, $data = [], $mergeData = [])
@@ -121,8 +141,8 @@ class Factory implements FactoryContract
      * Get the evaluated view contents for the given view.
      *
      * @param  string  $view
-     * @param  \Illuminate\Contracts\Support\Arrayable|array   $data
-     * @param  array   $mergeData
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $data
+     * @param  array  $mergeData
      * @return \Illuminate\Contracts\View\View
      */
     public function make($view, $data = [], $mergeData = [])
@@ -145,8 +165,8 @@ class Factory implements FactoryContract
      * Get the first view that actually exists from the given list.
      *
      * @param  array  $views
-     * @param  \Illuminate\Contracts\Support\Arrayable|array   $data
-     * @param  array   $mergeData
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $data
+     * @param  array  $mergeData
      * @return \Illuminate\Contracts\View\View
      *
      * @throws \InvalidArgumentException
@@ -169,8 +189,8 @@ class Factory implements FactoryContract
      *
      * @param  bool  $condition
      * @param  string  $view
-     * @param  \Illuminate\Contracts\Support\Arrayable|array   $data
-     * @param  array   $mergeData
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $data
+     * @param  array  $mergeData
      * @return string
      */
     public function renderWhen($condition, $view, $data = [], $mergeData = [])
@@ -183,10 +203,24 @@ class Factory implements FactoryContract
     }
 
     /**
+     * Get the rendered content of the view based on the negation of a given condition.
+     *
+     * @param  bool  $condition
+     * @param  string  $view
+     * @param  \Illuminate\Contracts\Support\Arrayable|array  $data
+     * @param  array  $mergeData
+     * @return string
+     */
+    public function renderUnless($condition, $view, $data = [], $mergeData = [])
+    {
+        return $this->renderWhen(! $condition, $view, $data, $mergeData);
+    }
+
+    /**
      * Get the rendered contents of a partial from a loop.
      *
      * @param  string  $view
-     * @param  array   $data
+     * @param  array  $data
      * @param  string  $iterator
      * @param  string  $empty
      * @return string
@@ -210,9 +244,9 @@ class Factory implements FactoryContract
         // view. Alternatively, the "empty view" could be a raw string that begins
         // with "raw|" for convenience and to let this know that it is a string.
         else {
-            $result = Str::startsWith($empty, 'raw|')
-                        ? substr($empty, 4)
-                        : $this->make($empty)->render();
+            $result = str_starts_with($empty, 'raw|')
+                ? substr($empty, 4)
+                : $this->make($empty)->render();
         }
 
         return $result;
@@ -221,12 +255,12 @@ class Factory implements FactoryContract
     /**
      * Normalize a view name.
      *
-     * @param  string $name
+     * @param  string  $name
      * @return string
      */
     protected function normalizeName($name)
     {
-        return ViewName::normalize($name);
+        return $this->normalizedNameCache[$name] ??= ViewName::normalize($name);
     }
 
     /**
@@ -263,7 +297,7 @@ class Factory implements FactoryContract
     {
         try {
             $this->finder->find($view);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             return false;
         }
 
@@ -280,27 +314,31 @@ class Factory implements FactoryContract
      */
     public function getEngineFromPath($path)
     {
-        if (! $extension = $this->getExtension($path)) {
-            throw new InvalidArgumentException("Unrecognized extension in file: {$path}");
+        if (isset($this->pathEngineCache[$path])) {
+            return $this->engines->resolve($this->pathEngineCache[$path]);
         }
 
-        $engine = $this->extensions[$extension];
+        if (! $extension = $this->getExtension($path)) {
+            throw new InvalidArgumentException("Unrecognized extension in file: {$path}.");
+        }
 
-        return $this->engines->resolve($engine);
+        return $this->engines->resolve(
+            $this->pathEngineCache[$path] = $this->extensions[$extension]
+        );
     }
 
     /**
      * Get the extension used by the view file.
      *
      * @param  string  $path
-     * @return string
+     * @return string|null
      */
     protected function getExtension($path)
     {
         $extensions = array_keys($this->extensions);
 
         return Arr::first($extensions, function ($value) use ($path) {
-            return Str::endsWith($path, '.'.$value);
+            return str_ends_with($path, '.'.$value);
         });
     }
 
@@ -308,7 +346,7 @@ class Factory implements FactoryContract
      * Add a piece of shared data to the environment.
      *
      * @param  array|string  $key
-     * @param  mixed|null  $value
+     * @param  mixed  $value
      * @return mixed
      */
     public function share($key, $value = null)
@@ -353,6 +391,28 @@ class Factory implements FactoryContract
     }
 
     /**
+     * Determine if the given once token has been rendered.
+     *
+     * @param  string  $id
+     * @return bool
+     */
+    public function hasRenderedOnce(string $id)
+    {
+        return isset($this->renderedOnce[$id]);
+    }
+
+    /**
+     * Mark the given once token as having been rendered.
+     *
+     * @param  string  $id
+     * @return void
+     */
+    public function markAsRenderedOnce(string $id)
+    {
+        $this->renderedOnce[$id] = true;
+    }
+
+    /**
      * Add a location to the array of view locations.
      *
      * @param  string  $location
@@ -361,6 +421,17 @@ class Factory implements FactoryContract
     public function addLocation($location)
     {
         $this->finder->addLocation($location);
+    }
+
+    /**
+     * Prepend a location to the array of view locations.
+     *
+     * @param  string  $location
+     * @return void
+     */
+    public function prependLocation($location)
+    {
+        $this->finder->prependLocation($location);
     }
 
     /**
@@ -408,8 +479,8 @@ class Factory implements FactoryContract
     /**
      * Register a valid view extension and its engine.
      *
-     * @param  string    $extension
-     * @param  string    $engine
+     * @param  string  $extension
+     * @param  string  $engine
      * @param  \Closure|null  $resolver
      * @return void
      */
@@ -424,6 +495,8 @@ class Factory implements FactoryContract
         unset($this->extensions[$extension]);
 
         $this->extensions = array_merge([$extension => $engine], $this->extensions);
+
+        $this->pathEngineCache = [];
     }
 
     /**
@@ -434,9 +507,12 @@ class Factory implements FactoryContract
     public function flushState()
     {
         $this->renderCount = 0;
+        $this->renderedOnce = [];
 
         $this->flushSections();
         $this->flushStacks();
+        $this->flushComponents();
+        $this->flushFragments();
     }
 
     /**
@@ -548,7 +624,7 @@ class Factory implements FactoryContract
      * Get an item from the shared data.
      *
      * @param  string  $key
-     * @param  mixed   $default
+     * @param  mixed  $default
      * @return mixed
      */
     public function shared($key, $default = null)

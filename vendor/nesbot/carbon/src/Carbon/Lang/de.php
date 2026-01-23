@@ -16,6 +16,7 @@
  * - dennisoderwald
  * - Timo
  * - Karag2006
+ * - Pete Scopes (pdscopes)
  */
 return [
     'year' => ':count Jahr|:count Jahre',
@@ -39,6 +40,12 @@ return [
     'second' => ':count Sekunde|:count Sekunden',
     'a_second' => 'ein paar Sekunden|:count Sekunden',
     's' => ':count Sek.',
+    'millisecond' => ':count Millisekunde|:count Millisekunden',
+    'a_millisecond' => 'eine Millisekunde|:count Millisekunden',
+    'ms' => ':countms',
+    'microsecond' => ':count Mikrosekunde|:count Mikrosekunden',
+    'a_microsecond' => 'eine Mikrosekunde|:count Mikrosekunden',
+    'µs' => ':countµs',
     'ago' => 'vor :time',
     'from_now' => 'in :time',
     'after' => ':time später',
@@ -52,12 +59,42 @@ return [
     'month_ago' => ':count Monat|:count Monaten',
     'week_ago' => ':count Woche|:count Wochen',
     'day_ago' => ':count Tag|:count Tagen',
+    'a_year_from_now' => 'ein Jahr|:count Jahren',
+    'a_month_from_now' => 'ein Monat|:count Monaten',
+    'a_week_from_now' => 'eine Woche|:count Wochen',
+    'a_day_from_now' => 'ein Tag|:count Tagen',
+    'a_year_ago' => 'ein Jahr|:count Jahren',
+    'a_month_ago' => 'ein Monat|:count Monaten',
+    'a_week_ago' => 'eine Woche|:count Wochen',
+    'a_day_ago' => 'ein Tag|:count Tagen',
 
     'diff_now' => 'Gerade eben',
+    'diff_today' => 'heute',
+    'diff_today_regexp' => 'heute(?:\\s+um)?',
     'diff_yesterday' => 'Gestern',
-    'diff_tomorrow' => 'Heute',
+    'diff_yesterday_regexp' => 'gestern(?:\\s+um)?',
+    'diff_tomorrow' => 'Morgen',
+    'diff_tomorrow_regexp' => 'morgen(?:\\s+um)?',
     'diff_before_yesterday' => 'Vorgestern',
     'diff_after_tomorrow' => 'Übermorgen',
+
+    'period_recurrences' => 'einmal|:count mal',
+    'period_interval' => static function (string $interval = '') {
+        /** @var string $output */
+        $output = preg_replace('/^(ein|eine|1)\s+/u', '', $interval);
+
+        if (preg_match('/^(ein|1)( Monat| Mon.| Tag| Tg.)/u', $interval)) {
+            return "jeden $output";
+        }
+
+        if (preg_match('/^(ein|1)( Jahr| J.)/u', $interval)) {
+            return "jedes $output";
+        }
+
+        return "jede $output";
+    },
+    'period_start_date' => 'von :date',
+    'period_end_date' => 'bis :date',
 
     'formats' => [
         'LT' => 'HH:mm',
@@ -86,4 +123,13 @@ return [
     'first_day_of_week' => 1,
     'day_of_first_week_of_year' => 4,
     'list' => [', ', ' und '],
+    'ordinal_words' => [
+        'of' => 'im',
+        'first' => 'erster',
+        'second' => 'zweiter',
+        'third' => 'dritter',
+        'fourth' => 'vierten',
+        'fifth' => 'fünfter',
+        'last' => 'letzten',
+    ],
 ];

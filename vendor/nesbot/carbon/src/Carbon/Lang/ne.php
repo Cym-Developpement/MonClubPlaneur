@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - nootanghimire
  * - Josh Soref
@@ -35,6 +35,8 @@ return [
     'from_now' => ':timeमा',
     'after' => ':time पछि',
     'before' => ':time अघि',
+    'diff_now' => 'अहिले',
+    'diff_today' => 'आज',
     'diff_yesterday' => 'हिजो',
     'diff_tomorrow' => 'भोलि',
     'formats' => [
@@ -53,7 +55,7 @@ return [
         'lastWeek' => '[गएको] dddd[,] LT',
         'sameElse' => 'L',
     ],
-    'meridiem' => function ($hour) {
+    'meridiem' => static function ($hour) {
         if ($hour < 3) {
             return 'राति';
         }

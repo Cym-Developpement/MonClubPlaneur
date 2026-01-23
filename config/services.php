@@ -35,13 +35,21 @@ return [
     ],
 
     'stripe' => [
-        'model' => App\User::class,
+        'model' => App\Models\User::class,
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook' => [
             'secret' => env('STRIPE_WEBHOOK_SECRET'),
             'tolerance' => env('STRIPE_WEBHOOK_TOLERANCE', 300),
         ],
+    ],
+
+    'helloasso' => [
+        'api_url' => env('HELLOASSO_API_URL', 'https://api.helloasso.com/v5'),
+        'organization_slug' => env('HELLOASSO_ORGANIZATION_SLUG'),
+        'client_id' => env('HELLOASSO_CLIENT_ID'),
+        'client_secret' => env('HELLOASSO_CLIENT_SECRET'),
+        'sandbox' => env('HELLOASSO_SANDBOX', false),
     ],
 
 ];

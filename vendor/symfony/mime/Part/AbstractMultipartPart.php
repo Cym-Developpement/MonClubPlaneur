@@ -15,13 +15,11 @@ use Symfony\Component\Mime\Header\Headers;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @experimental in 4.3
  */
 abstract class AbstractMultipartPart extends AbstractPart
 {
-    private $boundary;
-    private $parts = [];
+    private ?string $boundary = null;
+    private array $parts = [];
 
     public function __construct(AbstractPart ...$parts)
     {
@@ -76,12 +74,22 @@ abstract class AbstractMultipartPart extends AbstractPart
         yield '--'.$this->getBoundary()."--\r\n";
     }
 
-    private function getBoundary(): string
+    public function asDebugString(): string
     {
-        if (null === $this->boundary) {
-            $this->boundary = '_=_symfony_'.time().'_'.bin2hex(random_bytes(16)).'_=_';
+        $str = parent::asDebugString();
+        foreach ($this->getParts() as $part) {
+            $lines = explode("\n", $part->asDebugString());
+            $str .= "\n  └ ".array_shift($lines);
+            foreach ($lines as $line) {
+                $str .= "\n  |".$line;
+            }
         }
 
-        return $this->boundary;
+        return $str;
+    }
+
+    private function getBoundary(): string
+    {
+        return $this->boundary ??= strtr(base64_encode(random_bytes(6)), '+/', '-_');
     }
 }

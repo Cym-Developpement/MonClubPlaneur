@@ -7,21 +7,19 @@
 
             <div class="card">
                 <div class="card-header">Mon Carnet de vol au CVVT
-                  <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#addExternalFlight">Enregistrer un vol hors planche</button>
+                  @can('debug')
+                  <button type="button" class="btn btn-success float-end" data-bs-toggle="modal" data-bs-target="#addExternalFlight">Enregistrer un vol hors planche</button>
+                  @endcan
                 </div>
 
                 <div class="card-body">
                   <form method="post">
                     @csrf
                     <div class="input-group">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text">Dates : </span>
-                      </div>
+                      <span class="input-group-text">Dates : </span>
                       <input type="text" value="{{ $dates[0] }}" placeholder="date début" class="form-control planches-datepicker" name="start">
                       <input type="text" value="{{ $dates[1] }}" placeholder="date fin" class="form-control planches-datepicker" name="end">
-                      <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Afficher</button>
-                      </div>
+                      <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Afficher</button>
                     </div>
                   </form>
                   <br>
@@ -105,15 +103,13 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel">Enregistrer un vol hors planche ou antérieur</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <b>Ce formulaire permet d'enregistrer facilement des vols hors planche<br>ou une expérience antérieur pour être enregistré sur GESSASSO.</b>
         <hr>
         <h2>1. choisir l'année : 
-          <select class="custom-select custom-select-lg mb-3">
+          <select class="form-select form-select-lg mb-3">
             <option selected value="@php
                 echo date('Y');
               @endphp">
@@ -143,48 +139,32 @@
         <i>Vous pouvez saisir directement sans cliquer ni appuyer sur entrée<br>le curseur passe a la case suivante automatiquement.</i>
         <br>
         <div class="input-group">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Date</span>
-          </div>
-          <div class="input-group-prepend">
-            <span class="input-group-text">Jour : </span>
-          </div>
+          <span class="input-group-text">Date</span>
+          <span class="input-group-text">Jour : </span>
           <input id="addExternalDay" type="text" aria-label="Jour" class="form-control">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Mois : </span>
-          </div>
+          <span class="input-group-text">Mois : </span>
           <input id="addExternalMonth" type="text" aria-label="Mois" class="form-control">
         </div>
         <br>
         <div class="input-group">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Temps de vol</span>
-          </div>
-          <div class="input-group-prepend">
-            <span class="input-group-text">Heures : </span>
-          </div>
+          <span class="input-group-text">Temps de vol</span>
+          <span class="input-group-text">Heures : </span>
           <input id="addExternalFlightHour" type="text" aria-label="Jour" class="form-control">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Minutes : </span>
-          </div>
+          <span class="input-group-text">Minutes : </span>
           <input id="addExternalFlightMinutes" type="text" aria-label="Mois" class="form-control">
         </div>
         <br>
 
         <div class="input-group">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Atterrissage : </span>
-          </div>
+          <span class="input-group-text">Atterrissage : </span>
           <input id="addExternalFlightLanding" type="text" aria-label="" value="1" class="form-control">
-          <div class="input-group-prepend">
-            <span class="input-group-text">Rôle : </span>
-          </div>
+          <span class="input-group-text">Rôle : </span>
           
         </div>
 
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
       </div>
     </div>
   </div>

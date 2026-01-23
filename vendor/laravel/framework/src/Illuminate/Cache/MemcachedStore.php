@@ -2,10 +2,10 @@
 
 namespace Illuminate\Cache;
 
+use Illuminate\Contracts\Cache\LockProvider;
+use Illuminate\Support\InteractsWithTime;
 use Memcached;
 use ReflectionMethod;
-use Illuminate\Support\InteractsWithTime;
-use Illuminate\Contracts\Cache\LockProvider;
 
 class MemcachedStore extends TaggableStore implements LockProvider
 {
@@ -36,8 +36,7 @@ class MemcachedStore extends TaggableStore implements LockProvider
      * Create a new Memcached store.
      *
      * @param  \Memcached  $memcached
-     * @param  string      $prefix
-     * @return void
+     * @param  string  $prefix
      */
     public function __construct($memcached, $prefix = '')
     {
@@ -45,7 +44,7 @@ class MemcachedStore extends TaggableStore implements LockProvider
         $this->memcached = $memcached;
 
         $this->onVersionThree = (new ReflectionMethod('Memcached', 'getMulti'))
-                            ->getNumberOfParameters() == 2;
+            ->getNumberOfParameters() == 2;
     }
 
     /**
@@ -96,7 +95,7 @@ class MemcachedStore extends TaggableStore implements LockProvider
      * Store an item in the cache for a given number of seconds.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @param  int  $seconds
      * @return bool
      */
@@ -131,7 +130,7 @@ class MemcachedStore extends TaggableStore implements LockProvider
      * Store an item in the cache if the key doesn't exist.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @param  int  $seconds
      * @return bool
      */
@@ -146,8 +145,8 @@ class MemcachedStore extends TaggableStore implements LockProvider
      * Increment the value of an item in the cache.
      *
      * @param  string  $key
-     * @param  mixed   $value
-     * @return int|bool
+     * @param  mixed  $value
+     * @return int|false
      */
     public function increment($key, $value = 1)
     {
@@ -158,8 +157,8 @@ class MemcachedStore extends TaggableStore implements LockProvider
      * Decrement the value of an item in the cache.
      *
      * @param  string  $key
-     * @param  mixed   $value
-     * @return int|bool
+     * @param  mixed  $value
+     * @return int|false
      */
     public function decrement($key, $value = 1)
     {
@@ -170,7 +169,7 @@ class MemcachedStore extends TaggableStore implements LockProvider
      * Store an item in the cache indefinitely.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return bool
      */
     public function forever($key, $value)
@@ -181,9 +180,9 @@ class MemcachedStore extends TaggableStore implements LockProvider
     /**
      * Get a lock instance.
      *
-     * @param  string $name
-     * @param  int $seconds
-     * @param  string|null $owner
+     * @param  string  $name
+     * @param  int  $seconds
+     * @param  string|null  $owner
      * @return \Illuminate\Contracts\Cache\Lock
      */
     public function lock($name, $seconds = 0, $owner = null)
@@ -274,6 +273,6 @@ class MemcachedStore extends TaggableStore implements LockProvider
      */
     public function setPrefix($prefix)
     {
-        $this->prefix = ! empty($prefix) ? $prefix.':' : '';
+        $this->prefix = $prefix;
     }
 }

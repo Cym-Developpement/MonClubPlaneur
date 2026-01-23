@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - François B
  * - Zhan Tong Zhang
@@ -26,4 +26,5 @@ return array_replace_recursive(require __DIR__.'/en.php', [
         'LLL' => 'MMMM D, YYYY h:mm A',
         'LLLL' => 'dddd, MMMM D, YYYY h:mm A',
     ],
+    'first_day_of_week' => 0,
 ]);

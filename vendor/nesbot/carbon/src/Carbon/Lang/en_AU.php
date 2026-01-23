@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-/**
+/*
  * Authors:
  * - Kunal Marwaha
  * - François B
@@ -26,6 +26,5 @@ return array_replace_recursive(require __DIR__.'/en.php', [
         'LLL' => 'D MMMM YYYY h:mm A',
         'LLLL' => 'dddd, D MMMM YYYY h:mm A',
     ],
-    'first_day_of_week' => 1,
     'day_of_first_week_of_year' => 4,
 ]);
