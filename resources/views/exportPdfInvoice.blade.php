@@ -4,9 +4,36 @@
 		font-family: Arial, Helvetica, sans-serif;
 	}
 	#header{
-		text-align: center;
 		font-family: Arial, Helvetica, sans-serif;
 		margin-top: 30px;
+		display: table;
+		width: 100%;
+	}
+	#header-left{
+		display: table-cell;
+		width: 40%;
+		vertical-align: top;
+	}
+	#header-right{
+		display: table-cell;
+		width: 60%;
+		vertical-align: top;
+		text-align: right;
+		padding-left: 20px;
+	}
+	#header-right h3{
+		margin: 5px 0;
+	}
+	#header-right p{
+		margin: 3px 0;
+		font-size: 0.9em;
+	}
+	#invoice-info{
+		text-align: center;
+		margin-top: 20px;
+	}
+	#invoice-info h3, #invoice-info h4{
+		margin: 5px 0;
 	}
 	#container{
 		font-family: Arial, Helvetica, sans-serif;
@@ -24,23 +51,23 @@
 	th {
 	  height: 30px;
 	  text-align: left;
-	  padding: 5px 8px;
+	  padding: 3px 5px;
 	  font-size: 0.95em;
 	}
 	td {
 	  height: auto;
 	  min-height: 25px;
 	  vertical-align: middle;
-	  padding: 4px 8px;
+	  padding: 3px 5px;
 	  font-size: 0.9em;
 	}
 	.tdNumbers {
 		text-align: right;
-		padding-right: 8px;
+		padding-right: 5px;
 	}
 	.dateTr {
 		text-align: center;
-		padding: 4px 6px;
+		padding: 3px 4px;
 	}
 	.page-break {
 	    page-break-after: always;
@@ -65,8 +92,22 @@
 </style>
 
 <div id="header">
-	<img src="../storage/app/img/logo-pdf.png">
+	<div id="header-left">
+		<img src="../storage/app/img/logo-pdf.png" style="max-height: 120px;">
+	</div>
+	<div id="header-right">
+		<h3>CVVT - Centre de Vol à Voile Thouarsais</h3>
+		<p>Aérodrome de Thouars, 79100 Thouars</p>
+		<p>0549962290</p>
+		<p>contact@cvvt.fr</p>
+		<p>www.cvvt.fr</p>
+	</div>
+</div>
+<div id="invoice-info">
 	<h3>Facture</h3>
+	@if(isset($invoiceNumber))
+	<h4>N° : {{$invoiceNumber}}</h4>
+	@endif
 	<h4>{{$selectedUser->name}}</h4>
 	<h4>Période : {{$year}}</h4>
 	<h4>Date d'émission : 

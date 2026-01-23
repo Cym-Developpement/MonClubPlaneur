@@ -5,6 +5,7 @@ use App\Gesasso;
 use App\Mail\sendAccount;
 use App\Models\aircraft;
 use App\Models\flight;
+use App\Models\parametre;
 use App\Models\refund;
 use App\Models\sailplaneStartPrice;
 use App\Models\transaction;
@@ -736,8 +737,53 @@ class admin extends Controller
                 ->first();
             $currentBalance = $accountBalance ? ($accountBalance->solde / 100) : 0;
             
+            // Déterminer le numéro de facture
+            // Récupérer la date de clôture des écritures (par défaut 31/12 de l'année n-2)
+            $currentYear = date('Y');
+            $defaultClosureDate = ($currentYear - 2) . '-12-31';
+            $closureDateStr = parametre::getValue('Date de cloture des écritures', $defaultClosureDate);
+            
+            // Convertir la date de clôture en timestamp (gère plusieurs formats)
+            $closureDate = strtotime($closureDateStr);
+            if ($closureDate === false) {
+                // Si le format n'est pas reconnu, essayer avec le format français
+                $closureDate = strtotime(str_replace('/', '-', $closureDateStr));
+            }
+            if ($closureDate === false) {
+                // En dernier recours, utiliser la date par défaut
+                $closureDate = strtotime($defaultClosureDate);
+            }
+            
+            // Date d'émission de la facture (aujourd'hui)
+            $invoiceDate = time();
+            
+            // Récupérer le dernier numéro de facture de l'année
+            $lastInvoiceNumberParam = 'Dernier numéro facture ' . $year;
+            $lastInvoiceNumber = parametre::getValue($lastInvoiceNumberParam, 0);
+            $invoiceSequence = intval($lastInvoiceNumber) + 1;
+            
+            // Formater le numéro séquentiel sur 4 chiffres
+            $invoiceSequenceFormatted = str_pad($invoiceSequence, 4, '0', STR_PAD_LEFT);
+            
+            // Déterminer le suffixe selon la date
+            if ($invoiceDate > $closureDate) {
+                // Facture postérieure à la date de clôture : PROVISOIRE
+                $invoiceNumber = 'F' . $invoiceSequenceFormatted . '-PROVISOIRE';
+            } else {
+                // Facture antérieure ou égale à la date de clôture : avec ID utilisateur
+                $invoiceNumber = 'F' . $invoiceSequenceFormatted . '-' . $selectedUser->id;
+            }
+            
+            // Mettre à jour le dernier numéro de facture pour l'année
+            parametre::getOrCreate($lastInvoiceNumberParam, $invoiceSequence);
+            $lastInvoiceParam = parametre::where('nom', $lastInvoiceNumberParam)->first();
+            if ($lastInvoiceParam) {
+                $lastInvoiceParam->value = $invoiceSequence;
+                $lastInvoiceParam->save();
+            }
+            
             $filename            = 'CVVT-FACTURE-' . str_replace(' ', '_', strtoupper($selectedUser->name)) . '_' . $year . '_' . date('d-m-Y_H-i') . '.pdf';
-            $pdf                 = Pdf::loadView('exportPdfInvoice', ['transactions' => $transactions, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice, 'year' => $year, 'currentBalance' => $currentBalance]);
+            $pdf                 = Pdf::loadView('exportPdfInvoice', ['transactions' => $transactions, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice, 'year' => $year, 'currentBalance' => $currentBalance, 'invoiceNumber' => $invoiceNumber]);
             return $pdf->download($filename);
             //return $pdf->stream();
 
