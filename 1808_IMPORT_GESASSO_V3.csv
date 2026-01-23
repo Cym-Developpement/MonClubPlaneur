@@ -1,6 +1,0 @@
-Date;Aéronef;Aéronef externe;Individu 1;Individu 1 externe;Individu 2;Individu 2 externe;Vol d'instruction;Heure de décollage;Heure de l'atterrissage;Durée;Code OACI du décollage;Code OACI de l'atterrissage;Nombre de décollage/atterrissage;Moyen de mise en l'air;Temps moteur;Temps moteur en h:m;Immatriculation du remorqueur;Remorqueur externe;Individu 1 dans le remorqueur;Individu 1 externe dans le remorqueur;Individu 2 dans le remorqueur;Individu 2 externe dans le remorqueur;Instruction Remorqueur;Treuil;Treuil externe;Treuilleur;Treuilleur externe;Commentaire
-25/08/2018;F-CIHJ;;2530;;;;;12:30;12:35;;LFMX;LFMX;1;Remorquage;10;;F-GLKA;1;PILOTE EXTERNE;1;;;;;;;;Ceci est un commentaire
-25/08/2018;PLANEUR EXTERNE (Planeur);1;4035;;2530;;1;13:00;13:35;;LFMX;LFMX;1;Treuil;;;;;;;;;;SAVHYDRO EXTERNE;1;TREUILLARD EXTERNE;1;Ceci est un commentaire
-25/08/2018;F-JUFF (ULM);1;Pilote externe;1;;;;13:45;14:00;;LFMX;LFMX;1;Autonome;;;;;;;;;;;;;;
-25/08/2018;F-GLKB (Avion);1;Pilote externe;1;;;;14:00;15:50;;LFMX;LFMX;1;Autonome;;;;;;;;;;;;;;
-25/08/2018;F-CNVV (TMG);1;4035;;2530;;1;17:00;18:30;;LFMX;LFMX;1;Autonome;10;;;;;;;;;;;;;

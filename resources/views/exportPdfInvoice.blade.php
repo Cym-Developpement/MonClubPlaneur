@@ -15,28 +15,32 @@
 		border: 2px solid;
 		border-collapse: collapse;
 		width: 100%;
+		font-size: 0.9em;
+		margin: 10px 0;
 	}
 	table, th, td {
 	  border: 1px solid black;
 	}
 	th {
-	  height: 50px;
-	}
-	th {
+	  height: 30px;
 	  text-align: left;
-	  padding-left: 10px;
+	  padding: 5px 8px;
+	  font-size: 0.95em;
 	}
 	td {
-	  height: 50px;
+	  height: auto;
+	  min-height: 25px;
 	  vertical-align: middle;
-	  padding-left: 10px;
+	  padding: 4px 8px;
+	  font-size: 0.9em;
 	}
 	.tdNumbers {
 		text-align: right;
-		padding-right: 5px;
+		padding-right: 8px;
 	}
 	.dateTr {
 		text-align: center;
+		padding: 4px 6px;
 	}
 	.page-break {
 	    page-break-after: always;
@@ -93,7 +97,7 @@
 	        </th>
 	        <td>{{ $transaction['name'] }}
 	        @if($transaction['observation'] != '')
-	          <br><small style="font-size: 70%;"><i>{{ $transaction['observation'] }}</i></small>
+	          <br><small style="font-size: 65%;"><i>{{ $transaction['observation'] }}</i></small>
 	        @endif
 	        </td>
 	        <td class="tdNumbers">{{ number_format(abs(floatval(str_replace(',', '.', $transaction['value']))), 2) }}€</td>
@@ -131,7 +135,6 @@
 	<p> - Par virement en indiquant votre nom dans le libélé du virement.<br>
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i><small>IBAN  : FR76 1333 5004 0108 9253 9002 919 </small></i></p>
 	<p> - Par carte bancaire : <a href="https://compte.cvvt.fr/don" target="_blank">https://compte.cvvt.fr/don</a></p>
-	<p><b>Merci de votre confiance.</b></p>
 </div>
 @else
 <div id="total">
