@@ -44,6 +44,10 @@ return [
         ],
     ],
 
+    'github' => [
+        'webhook_secret' => env('GITHUB_WEBHOOK_SECRET'),
+    ],
+
     'helloasso' => [
         'api_url' => env('HELLOASSO_API_URL', 'https://api.helloasso.com/v5'),
         'organization_slug' => env('HELLOASSO_ORGANIZATION_SLUG'),

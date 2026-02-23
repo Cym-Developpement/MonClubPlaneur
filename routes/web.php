@@ -102,6 +102,9 @@ Route::post('/wiki/update/{page}', [App\Http\Controllers\WikiController::class, 
 Route::post('/wiki/new', [App\Http\Controllers\WikiController::class, 'newPage']);
 Route::post('/wikipassword', [App\Http\Controllers\WikiController::class, 'password']);
 
+// GitHub Webhook — mise à jour automatique
+Route::post('/update', [App\Http\Controllers\GitWebhookController::class, 'update'])->name('git.webhook');
+
 //STRIPE
 Route::post('/stripe', [App\Http\Controllers\StripeController::class, 'completed']);
 

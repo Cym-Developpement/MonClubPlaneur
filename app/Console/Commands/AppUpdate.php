@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use Symfony\Component\Process\Process;
+
+class AppUpdate extends Command
+{
+    protected $signature = 'app:update
+                            {--no-migrate : Ne pas exécuter les migrations}
+                            {--no-cache : Ne pas reconstruire les caches}';
+
+    protected $description = 'Met à jour l\'application depuis GitHub (git pull + migrate + cache)';
+
+    public function handle()
+    {
+        $this->info('=== Mise à jour de l\'application ===');
+        $this->newLine();
+
+        if (! $this->step('git pull', ['git', 'pull'])) {
+            return 1;
+        }
+
+        if (! $this->step('composer install', ['composer', 'install', '--no-dev', '--optimize-autoloader', '--no-interaction'])) {
+            return 1;
+        }
+
+        if (! $this->option('no-migrate')) {
+            if (! $this->step('migrations', ['php', 'artisan', 'migrate', '--force'])) {
+                return 1;
+            }
+        }
+
+        if (! $this->option('no-cache')) {
+            $this->step('config:cache',  ['php', 'artisan', 'config:cache']);
+            $this->step('route:cache',   ['php', 'artisan', 'route:cache']);
+            $this->step('view:cache',    ['php', 'artisan', 'view:cache']);
+        }
+
+        $this->newLine();
+        $this->info('✓ Application mise à jour avec succès.');
+        return 0;
+    }
+
+    private function step(string $label, array $command): bool
+    {
+        $this->line("  → {$label}...");
+
+        $process = new Process($command, base_path());
+        $process->setTimeout(300);
+        $process->run(function ($type, $buffer) {
+            $this->line('    ' . trim($buffer));
+        });
+
+        if (! $process->isSuccessful()) {
+            $this->error("  ✗ Échec : {$label}");
+            $this->line($process->getErrorOutput());
+            return false;
+        }
+
+        $this->line("  ✓ {$label}");
+        return true;
+    }
+}

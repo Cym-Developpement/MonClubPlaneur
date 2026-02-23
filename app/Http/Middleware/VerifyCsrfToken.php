@@ -21,6 +21,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         '/stripe',
         '/helloasso/webhook',
-        '/helloasso/notification'
+        '/helloasso/notification',
+        '/update',
     ];
 }
