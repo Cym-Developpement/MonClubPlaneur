@@ -8,7 +8,10 @@
             <div class="card">
                 <div class="card-header">Liste des Pilotes
                   <a  style="margin-left: 10px;" href="/usersSendAccountNotification" class="btn btn-sm btn-warning float-end">Envoyer l'email de compte débiteur</a>
-                  <div class="dropdown float-end">
+                  <a href="{{ route('usersExportCsv', request()->only('filter')) }}" class="btn btn-sm btn-success float-end me-1">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                  </a>
+                  <div class="dropdown float-end me-1">
                     <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                       Filtres
                     </button>

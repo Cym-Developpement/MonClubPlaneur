@@ -86,6 +86,7 @@ Route::get('/towing', [App\Http\Controllers\admin::class, 'towing']);
 //UTILISATEUR / PILOTE
 Route::post('/admin/addUser', [App\Http\Controllers\admin::class, 'addUser'])->name('addUser')->middleware('can:admin');
 Route::get('/usersList', [App\Http\Controllers\admin::class, 'usersList'])->name('usersList')->middleware('can:admin');
+Route::get('/usersExportCsv', [App\Http\Controllers\admin::class, 'usersExportCsv'])->name('usersExportCsv')->middleware('can:admin');
 Route::get('/user/state', [App\Http\Controllers\admin::class, 'userState'])->name('userState')->middleware('can:admin');
 Route::get('/userMod/{id}', [App\Http\Controllers\admin::class, 'userMod'])->name('userMod')->middleware('can:admin');
 Route::post('/userMod/{id}', [App\Http\Controllers\admin::class, 'saveUserMod'])->name('saveUserMod')->middleware('can:admin');

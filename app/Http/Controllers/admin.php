@@ -156,6 +156,52 @@ class admin extends Controller
         return view('usersList', ['users' => $allDataUsers, 'totaux' => $totaux]);
     }
 
+    public function usersExportCsv(Request $request)
+    {
+        switch ($request->filter) {
+            case 'all':
+                $users = User::where('id', '>', 0);
+                break;
+            default:
+                $users = User::where('state', 1);
+                break;
+        }
+
+        $users     = $users->orderBy('name', 'ASC')->get();
+        $attribute = usersAttributes::all();
+
+        $allAttributes = [];
+        foreach ($attribute as $value) {
+            $allAttributes[$value->userId][] = $value->attributeName;
+        }
+
+        $rows   = [];
+        $rows[] = implode(';', ['Nom', 'Email', 'Licence FFVP', 'Solde (€)', 'Attributs', 'Actif']);
+
+        foreach ($users as $user) {
+            $solde      = number_format(($this->getSolde($user->id) / 100), 2);
+            $attributes = isset($allAttributes[$user->id]) ? implode(', ', $allAttributes[$user->id]) : '';
+            $actif      = $user->state ? 'Oui' : 'Non';
+
+            $rows[] = implode(';', [
+                '"' . str_replace('"', '""', $user->name) . '"',
+                '"' . str_replace('"', '""', $user->email) . '"',
+                '"' . str_replace('"', '""', $user->licenceNumber ?? '') . '"',
+                $solde,
+                '"' . str_replace('"', '""', $attributes) . '"',
+                $actif,
+            ]);
+        }
+
+        $csv      = "\xEF\xBB\xBF" . implode("\r\n", $rows); // BOM UTF-8 pour Excel
+        $filename = 'pilotes_' . date('Y-m-d') . '.csv';
+
+        return response($csv, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
     public function getValidTransactions()
     {
         $transactions        = transaction::where('valid', 0)->get();
