@@ -1,10 +1,5 @@
     
-    <style type="text/css">
-      .custom-file-input ~ .custom-file-label::after {
-        content: "Fichier/Photos";
-    }
-    </style>
-    <!-- Modal remboursement-->
+<!-- Modal remboursement-->
     <div class="modal fade" id="remboursementModal" tabindex="-1" role="dialog" aria-labelledby="remboursementModallLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -32,7 +27,7 @@
               <div class="mb-3">
                 <label for="remboursementModalAmount">Montant</label>
                 <input type="number" min="10" max="300" step="0.01" class="form-control" id="remboursementModalAmount" aria-describedby="payModalAmountHelp" placeholder="20,00" name="amount" required>
-                <small id="payModalAmountHelp" class="form-text text-muted">Montant indiqué sur le ticket ou la preuve d'achat.</small>
+                <small id="payModalAmountHelp" class="form-text text-body-secondary">Montant indiqué sur le ticket ou la preuve d'achat.</small>
               </div>
                 <div class="alert alert-danger" id="remboursementModalErrorAmount" role="alert" style="display: none;">
                     Veuillez indiquer un montant correct (ex:150.00).
@@ -43,11 +38,8 @@
               </div>
 
               <div class="mb-3">
-                <label for="remboursementModalPicture">Preuve d'achat</label>
-                 <div class="custom-file">
-                  <input type="file" name="facture" class="custom-file-input" id="inputGroupFile01" required>
-                  <label class="custom-file-label" for="inputGroupFile01">Fichier/Photos</label>
-                </div>
+                <label for="inputGroupFile01" class="form-label">Preuve d'achat</label>
+                <input type="file" name="facture" class="form-control" id="inputGroupFile01" required>
               </div>
               
               <div class="mb-3">
@@ -68,7 +60,7 @@
                     <option value="1">Chéque</option>
                 </select>
               </div>
-              <small class="form-text text-muted">Les achats sont validé par le trésorier.</small>
+              <small class="form-text text-body-secondary">Les achats sont validé par le trésorier.</small>
               <button type="submit" class="btn btn-primary float-end">Enregistrer</button>
             </form>
           </div>

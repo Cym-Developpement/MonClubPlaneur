@@ -11,15 +11,15 @@
                 <div class="card-body">
                   <form method="post">
                     @csrf
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="modUserMailInput">Adresse e-mail</label>
                       <input name="email" type="email" class="form-control" id="modUserMailInput" aria-describedby="emailHelp" placeholder="email" value="{{ $user->email }}">
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="modUserNameInput">Nom Complet</label>
                       <input name="name" type="text" class="form-control" id="modUserNameInput" placeholder="Nom Prénom"  value="{{ $user->name }}">
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                       <label for="modUserLicNumberInput">Numéro Licence</label>
                       <input name="licenceNumber" type="text" class="form-control" id="modUserLicNumberInput" placeholder="XXXXX" value="{{ $user->licenceNumber }}">
                     </div>

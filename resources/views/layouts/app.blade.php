@@ -336,7 +336,7 @@
                 <div class="text-center">
                   <h5>Controle de la base de données en cours ...</h5>
                   <div class="spinner-border" role="status">
-                    <span class="sr-only">Loading...</span>
+                    <span class="visually-hidden">Loading...</span>
                   </div>
                 </div>
               </div>
@@ -368,16 +368,14 @@
     <script src="js/jquery.mask.js"></script>
     <script src="js/function.js"></script>
     <script type="text/javascript">
-       $('.custom-file-input').on('change',function(){
-          //get the file name
-          var fileData = $(this).val().split('\\');
-          fileName = fileData[(fileData.length-1)];
-
-          //replace the "Choose a file" label
-          $(this).next('.custom-file-label').html(fileName);
-      });
-
-
+       document.querySelectorAll('input[type="file"].form-control').forEach(function(input) {
+          input.addEventListener('change', function() {
+              var fileData = this.value.split('\\');
+              var fileName = fileData[fileData.length - 1];
+              var label = this.nextElementSibling;
+              if (label) label.textContent = fileName;
+          });
+       });
     </script>
   
 </body>

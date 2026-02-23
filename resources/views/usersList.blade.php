@@ -45,19 +45,19 @@
                           <td>{{ $user->email }}</td>
                           <td style="text-align: right;">
                           @if($user->solde < 0)
-                            <a href="saisie?selectUserInTransaction={{ $user->id }}" class="badge badge-danger">{{ $user->solde }}€</a>
+                            <a href="saisie?selectUserInTransaction={{ $user->id }}" class="badge bg-danger">{{ $user->solde }}€</a>
                           @else
-                          <a href="saisie?selectUserInTransaction={{ $user->id }}" class="badge badge-success">{{ $user->solde }}€</a>
+                          <a href="saisie?selectUserInTransaction={{ $user->id }}" class="badge bg-success">{{ $user->solde }}€</a>
                           @endif
                           @php $totalAll += floatval($user->solde); @endphp
                           </td>
                           <td>
                             @foreach($user->userAttributes as $attribute)
-                              <span class="badge badge-secondary">{{ $attribute }}</span>
+                              <span class="badge bg-secondary">{{ $attribute }}</span>
                             @endforeach
                           </td>
                           <td>
-                            <div class="form-inline">
+                            <div class="d-flex align-items-center">
                               <div class="form-check form-switch" style="margin-right: 10px;">
                                 <input type="checkbox" class="form-check-input" id="activeUser-{{ $user->id }}"
                                 @if($user->state == 1)
@@ -103,9 +103,9 @@
                           <td></td>
                           <td style="text-align: right;">
                             @if($totalAll < 0)
-                            <a href="#" class="badge badge-danger">{{ $totalAll }}€</a>
+                            <a href="#" class="badge bg-danger">{{ $totalAll }}€</a>
                             @else
-                            <a href="#" class="badge badge-success">{{ $totalAll }}€</a>
+                            <a href="#" class="badge bg-success">{{ $totalAll }}€</a>
                             @endif</td>
                           <td></td>
                           <td></td>
@@ -127,7 +127,7 @@
                         @foreach ($totaux as $key => $total)
                         <tr>
                           <td>{{ $key }}</td>
-                          <td style="text-align: center;"><span class="badge badge-info" style="width: 30%;color: white;">{{ $total }}</span></td>
+                          <td style="text-align: center;"><span class="badge bg-info text-dark" style="width: 30%;color: white;">{{ $total }}</span></td>
                         </tr>
                         @endforeach
                       </tbody>

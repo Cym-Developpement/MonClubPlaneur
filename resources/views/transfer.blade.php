@@ -81,7 +81,7 @@
                             @error('amount')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="form-text text-muted">
+                            <small class="form-text text-body-secondary">
                                 Montant minimum : 0,01€ - Montant maximum : 10 000€
                             </small>
                         </div>
@@ -100,7 +100,7 @@
                             @error('message')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="form-text text-muted">
+                            <small class="form-text text-body-secondary">
                                 Maximum 255 caractères
                             </small>
                         </div>

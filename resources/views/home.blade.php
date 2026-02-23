@@ -48,7 +48,7 @@
                                 <th scope="row">{{ $transaction['time'] }}</th>
                                 <td style="font-weight: bold;">{{ $transaction['name'] }}
                                   @if($transaction['valid'] == 0)
-                                  <br><span class="badge badge-danger">En attente de validation.</span>
+                                  <br><span class="badge bg-danger">En attente de validation.</span>
                                     @php
                                       $temporySolde = 1;
                                     @endphp
@@ -73,7 +73,7 @@
                                   echo date('d/m/Y');
                               @endphp
                               @if($temporySolde == 1)
-                                <br><span class="badge badge-danger">En attente de validation.</span>
+                                <br><span class="badge bg-danger">En attente de validation.</span>
                               @endif
                               </th>
                               <td></td>

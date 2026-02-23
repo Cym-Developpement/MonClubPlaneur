@@ -14,13 +14,13 @@
                     <!--<option value="CH">Chèque</option>-->
                     <option value="VI">Virement</option>
                 </select>
-                <small id="payModalTypeHelp" class="form-text text-muted">Pour les chèques et les virements, la transaction sera validé par le trésorerier.<br>Les paiement Carte Bancaire sont validés immédiatement.</small>
+                <small id="payModalTypeHelp" class="form-text text-body-secondary">Pour les chèques et les virements, la transaction sera validé par le trésorerier.<br>Les paiement Carte Bancaire sont validés immédiatement.</small>
             </div>
             <div class="paidNoCB" style="display: none;">
               <div class="mb-3">
                 <label for="payModalAmount" class="form-label">Montant</label>
                 <input type="number" min="10" max="3000" class="form-control" id="payModalAmount" aria-describedby="payModalAmountHelp" placeholder="20,00">
-                <small id="payModalAmountHelp" class="form-text text-muted">Montant minimum 10€.</small>
+                <small id="payModalAmountHelp" class="form-text text-body-secondary">Montant minimum 10€.</small>
               </div>
                 <div class="alert alert-danger" id="payModalErrorAmount" role="alert" style="display: none;">
                     Veuillez indiquer un montant correct (ex:150.00).

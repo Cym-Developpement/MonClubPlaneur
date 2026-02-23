@@ -88,7 +88,7 @@
                               @if(isset($lastIndexMotor[$flight['aircraft']]) && $lastIndexMotor[$flight['aircraft']] !== $flight['data']->motorStartTime)
                               text-danger
                               @else
-                              text-muted
+                              text-body-secondary
                               @endif
                               ">{{ number_format($flight['data']->motorStartTime, 2, ',', '') }} - {{ number_format($flight['data']->motorEndTime, 2, ',', '') }}</small>
                               @php $lastIndexMotor[$flight['aircraft']] = $flight['data']->motorEndTime @endphp
@@ -99,7 +99,7 @@
                             {{ $flight['price'] }}
                             @isset($flight['id'])
                             <br>
-                            @isset($flight['data']->user_paid)<small class="form-text text-muted">{{ $flight['data']->user_paid->name }}</small>@endisset
+                            @isset($flight['data']->user_paid)<small class="form-text text-body-secondary">{{ $flight['data']->user_paid->name }}</small>@endisset
                             @if(is_null($flight['data']->user_paid))<small class="form-text text-danger">Erreur de transaction</small>@php $transactionErrors ++; @endphp@endif
                             @endisset
                           </td>
