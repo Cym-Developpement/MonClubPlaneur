@@ -364,7 +364,7 @@
       </div>
     </div>
 
-    <footer class="text-center text-muted py-3 mt-4 border-top small">
+    <footer class="text-center text-muted py-3 mt-4 border-top small" style="background-color: rgba(255,255,255,0.75);">
         {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
         @if($gitCommitMessage)
             &mdash; {{ $gitCommitMessage }}
