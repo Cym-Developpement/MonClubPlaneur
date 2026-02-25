@@ -28,8 +28,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
-        $refundCategory = refundCategory::all();
-        View::share('refundCategory', $refundCategory);
+        try {
+            $refundCategory = refundCategory::all();
+            View::share('refundCategory', $refundCategory);
+        } catch (\Exception $e) {
+            View::share('refundCategory', collect());
+        }
 
         
         \Response::macro('csv', function ($content, $name) {
