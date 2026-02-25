@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 
 class GitWebhookController extends Controller
 {
-
     public function update(Request $request)
     {
         // Vérification de la signature GitHub
