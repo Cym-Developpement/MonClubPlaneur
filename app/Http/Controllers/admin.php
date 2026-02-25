@@ -104,14 +104,22 @@ class admin extends Controller
      */
     public function usersList(Request $request)
     {
-        switch ($request->filter) {
-            case 'all':
-                $users = User::where('id', '>', 0);
-                break;
+        $currentYear = (int) date('Y');
+        $filterYear  = null;
 
-            default:
-                $users = User::where('state', 1);
-                break;
+        if (is_numeric($request->filter) && (int) $request->filter >= $currentYear - 4 && (int) $request->filter <= $currentYear) {
+            $filterYear = (int) $request->filter;
+            $userIds = transaction::where('name', 'Cotisation ' . $filterYear)->pluck('idUser')->unique();
+            $users   = User::whereIn('id', $userIds);
+        } else {
+            switch ($request->filter) {
+                case 'all':
+                    $users = User::where('id', '>', 0);
+                    break;
+                default:
+                    $users = User::where('state', 1);
+                    break;
+            }
         }
 
         $users = $users->orderBy('name', 'ASC')->get();

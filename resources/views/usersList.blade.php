@@ -18,7 +18,10 @@
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                       <a class="dropdown-item" href="/usersList">Actif uniquement</a>
                       <a class="dropdown-item" href="/usersList?filter=all">Actifs et Inactifs</a>
-                      <!--<a class="dropdown-item" href="#">Something else here</a>-->
+                      <div class="dropdown-divider"></div>
+                      @for ($y = date('Y'); $y >= date('Y') - 4; $y--)
+                        <a class="dropdown-item" href="/usersList?filter={{ $y }}">Adhérents {{ $y }}</a>
+                      @endfor
                     </div>
                   </div>
                 </div>
