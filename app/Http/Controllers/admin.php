@@ -166,13 +166,24 @@ class admin extends Controller
 
     public function usersExportCsv(Request $request)
     {
-        switch ($request->filter) {
-            case 'all':
-                $users = User::where('id', '>', 0);
-                break;
-            default:
-                $users = User::where('state', 1);
-                break;
+        $currentYear = (int) date('Y');
+        $filterLabel = 'actifs';
+
+        if (is_numeric($request->filter) && (int) $request->filter >= $currentYear - 4 && (int) $request->filter <= $currentYear) {
+            $filterYear  = (int) $request->filter;
+            $filterLabel = 'adherents_' . $filterYear;
+            $userIds     = transaction::where('name', 'Cotisation ' . $filterYear)->pluck('idUser')->unique();
+            $users       = User::whereIn('id', $userIds);
+        } else {
+            switch ($request->filter) {
+                case 'all':
+                    $filterLabel = 'tous';
+                    $users       = User::where('id', '>', 0);
+                    break;
+                default:
+                    $users = User::where('state', 1);
+                    break;
+            }
         }
 
         $users     = $users->orderBy('name', 'ASC')->get();
@@ -202,7 +213,7 @@ class admin extends Controller
         }
 
         $csv      = "\xEF\xBB\xBF" . implode("\r\n", $rows); // BOM UTF-8 pour Excel
-        $filename = 'pilotes_' . date('Y-m-d') . '.csv';
+        $filename = 'pilotes_' . $filterLabel . '_' . date('Y-m-d') . '.csv';
 
         return response($csv, 200, [
             'Content-Type'        => 'text/csv; charset=UTF-8',
