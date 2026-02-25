@@ -34,7 +34,7 @@ Route::get('/flightDayBoard', [App\Http\Controllers\HomeController::class, 'getF
 Route::any('/saisie', [App\Http\Controllers\HomeController::class, 'saisie'])->name('saisie');
 Route::get('/saisie/deleteLast', [App\Http\Controllers\HomeController::class, 'deleteLastTransaction'])->name('deleteLast');
 Route::get('/saisiePeriodique/{year?}', [App\Http\Controllers\admin::class, 'saisiePeriodique'])->name('saisiePeriodique');
-Route::post('/saisiePeriodique', [App\Http\Controllers\admin::class, 'saisiePeriodiqueEnregistrement'])->name('saisiePeriodique');
+Route::post('/saisiePeriodique', [App\Http\Controllers\admin::class, 'saisiePeriodiqueEnregistrement'])->name('saisiePeriodique.store');
 Route::any('/planches', [App\Http\Controllers\HomeController::class, 'planches'])->name('planches');
 Route::any('/carnet', [App\Http\Controllers\HomeController::class, 'carnet'])->name('carnet');
 Route::post('/pay/add', [App\Http\Controllers\HomeController::class, 'addPay'])->name('addPay');
