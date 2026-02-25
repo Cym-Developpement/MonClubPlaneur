@@ -26,7 +26,7 @@
                 <div class="card-body">
                   
                   <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table id="usersTable" class="table table-striped">
                       <thead>
                         <tr>
                           <th scope="col">#</th>
@@ -99,6 +99,8 @@
                           </td>
                         </tr>
                         @endforeach
+                      </tbody>
+                      <tfoot>
                         <tr>
                           <td></td>
                           <td></td>
@@ -109,11 +111,12 @@
                             <a href="#" class="badge bg-danger">{{ $totalAll }}€</a>
                             @else
                             <a href="#" class="badge bg-success">{{ $totalAll }}€</a>
-                            @endif</td>
+                            @endif
+                          </td>
                           <td></td>
                           <td></td>
                         </tr>
-                      </tbody>
+                      </tfoot>
                     </table>
                   </div>
                   <hr>
@@ -141,7 +144,22 @@
         </div>
     </div>
 </div>
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
 <script type="text/javascript">
+  $(document).ready(function () {
+    $('#usersTable').DataTable({
+      pageLength: 10,
+      language: {
+        url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/fr-FR.json'
+      },
+      columnDefs: [
+        { orderable: false, targets: [5, 6] }
+      ]
+    });
+  });
+
   function activeUser(id, state)
   {
     if (state) {
