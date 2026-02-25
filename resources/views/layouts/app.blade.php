@@ -364,6 +364,16 @@
       </div>
     </div>
 
+    <footer class="text-center text-muted py-3 mt-4 border-top small">
+        {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
+        @if($gitCommitMessage)
+            &mdash; {{ $gitCommitMessage }}
+            @if($gitCommitDate)
+                <span class="text-muted">({{ $gitCommitDate }})</span>
+            @endif
+        @endif
+    </footer>
+
     <script src="https://kit.fontawesome.com/9724d9dada.js" crossorigin="anonymous"></script>
     <script src="js/jquery.mask.js"></script>
     <script src="js/function.js"></script>
