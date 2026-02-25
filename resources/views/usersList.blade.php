@@ -190,7 +190,18 @@
 <script>
   $('#usersTable').DataTable({
     pageLength: 10,
-    language: { url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/fr-FR.json' },
+    language: {
+      processing:     "Traitement en cours...",
+      search:         "Rechercher&nbsp;:",
+      lengthMenu:     "Afficher _MENU_ éléments",
+      info:           "Affichage de _START_ à _END_ sur _TOTAL_ éléments",
+      infoEmpty:      "Affichage de 0 à 0 sur 0 élément",
+      infoFiltered:   "(filtré à partir de _MAX_ éléments au total)",
+      loadingRecords: "Chargement en cours...",
+      zeroRecords:    "Aucun élément à afficher",
+      emptyTable:     "Aucune donnée disponible",
+      paginate: { first: "Premier", previous: "Précédent", next: "Suivant", last: "Dernier" }
+    },
     columnDefs: [{ orderable: false, targets: [5, 6] }]
   });
 </script>
