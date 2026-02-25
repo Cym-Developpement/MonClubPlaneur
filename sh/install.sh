@@ -2,6 +2,9 @@
 
 set -e
 
+# Se placer à la racine du projet (dossier parent de sh/)
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 # Couleurs
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -57,21 +60,27 @@ else
     warn ".env existant conservé."
 fi
 
-# Saisie interactive des paramètres DB
+# Configuration SQLite
 echo ""
-info "Configuration de la base de données"
-read -rp "  DB_HOST     [127.0.0.1] : " db_host;    db_host="${db_host:-127.0.0.1}"
-read -rp "  DB_PORT     [3306]      : " db_port;    db_port="${db_port:-3306}"
-read -rp "  DB_DATABASE [monclubplaneur] : " db_name; db_name="${db_name:-monclubplaneur}"
-read -rp "  DB_USERNAME [root]      : " db_user;    db_user="${db_user:-root}"
-read -srp " DB_PASSWORD []         : " db_pass;    echo ""
+info "Configuration de la base de données (SQLite)"
+DB_PATH="database/database.sqlite"
+read -rp "  Chemin du fichier SQLite [${DB_PATH}] : " db_path
+db_path="${db_path:-${DB_PATH}}"
 
-sed -i "s/^DB_HOST=.*/DB_HOST=${db_host}/" .env
-sed -i "s/^DB_PORT=.*/DB_PORT=${db_port}/" .env
-sed -i "s/^DB_DATABASE=.*/DB_DATABASE=${db_name}/" .env
-sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${db_user}/" .env
-sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${db_pass}/" .env
-ok "Paramètres DB enregistrés dans .env."
+mkdir -p "$(dirname "$db_path")"
+touch "$db_path"
+ok "Fichier SQLite prêt : ${db_path}."
+
+sed -i "s/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/" .env
+# Supprime les directives MySQL inutiles
+sed -i "/^DB_HOST=/d" .env
+sed -i "/^DB_PORT=/d" .env
+sed -i "/^DB_DATABASE=/d" .env
+sed -i "/^DB_USERNAME=/d" .env
+sed -i "/^DB_PASSWORD=/d" .env
+# Ajoute le chemin absolu du fichier SQLite
+echo "DB_DATABASE=$(pwd)/${db_path}" >> .env
+ok "Paramètres DB SQLite enregistrés dans .env."
 
 # Saisie de l'URL de l'application
 echo ""
@@ -114,9 +123,8 @@ echo "========================================"
 ok "Installation terminée !"
 echo ""
 echo "  Prochaines étapes :"
-echo "  1. Créez la base de données '${db_name}' sur ${db_host}:${db_port}"
-echo "  2. Lancez les migrations : php artisan migrate"
-echo "  3. (Optionnel) Seeders   : php artisan db:seed"
-echo "  4. Démarrez le serveur   : php artisan serve"
+echo "  1. Lancez les migrations : php artisan migrate"
+echo "  2. (Optionnel) Seeders   : php artisan db:seed"
+echo "  3. Démarrez le serveur   : php artisan serve"
 echo "========================================"
 echo ""
