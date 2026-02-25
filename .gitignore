@@ -16,6 +16,7 @@ node_modules
 package-lock.json
 node_modules
 .cursor/
-dev_resources/
+dev_ressources/
 Rapport/
 work/
+composer.phar
