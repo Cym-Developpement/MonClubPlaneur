@@ -144,22 +144,7 @@
         </div>
     </div>
 </div>
-<link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
-<script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
 <script type="text/javascript">
-  $(document).ready(function () {
-    $('#usersTable').DataTable({
-      pageLength: 10,
-      language: {
-        url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/fr-FR.json'
-      },
-      columnDefs: [
-        { orderable: false, targets: [5, 6] }
-      ]
-    });
-  });
-
   function activeUser(id, state)
   {
     if (state) {
@@ -197,3 +182,16 @@
 
 </script>
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
+<script>
+  $('#usersTable').DataTable({
+    pageLength: 10,
+    language: { url: 'https://cdn.datatables.net/plug-ins/2.2.2/i18n/fr-FR.json' },
+    columnDefs: [{ orderable: false, targets: [5, 6] }]
+  });
+</script>
+@endpush
