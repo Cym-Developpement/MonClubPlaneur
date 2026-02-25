@@ -92,7 +92,9 @@ ok "APP_URL défini à ${app_url}."
 
 echo ""
 info "Installation des dépendances Composer..."
-php "$COMPOSER_BIN" install --no-interaction --prefer-dist --optimize-autoloader
+# --no-scripts : évite que @php artisan package:discover échoue si le binaire
+# PHP utilisé par Composer diffère de celui de la session (ex. OVH).
+php "$COMPOSER_BIN" install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 ok "Dépendances PHP installées."
 
 # ── Clé d'application ─────────────────────────────────────────────────────────
@@ -100,6 +102,12 @@ ok "Dépendances PHP installées."
 info "Génération de la clé d'application..."
 php artisan key:generate --no-interaction
 ok "APP_KEY généré."
+
+# ── Découverte des packages Laravel ──────────────────────────────────────────
+
+info "Découverte des packages Laravel..."
+php artisan package:discover --ansi
+ok "Packages découverts."
 
 # ── Permissions ───────────────────────────────────────────────────────────────
 
