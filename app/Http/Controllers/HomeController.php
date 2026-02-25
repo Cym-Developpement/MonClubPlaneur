@@ -121,7 +121,9 @@ class HomeController extends Controller
         $aircraft = aircraft::all();
         $sailplaneStartPrice = sailplaneStartPrice::all();
 
-        return view('transaction', ['users' => $users, 'transactions' => $transactions, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice]);
+        $currentUserName = $selectedUser ? (User::find($selectedUser)?->name ?? '') : '';
+
+        return view('transaction', ['users' => $users, 'transactions' => $transactions, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice, 'currentUserName' => $currentUserName]);
     }
 
     private function getSolde($user)
