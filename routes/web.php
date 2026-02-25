@@ -27,7 +27,7 @@ Route::post('/don/callback', [App\Http\Controllers\PublicPaymentController::clas
 Route::get('/getPrice', [App\Http\Controllers\HomeController::class, 'getPrice']);
 Route::post('/getAddFlightInfoTime', [App\Http\Controllers\HomeController::class, 'getAddFlightInfoTime']);
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index']);
 Route::post('/flightDay', [App\Http\Controllers\HomeController::class, 'addFlightDay'])->name('flightDay');
 Route::post('/flightDay/delete', [App\Http\Controllers\HomeController::class, 'deleteFlightDay'])->name('deleteFlightDay');
 Route::get('/flightDayBoard', [App\Http\Controllers\HomeController::class, 'getFlightDay'])->name('flightDayBoard');
