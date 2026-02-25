@@ -35,7 +35,8 @@ class GitWebhookController extends Controller
         $artisan = base_path('artisan');
         $log     = storage_path('logs/update.log');
 
-        exec("php {$artisan} app:update >> {$log} 2>&1 &");
+        $php = PHP_BINARY;
+        exec("{$php} {$artisan} app:update >> {$log} 2>&1 &");
 
         return response()->json([
             'status'  => 'update started',
