@@ -916,7 +916,7 @@ class admin extends Controller
                 'sailplaneStartPrices' => $sailplaneStartPrice,
             ]);
             $pdf->save('../storage/app/userAcountState/' . $filename);
-            Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
+            //Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
         }
 
         return redirect('/usersList')->with('success', 'Emails envoyés à ' . count($users) . ' adhérent(s) ' . $year . '.');

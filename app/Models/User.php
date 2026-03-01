@@ -308,7 +308,7 @@ class User extends Authenticatable
             $pdf = Pdf::loadView('exportPdfAccount', ['transactions' => $transactions, 'selectedUser' => $user, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice]);
             $pdf->save('../storage/app/userAcountState/'.$filename);
 
-            Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/'.$filename));
+            //Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/'.$filename));
             //Mail::to('yann@cymdev.com')->send(new sendAccount($user->name, 'userAcountState/'.$filename));
         }
 
