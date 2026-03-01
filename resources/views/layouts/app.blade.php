@@ -220,7 +220,6 @@
                 @auth
                 @php
                     $helpKey        = \App\Helpers\HelpSystem::keyFromPath(request()->path());
-                    \App\Helpers\HelpSystem::ensureFile($helpKey);
                     $helpHasContent = \App\Helpers\HelpSystem::hasContent($helpKey);
                 @endphp
                 @endauth
@@ -235,12 +234,12 @@
                     <ul class="navbar-nav ms-auto">
                         @auth
                         @if($helpHasContent)
-                        <li class="nav-item d-flex align-items-center me-1">
-                            <button class="btn btn-info btn-sm rounded-circle"
-                                    style="width:32px;height:32px;padding:0;line-height:1;"
-                                    onclick="helpOpen('{{ $helpKey }}')"
+                        <li class="nav-item d-flex align-items-center me-2">
+                            <button class="btn btn-info btn-sm text-white"
+                                    data-bs-toggle="modal" data-bs-target="#helpModal"
+                                    data-help-key="{{ $helpKey }}"
                                     title="Aide">
-                                <i class="fas fa-question"></i>
+                                <i class="fas fa-question-circle"></i>
                             </button>
                         </li>
                         @endif
@@ -431,22 +430,20 @@
     @stack('scripts')
 
     <script>
-    function helpOpen(key) {
-        const body  = document.getElementById('helpModalBody');
-        const modal = new bootstrap.Modal(document.getElementById('helpModal'));
+    document.getElementById('helpModal').addEventListener('show.bs.modal', function(event) {
+        var key = event.relatedTarget ? event.relatedTarget.dataset.helpKey : null;
+        if (!key) return;
+        var body = document.getElementById('helpModalBody');
         body.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
-        modal.show();
-        fetch('/help/content/' + encodeURIComponent(key), {
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
-        })
-        .then(r => r.json())
-        .then(data => {
-            body.innerHTML = '<div class="help-content">' + data.html + '</div>';
-        })
-        .catch(() => {
-            body.innerHTML = '<div class="alert alert-danger">Impossible de charger l\'aide.</div>';
-        });
-    }
+        fetch('/help/content/' + encodeURIComponent(key))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                body.innerHTML = '<div class="help-content">' + data.html + '</div>';
+            })
+            .catch(function() {
+                body.innerHTML = '<div class="alert alert-danger">Impossible de charger l\'aide.</div>';
+            });
+    });
     </script>
 
     <style>
