@@ -5,24 +5,28 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">Saisie Transaction
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <span>Saisie Transaction</span>
                   @if($selectedUser > 0)
-                  <a style="margin-left: 10px;" href="/accountExport?user={{ $selectedUser }}" target="_blank" class="btn btn-info btn-sm float-end">Export PDF</a>
-                  
-                  <div class="dropdown float-end" style="margin-right: 10px;">
-                    <button class="btn btn-warning btn-sm dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                      Export Facture
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#adminAddFlight">
+                      <i class="fas fa-plane me-1"></i>Enregistrer un vol
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                      <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') }}">Année {{ date('Y') }}</a></li>
-                      <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 1 }}">Année {{ date('Y') - 1 }}</a></li>
-                      <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 2 }}">Année {{ date('Y') - 2 }}</a></li>
-                      <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 3 }}">Année {{ date('Y') - 3 }}</a></li>
-                    </ul>
+                    <a href="/accountExport?user={{ $selectedUser }}" target="_blank" class="btn btn-info">
+                      <i class="fas fa-file-pdf me-1"></i>Export PDF
+                    </a>
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-invoice me-1"></i>Facture
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') }}">Année {{ date('Y') }}</a></li>
+                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 1 }}">Année {{ date('Y') - 1 }}</a></li>
+                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 2 }}">Année {{ date('Y') - 2 }}</a></li>
+                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 3 }}">Année {{ date('Y') - 3 }}</a></li>
+                      </ul>
+                    </div>
                   </div>
-                  
-                  <button class="btn btn-success btn-sm float-end" data-bs-toggle="modal" data-bs-target="#adminAddFlight">Enregistrer un vol</button>
-
                   @endif
                 </div>
 
