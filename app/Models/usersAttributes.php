@@ -83,5 +83,9 @@ class usersAttributes extends Model
             'name'        => 'Sauvegardes',
             'description' => 'Création, téléchargement et suppression des sauvegardes',
         ],
+        'admin:audit' => [
+            'name'        => 'Journal d\'audit',
+            'description' => 'Consultation des logs d\'activité de l\'application',
+        ],
     ];
 }

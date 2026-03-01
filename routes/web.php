@@ -103,6 +103,9 @@ Route::post('/wiki/update/{page}', [App\Http\Controllers\WikiController::class, 
 Route::post('/wiki/new', [App\Http\Controllers\WikiController::class, 'newPage']);
 Route::post('/wikipassword', [App\Http\Controllers\WikiController::class, 'password']);
 
+// AUDIT
+Route::get('/audit', [App\Http\Controllers\AuditController::class, 'index'])->name('audit.index')->middleware('can:admin:audit');
+
 // SAUVEGARDES
 Route::get('/backups', [App\Http\Controllers\BackupController::class, 'index'])->name('backups.index')->middleware('can:admin');
 Route::post('/backups/create', [App\Http\Controllers\BackupController::class, 'create'])->name('backups.create')->middleware('can:admin');

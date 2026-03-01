@@ -71,6 +71,12 @@
 </a>
 @endcan
 
+@can('admin:audit')
+<a class="dropdown-item" href="/audit">
+    <i class="fas fa-shield-alt me-2"></i>Journal d'audit
+</a>
+@endcan
+
 <hr>
 <a class="dropdown-item">
     <small>
