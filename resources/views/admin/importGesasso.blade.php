@@ -12,18 +12,19 @@
                 <div class="card-body">
                   @empty($data)
                   <div class="row justify-content-center">
-                    <div class="col-md-10">
+                    <div class="col-md-8">
                       <form enctype="multipart/form-data" action="/importGesasso" method="post">
                         @csrf
-                        <div class="form-group">
-                          <label for="plancheGesasso">Fichier Gesasso</label>
-                          <div class="custom-file">
-                            <input type="file" class="custom-file-input" accept=".csv" name="planche" id="plancheGesasso" required>
-                            <label class="custom-file-label" id="plancheGesassoLabel" for="plancheGesasso" data-browse="Parcourir">Choisir un fichier</label>
-                          </div>
-                          <small  class="form-text text-muted">Fichier CSV d'export Gesasso.</small>
+                        <label for="plancheGesasso" class="form-label text-muted small text-uppercase fw-bold mb-1">
+                          <i class="fas fa-file-csv me-1"></i>Fichier CSV Gesasso
+                        </label>
+                        <div class="input-group">
+                          <input type="file" class="form-control" accept=".csv" name="planche" id="plancheGesasso" required>
+                          <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-file-import me-1"></i>Importer
+                          </button>
                         </div>
-                        <button type="submit" class="btn btn-primary mb-2">Importer</button>
+                        <div class="form-text">Fichier CSV exporté depuis l'application Gesasso.</div>
                       </form>
                     </div>
                   </div>
