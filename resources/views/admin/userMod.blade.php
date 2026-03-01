@@ -36,9 +36,42 @@
                     </div>
                     <div class="form-check form-switch mb-3">
                         <input type="checkbox" class="form-check-input" id="modUserIsAdmin" name="isAdmin" value="1"
-                            @if($user->isAdmin == 1) checked @endif>
+                            @if($user->isAdmin == 1) checked @endif
+                            onchange="toggleAdminPerms(this.checked)">
                         <label class="form-check-label" for="modUserIsAdmin">Administrateur</label>
                     </div>
+
+                    <div id="adminPermsBlock" @if($user->isAdmin != 1) style="display:none" @endif>
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-info-circle"></i>
+                            Cochez les sections accessibles. <strong>Si aucune case n'est cochée, l'admin a accès à tout.</strong>
+                            Retirer le rôle admin supprimera toutes ces permissions.
+                        </p>
+                        <div class="row">
+                            @foreach(\App\Models\usersAttributes::$userRights as $right => $info)
+                            @php $inputKey = 'perm_' . str_replace(':', '_', $right); @endphp
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input"
+                                        id="{{ $inputKey }}" name="{{ $inputKey }}"
+                                        @if($user->isAttr($right)) checked @endif>
+                                    <label class="form-check-label" for="{{ $inputKey }}">
+                                        <strong>{{ $info['name'] }}</strong>
+                                        <br><small class="text-muted">{{ $info['description'] }}</small>
+                                    </label>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @push('scripts')
+                    <script>
+                        function toggleAdminPerms(checked) {
+                            document.getElementById('adminPermsBlock').style.display = checked ? '' : 'none';
+                        }
+                    </script>
+                    @endpush
 
                     <div class="alert alert-danger" role="alert" id="modUserHelpServerError" style="display: none;"></div>
                     <button type="submit" class="btn btn-primary">Enregistrer</button>

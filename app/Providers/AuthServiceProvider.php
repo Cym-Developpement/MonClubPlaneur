@@ -26,19 +26,27 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
         
         Gate::define('admin', function ($user) {
-            if ($user->isAdmin == 1) {
-               return true;
-            } else {
-                return false;
-            }
+            return $user->isAdmin == 1;
         });
+
         Gate::define('debug', function ($user) {
-            if ($user->name == 'Challet Yann') {
-               return true;
-            } else {
+            return $user->name == 'Challet Yann';
+        });
+
+        // Gestion dynamique des permissions préfixées : can('admin:backups'), can('pilote:campagne'), etc.
+        Gate::before(function ($user, $ability) {
+            if (!str_contains($ability, ':')) {
+                return null; // Laisse les autres gates gérer
+            }
+
+            [$prefix] = explode(':', $ability, 2);
+
+            // Pour admin:*, l'utilisateur doit être admin
+            if ($prefix === 'admin' && $user->isAdmin != 1) {
                 return false;
             }
+
+            return $user->isAttr($ability);
         });
-        //
     }
 }

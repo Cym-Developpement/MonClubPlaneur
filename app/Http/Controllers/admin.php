@@ -1262,8 +1262,31 @@ class admin extends Controller
         $user->email         = $request->email;
         $user->licenceNumber = $request->licenceNumber;
         $user->isSupervisor  = $request->isSupervisor;
-        $user->isAdmin       = $request->has('isAdmin') ? 1 : 0;
-        $user->saveAttr($request->userState);
+
+        // Si admin retiré, supprime en cascade tous les admin:*
+        $wasAdmin = $user->isAdmin == 1;
+        $isAdmin  = $request->has('isAdmin');
+        if ($wasAdmin && !$isAdmin) {
+            \App\Models\usersAttributes::where('userId', $user->id)
+                ->where('attributeName', 'like', 'admin:%')
+                ->delete();
+        }
+        $user->isAdmin = $isAdmin ? 1 : 0;
+
+        $user->saveAttr($request->userState ?? []);
+
+        // Sauvegarde des permissions admin
+        if ($isAdmin) {
+            $perms = [];
+            foreach (array_keys(\App\Models\usersAttributes::$userRights) as $right) {
+                $inputKey = 'perm_' . str_replace(':', '_', $right);
+                if ($request->has($inputKey)) {
+                    $perms[] = $right;
+                }
+            }
+            $user->savePermissions('admin', $perms);
+        }
+
         $user->save();
         return view('admin.userMod', ['user' => $user]);
     }

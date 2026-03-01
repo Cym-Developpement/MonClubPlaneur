@@ -322,13 +322,59 @@ class User extends Authenticatable
         return in_array($name, $this->all_attr);
     }
 
+    // Correspondance rôle → préfixe de sous-permissions
+    public const ROLE_PREFIX_MAP = [
+        'Pilote'               => 'pilote',
+        'Elève'                => 'eleve',
+        'Instructeur Planeur'  => 'instructeur_planeur',
+        'Instructeur ULM'      => 'instructeur_ulm',
+        'Remorqueur'           => 'remorqueur',
+        'Licence associative'  => 'licence',
+    ];
+
     public function saveAttr($arr)
     {
-        usersAttributes::where('userId', $this->id)->delete();
+        // Rôles actuels sans préfixe
+        $current = usersAttributes::where('userId', $this->id)
+            ->where('attributeName', 'not like', '%:%')
+            ->pluck('attributeName')
+            ->toArray();
+
+        // Pour chaque rôle supprimé, cascade sur ses sous-permissions
+        foreach (array_diff($current, $arr) as $removed) {
+            if (isset(self::ROLE_PREFIX_MAP[$removed])) {
+                usersAttributes::where('userId', $this->id)
+                    ->where('attributeName', 'like', self::ROLE_PREFIX_MAP[$removed] . ':%')
+                    ->delete();
+            }
+        }
+
+        // Remplace les attributs sans préfixe
+        usersAttributes::where('userId', $this->id)
+            ->where('attributeName', 'not like', '%:%')
+            ->delete();
+
         foreach ($arr as $attr) {
             $attribute = new usersAttributes();
             $attribute->userId = $this->id;
             $attribute->attributeName = $attr;
+            $attribute->save();
+        }
+    }
+
+    /**
+     * Sauvegarde les permissions d'un préfixe donné.
+     * Ex: savePermissions('admin', ['admin:backups', 'admin:users'])
+     */
+    public function savePermissions(string $prefix, array $permissions): void
+    {
+        usersAttributes::where('userId', $this->id)
+            ->where('attributeName', 'like', $prefix . ':%')
+            ->delete();
+        foreach ($permissions as $perm) {
+            $attribute = new usersAttributes();
+            $attribute->userId = $this->id;
+            $attribute->attributeName = $perm;
             $attribute->save();
         }
     }

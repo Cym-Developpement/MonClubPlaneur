@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Modèle représentant les attributs additionnels des utilisateurs
- * 
+ *
  * @property int $id Identifiant unique de l'attribut
  * @property int $userId ID de l'utilisateur concerné
  * @property string $attribute Nom de l'attribut
@@ -22,4 +22,45 @@ class usersAttributes extends Model
      * @var string
      */
     protected $table = 'usersAttribute';
+
+    /**
+     * Droits d'administration disponibles.
+     * Clé = identifiant de permission (admin:<key>), valeur = [name, description]
+     *
+     * @var array<string, array{name: string, description: string}>
+     */
+    public static array $userRights = [
+        'admin:saisie' => [
+            'name'        => 'Saisie & Imports',
+            'description' => 'Saisie de vols, import GESASSO, planches OGN, saisie périodique',
+        ],
+        'admin:users' => [
+            'name'        => 'Gestion des utilisateurs',
+            'description' => 'Création, modification et liste des utilisateurs',
+        ],
+        'admin:transactions' => [
+            'name'        => 'Transactions',
+            'description' => 'Validation et suppression des transactions en attente',
+        ],
+        'admin:flights' => [
+            'name'        => 'Carnets de vol & Remorquage',
+            'description' => 'Carnet de route appareil, carnet de vol pilote, remorquage',
+        ],
+        'admin:data' => [
+            'name'        => 'Contrôle des données',
+            'description' => 'Vérification et mise à jour de la base de données',
+        ],
+        'admin:tarifs' => [
+            'name'        => 'Tarifs',
+            'description' => 'Gestion des tarifs aéronefs et moyens de mise en l\'air',
+        ],
+        'admin:instruction' => [
+            'name'        => 'Instruction',
+            'description' => 'Gestion des instructeurs et des élèves',
+        ],
+        'admin:backups' => [
+            'name'        => 'Sauvegardes',
+            'description' => 'Création, téléchargement et suppression des sauvegardes',
+        ],
+    ];
 }
