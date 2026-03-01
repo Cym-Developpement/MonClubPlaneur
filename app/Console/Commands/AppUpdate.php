@@ -33,9 +33,15 @@ class AppUpdate extends Command
         }
 
         if (! $this->option('no-cache')) {
-            $this->step('config:cache',  ['php', 'artisan', 'config:cache']);
-            $this->step('route:cache',   ['php', 'artisan', 'route:cache']);
-            $this->step('view:cache',    ['php', 'artisan', 'view:cache']);
+            if (! $this->step('config:cache', ['php', 'artisan', 'config:cache'])) {
+                return 1;
+            }
+            if (! $this->step('route:cache', ['php', 'artisan', 'route:cache'])) {
+                return 1;
+            }
+            if (! $this->step('view:cache', ['php', 'artisan', 'view:cache'])) {
+                return 1;
+            }
         }
 
         $this->newLine();
