@@ -67,6 +67,20 @@
 <div class="alert alert-danger" role="alert" id="{{ $block }}UserHelpState" style="display: none;">
     Merci de selectionner au moins une case!
 </div>
+
+<hr>
+<div class="form-check mb-3">
+  <input name="user_technique" value="1"
+  @isset($user)
+    @if($user->isAttr('user:technique'))
+      checked
+    @endif
+  @endisset
+  type="checkbox" class="form-check-input" id="{{ $block }}UserTechnique">
+  <label class="form-check-label" for="{{ $block }}UserTechnique">
+    Compte technique <small class="text-muted">(exclu des emails de compte débiteur)</small>
+  </label>
+</div>
 <script type="text/javascript">
   function updateIsSupervisor()
   {

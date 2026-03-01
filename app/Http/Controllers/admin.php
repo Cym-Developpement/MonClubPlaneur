@@ -1242,7 +1242,7 @@ class admin extends Controller
         $users = User::all();
         $notifUsers = [];
         foreach ($users as $user) {
-            if ($user->real_amount_account < 0 && $user->state == 1) {
+            if ($user->real_amount_account < 0 && $user->state == 1 && !$user->isAttr('user:technique')) {
                 $notifUsers[] = $user;
             }
         }
@@ -1286,6 +1286,17 @@ class admin extends Controller
         $user->isAdmin = $isAdmin ? 1 : 0;
 
         $user->saveAttr($request->userState ?? []);
+
+        // Attribut technique (exclu des emails débiteurs)
+        \App\Models\usersAttributes::where('userId', $user->id)
+            ->where('attributeName', 'user:technique')
+            ->delete();
+        if ($request->has('user_technique')) {
+            $attr = new \App\Models\usersAttributes();
+            $attr->userId = $user->id;
+            $attr->attributeName = 'user:technique';
+            $attr->save();
+        }
 
         // Sauvegarde des permissions admin (uniquement si l'admin courant a le droit de les modifier)
         if ($isAdmin && \Illuminate\Support\Facades\Gate::allows('admin:rights')) {

@@ -266,7 +266,7 @@ class User extends Authenticatable
         $users = User::all();
         $notifUsers = [];
         foreach ($users as $user) {
-            if ($user->real_amount_account < 0 && $user->state == 1) {
+            if ($user->real_amount_account < 0 && $user->state == 1 && !$user->isAttr('user:technique')) {
                 $notifUsers[] = $user;
             }
         }
