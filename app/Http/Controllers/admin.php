@@ -1275,8 +1275,8 @@ class admin extends Controller
 
         $user->saveAttr($request->userState ?? []);
 
-        // Sauvegarde des permissions admin
-        if ($isAdmin) {
+        // Sauvegarde des permissions admin (uniquement si l'admin courant a le droit de les modifier)
+        if ($isAdmin && \Illuminate\Support\Facades\Gate::allows('admin:rights')) {
             $perms = [];
             foreach (array_keys(\App\Models\usersAttributes::$userRights) as $right) {
                 $inputKey = 'perm_' . str_replace(':', '_', $right);

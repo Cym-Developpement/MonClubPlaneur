@@ -29,6 +29,7 @@
                     <hr>
                     @include('admin.user.blockAttributes', ['block' => 'mod'])
 
+                    @can('admin:rights')
                     <hr>
                     <h3>Accès administrateur</h3>
                     <div class="alert alert-warning py-2">
@@ -72,6 +73,8 @@
                         }
                     </script>
                     @endpush
+
+                    @endcan
 
                     <div class="alert alert-danger" role="alert" id="modUserHelpServerError" style="display: none;"></div>
                     <button type="submit" class="btn btn-primary">Enregistrer</button>

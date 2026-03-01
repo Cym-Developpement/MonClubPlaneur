@@ -34,6 +34,10 @@ class usersAttributes extends Model
             'name'        => 'Super administrateur',
             'description' => 'Accès total à toutes les sections, supplante tous les autres droits',
         ],
+        'admin:rights' => [
+            'name'        => 'Gestion des droits',
+            'description' => 'Modification des droits et permissions des utilisateurs',
+        ],
         'admin:saisie' => [
             'name'        => 'Saisie & Imports',
             'description' => 'Saisie de vols, import GESASSO, planches OGN, saisie périodique',
