@@ -1,15 +1,15 @@
 <style type="text/css">
 	*{
 		color: #313131;
-		font-family: Arial, Helvetica, sans-serif;
+		font-family: 'DejaVu Sans', sans-serif;
 	}
 	#header{
 		text-align: center;
-		font-family: Arial, Helvetica, sans-serif;
+		font-family: 'DejaVu Sans', sans-serif;
 		margin-top: 30px;
 	}
 	#container{
-		font-family: Arial, Helvetica, sans-serif;
+		font-family: 'DejaVu Sans', sans-serif;
 	}
 	table{
 		border: 2px solid;
