@@ -99,6 +99,7 @@ Route::post('/usersSendAccountNotification/test', [App\Http\Controllers\admin::c
 Route::get('/sendAccountState/preview/{year}', [App\Http\Controllers\admin::class, 'sendAccountStatePreview'])->name('sendAccountState.preview')->middleware('can:admin');
 Route::post('/sendAccountState/{year}', [App\Http\Controllers\admin::class, 'sendAccountStateForYear'])->name('sendAccountState.send')->middleware('can:admin');
 Route::post('/sendAccountState/{year}/test', [App\Http\Controllers\admin::class, 'sendAccountStateForYearTest'])->name('sendAccountState.test')->middleware('can:admin');
+Route::post('/sendAccountState/user/{id}', [App\Http\Controllers\admin::class, 'sendAccountStateForUser'])->name('sendAccountState.user')->middleware('can:admin');
 
 // WIKI SYSTEM
 Route::get('/wiki/delete/{page}', [App\Http\Controllers\WikiController::class, 'deletePage']);

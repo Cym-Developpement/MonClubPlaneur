@@ -108,6 +108,12 @@
                                   <a class="dropdown-item" target="_blank" href="/vol?filterID={{ $user->id }}&year={{ (date('Y')-2) }}">Carnet de vol {{ (date('Y')-2) }}</a>
                                   <button class="dropdown-item" onclick="getAdminAccess({{ $user->id }})">Accès administrateur temporaire</button>
                                   <a class="dropdown-item" href="/userMod/{{ $user->id }}">Modifier l'utilisateur</a>
+                                  <form method="post" action="/sendAccountState/user/{{ $user->id }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">
+                                      <i class="fas fa-file-invoice me-2"></i>Envoyer extrait de compte
+                                    </button>
+                                  </form>
                                   <div class="dropdown-divider"></div>
                                   <h6 class="dropdown-header">Info : {{ date('Y') }}</h6>
                                   <h6 class="dropdown-header">HDV :  {{ $user->current_hour_flight }}</h6>
