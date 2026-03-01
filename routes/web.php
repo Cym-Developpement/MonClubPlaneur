@@ -103,6 +103,12 @@ Route::post('/wiki/update/{page}', [App\Http\Controllers\WikiController::class, 
 Route::post('/wiki/new', [App\Http\Controllers\WikiController::class, 'newPage']);
 Route::post('/wikipassword', [App\Http\Controllers\WikiController::class, 'password']);
 
+// SAUVEGARDES
+Route::get('/backups', [App\Http\Controllers\BackupController::class, 'index'])->name('backups.index')->middleware('can:admin');
+Route::post('/backups/create', [App\Http\Controllers\BackupController::class, 'create'])->name('backups.create')->middleware('can:admin');
+Route::get('/backups/download/{filename}', [App\Http\Controllers\BackupController::class, 'download'])->name('backups.download')->middleware('can:admin');
+Route::post('/backups/delete/{filename}', [App\Http\Controllers\BackupController::class, 'destroy'])->name('backups.destroy')->middleware('can:admin');
+
 // GitHub Webhook — mise à jour automatique
 Route::post('/update', [App\Http\Controllers\GitWebhookController::class, 'update'])->name('git.webhook');
 

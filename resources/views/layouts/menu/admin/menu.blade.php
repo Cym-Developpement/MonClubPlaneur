@@ -50,6 +50,9 @@
     Instruction
 </a>
 
+<a class="dropdown-item" href="/backups">
+    Sauvegardes
+</a>
 
 <hr>
 <a class="dropdown-item" >
