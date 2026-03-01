@@ -86,7 +86,7 @@
                                         <td>
                                             <strong>{{ $parametre->title }}</strong>
                                             @if($parametre->description)
-                                                <br><span class="badge badge-secondary">{{ $parametre->description }}</span>
+                                                <br><span class="badge text-bg-secondary">{{ $parametre->description }}</span>
                                             @endif
                                         </td>
                                         <td>
@@ -116,7 +116,7 @@
                             @endphp
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover">
-                                    <thead class="bg-primary text-white">
+                                    <thead class="table-primary">
                                         <tr>
                                             <th scope="col">#</th>
                                             <th scope="col">Type</th>
@@ -134,7 +134,7 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
-                                                <span class="badge badge-{{ $aircraft->type == 1 ? 'info' : 'success' }}">
+                                                <span class="badge text-bg-{{ $aircraft->type == 1 ? 'info' : 'success' }}">
                                                     {{ $aircraft->type_str }}
                                                 </span>
                                             </td>

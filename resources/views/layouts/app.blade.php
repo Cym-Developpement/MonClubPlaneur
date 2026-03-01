@@ -364,6 +364,7 @@
       </div>
     </div>
 
+    @if(request()->get('iframe') != '1')
     <footer class="text-center text-muted py-3 mt-4 border-top small" style="background-color: rgba(255,255,255,0.75);">
         {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
         @if($gitCommitMessage)
@@ -373,6 +374,7 @@
             @endif
         @endif
     </footer>
+    @endif
 
     <script src="https://kit.fontawesome.com/9724d9dada.js" crossorigin="anonymous"></script>
     <script src="js/jquery.mask.js"></script>
