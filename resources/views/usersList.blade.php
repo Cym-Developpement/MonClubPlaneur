@@ -102,12 +102,12 @@
                                   <i class="fas fa-info-circle"></i>
                                 </button>
                                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                  <a class="dropdown-item" target="_blank" href="/saisie?selectUserInTransaction={{ $user->id }}">Compte pilote</a>
-                                  <a class="dropdown-item" target="_blank" href="/vol?filterID={{ $user->id }}&year={{ date('Y') }}">Carnet de vol {{ date('Y') }}</a>
-                                  <a class="dropdown-item" target="_blank" href="/vol?filterID={{ $user->id }}&year={{ (date('Y')-1) }}">Carnet de vol {{ (date('Y')-1) }}</a>
-                                  <a class="dropdown-item" target="_blank" href="/vol?filterID={{ $user->id }}&year={{ (date('Y')-2) }}">Carnet de vol {{ (date('Y')-2) }}</a>
-                                  <button class="dropdown-item" onclick="getAdminAccess({{ $user->id }})">Accès administrateur temporaire</button>
-                                  <a class="dropdown-item" href="/userMod/{{ $user->id }}">Modifier l'utilisateur</a>
+                                  <a class="dropdown-item" target="_blank" href="/saisie?selectUserInTransaction={{ $user->id }}"><i class="fas fa-wallet me-2"></i>Compte pilote</a>
+                                  <a class="dropdown-item" target="_blank" href="/vol?filterID={{ $user->id }}&year={{ date('Y') }}"><i class="fas fa-book-open me-2"></i>Carnet de vol {{ date('Y') }}</a>
+                                  <a class="dropdown-item" target="_blank" href="/vol?filterID={{ $user->id }}&year={{ (date('Y')-1) }}"><i class="fas fa-book me-2"></i>Carnet de vol {{ (date('Y')-1) }}</a>
+                                  <a class="dropdown-item" target="_blank" href="/vol?filterID={{ $user->id }}&year={{ (date('Y')-2) }}"><i class="fas fa-book me-2"></i>Carnet de vol {{ (date('Y')-2) }}</a>
+                                  <button class="dropdown-item" onclick="getAdminAccess({{ $user->id }})"><i class="fas fa-key me-2"></i>Accès administrateur temporaire</button>
+                                  <a class="dropdown-item" href="/userMod/{{ $user->id }}"><i class="fas fa-user-edit me-2"></i>Modifier l'utilisateur</a>
                                   <form method="post" action="/sendAccountState/user/{{ $user->id }}">
                                     @csrf
                                     <button type="submit" class="dropdown-item">
