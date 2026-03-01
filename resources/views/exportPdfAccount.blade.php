@@ -1,122 +1,316 @@
+@php
+    $logoParam  = \App\Models\parametre::getValue('club-logo', '');
+    $nomCourt   = \App\Models\parametre::getValue('club-nom_court', 'CVVT');
+    $nomComplet = \App\Models\parametre::getValue('club-nom_complet', 'Club de Vol à Voile de Thionville');
+    $lastSolde  = isset($transaction['solde']) ? $transaction['solde'] : null;
+@endphp
 <style type="text/css">
-	*{
-		color: #313131;
-		font-family: 'DejaVu Sans', sans-serif;
-	}
-	#header{
-		text-align: center;
-		font-family: 'DejaVu Sans', sans-serif;
-		margin-top: 30px;
-	}
-	#container{
-		font-family: 'DejaVu Sans', sans-serif;
-	}
-	table{
-		border: 2px solid;
-		border-collapse: collapse;
-		width: 100%;
-	}
-	table, th, td {
-	  border: 1px solid black;
-	}
-	th {
-	  height: 50px;
-	}
-	th {
-	  text-align: left;
-	  padding-left: 10px;
-	}
-	td {
-	  height: 50px;
-	  vertical-align: middle;
-	  padding-left: 10px;
-	}
-	.tdNumbers {
-		text-align: right;
-		padding-right: 5px;
-	}
-	.dateTr {
-		text-align: center;
-	}
-	.page-break {
-	    page-break-after: always;
-	}
-	#solde {
-		margin-top: 50px;
-		font-weight: bold;
-		font-size: 1.2em;
-		width: 100%;
-		text-align: right;
-	}
-	hr {
-		margin: 30px 0px 30px 0px;
-	}
-	#requirePayment{
-		margin-top: 30px;
-		font-size: 0.9em;
-	}
-	#requirePayment p{
-		margin:3px;
-	}
+    * {
+        font-family: 'DejaVu Sans', sans-serif;
+        color: #2c2c2c;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* ── En-tête ── */
+    #header {
+        background-color: #1a3a6b;
+        padding: 24px 32px;
+        margin-bottom: 0;
+    }
+    #header-inner {
+        width: 100%;
+    }
+    #header-logo {
+        width: 20%;
+        text-align: left;
+        vertical-align: middle;
+    }
+    #header-logo img {
+        max-width: 110px;
+        max-height: 70px;
+    }
+    #header-text {
+        width: 80%;
+        text-align: right;
+        vertical-align: middle;
+        padding-left: 16px;
+    }
+    #header-text .club-name {
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+    #header-text .club-full {
+        color: #a8c4e8;
+        font-size: 11px;
+        margin-top: 3px;
+    }
+    #header-text .doc-title {
+        color: #ffffff;
+        font-size: 13px;
+        margin-top: 10px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    /* ── Sous-en-tête ── */
+    #subheader {
+        background-color: #f0f4fa;
+        border-bottom: 2px solid #1a3a6b;
+        padding: 12px 32px;
+        margin-bottom: 24px;
+    }
+    #subheader table {
+        border: none;
+        width: 100%;
+    }
+    #subheader td, #subheader th {
+        border: none;
+        height: auto;
+        padding: 0;
+        font-size: 12px;
+        background: none;
+    }
+    .sh-label {
+        color: #666666;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .sh-value {
+        color: #1a3a6b;
+        font-size: 13px;
+        font-weight: bold;
+        margin-top: 2px;
+    }
+
+    /* ── Tableau transactions ── */
+    #container {
+        padding: 0 32px;
+    }
+    table.transactions {
+        border-collapse: collapse;
+        width: 100%;
+        border: none;
+        font-size: 12px;
+    }
+    table.transactions thead tr {
+        background-color: #1a3a6b;
+    }
+    table.transactions thead th {
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 10px 12px;
+        border: none;
+        height: auto;
+    }
+    table.transactions thead th.col-right {
+        text-align: right;
+    }
+    table.transactions tbody tr:nth-child(even) {
+        background-color: #f7f9fc;
+    }
+    table.transactions tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+    table.transactions tbody td {
+        padding: 9px 12px;
+        border: none;
+        border-bottom: 1px solid #e8edf4;
+        height: auto;
+        vertical-align: middle;
+        font-size: 12px;
+    }
+    table.transactions tbody td.col-date {
+        color: #555555;
+        font-size: 11px;
+        white-space: nowrap;
+        text-align: center;
+        width: 80px;
+    }
+    table.transactions tbody td.col-desc {
+        color: #2c2c2c;
+    }
+    table.transactions tbody td.col-obs {
+        color: #888888;
+        font-size: 10px;
+        font-style: italic;
+        margin-top: 2px;
+    }
+    table.transactions tbody td.col-amount {
+        text-align: right;
+        white-space: nowrap;
+        width: 80px;
+        font-weight: bold;
+    }
+    table.transactions tbody td.col-amount.positive {
+        color: #1a6b3a;
+    }
+    table.transactions tbody td.col-amount.negative {
+        color: #c0392b;
+    }
+    table.transactions tbody td.col-solde {
+        text-align: right;
+        white-space: nowrap;
+        width: 90px;
+        font-weight: bold;
+    }
+    table.transactions tbody td.col-solde.solde-ok {
+        color: #1a6b3a;
+    }
+    table.transactions tbody td.col-solde.solde-neg {
+        color: #c0392b;
+        background-color: #fff0f0;
+    }
+
+    /* ── Bloc solde final ── */
+    #solde-block {
+        margin: 28px 32px 0;
+        padding: 14px 20px;
+        border-left: 4px solid #1a3a6b;
+        background-color: #f0f4fa;
+        font-size: 13px;
+    }
+    #solde-block .solde-label {
+        color: #555555;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    #solde-block .solde-value {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 4px;
+    }
+    #solde-block .solde-value.ok {
+        color: #1a6b3a;
+    }
+    #solde-block .solde-value.neg {
+        color: #c0392b;
+    }
+
+    /* ── Section paiement ── */
+    #payment-block {
+        margin: 24px 32px 32px;
+        padding: 14px 20px;
+        background-color: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        font-size: 11px;
+        color: #555555;
+    }
+    #payment-block .pay-title {
+        font-weight: bold;
+        color: #2c2c2c;
+        margin-bottom: 8px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    #payment-block .pay-item {
+        margin-bottom: 5px;
+        padding-left: 10px;
+    }
+    #payment-block .pay-detail {
+        color: #888888;
+        font-size: 10px;
+        font-style: italic;
+        padding-left: 10px;
+    }
+
+    .page-break {
+        page-break-after: always;
+    }
 </style>
 
+{{-- ── En-tête ── --}}
 <div id="header">
-	@php $logoParam = \App\Models\parametre::getValue('club-logo', ''); @endphp
-	@if($logoParam)
-		<img src="{{ $logoParam }}" style="max-width:30%;">
-	@else
-		<img src="../storage/app/img/logo-pdf.png" style="max-width:30%;">
-	@endif
-	<h3>Extrait de compte</h3>
-	<h4>{{$selectedUser->name}}</h4>
-	<h4>date : {{ \Carbon\Carbon::now()->locale('fr')->isoFormat('DD-MM-YYYY') }}</h4>
-</div>
-<hr>
-<div id="container">
-	@if (count($transactions) > 0)
-	<table class="table table-striped">
-	<thead>
-	  <tr>
-	    <th scope="col">Date</th>
-	    <th scope="col">Description</th>
-	    <th scope="col">Montant</th>
-	    <th scope="col">Solde</th>
-	  </tr>
-	</thead>
-	<tbody>
-	  @foreach ($transactions as $transaction)
-	      <tr>
-	        <th scope="row" class="dateTr">
-	          {{ $transaction['time'] }}
-	        </th>
-	        <td>{{ $transaction['name'] }}
-	        @if($transaction['observation'] != '')
-	          <br><small style="font-size: 70%;"><i>{{ $transaction['observation'] }}</i></small>
-	        @endif
-	        </td>
-	        <td class="tdNumbers">{{ $transaction['value'] }}€</td>
-	        <td class="tdNumbers 
- 	        @if($transaction['solde']<0)
-	          table-danger 
-	        @endif
-	        "
-	         >{{ $transaction['solde'] }}€</td>
-	      </tr>
-	  @endforeach
-	</tbody>
-	</table>
-	@endif
-</div>
-<hr>
-@isset($transaction['solde'])
-<div id="solde">
-	Le solde de votre compte est de : {{ $transaction['solde'] }}€
+    <table id="header-inner">
+        <tr>
+            <td id="header-logo">
+                @if($logoParam)
+                    <img src="{{ $logoParam }}">
+                @endif
+            </td>
+            <td id="header-text">
+                <div class="club-name">{{ $nomCourt }}</div>
+                <div class="club-full">{{ $nomComplet }}</div>
+                <div class="doc-title">Extrait de compte</div>
+            </td>
+        </tr>
+    </table>
 </div>
 
-<div id="requirePayment">
-	<p><b>Pour approvisionner votre compte :</b></p>
-	<p> - Par virement en indiquant votre nom dans le libellé du virement.<br>
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i><small>IBAN : FR76 1333 5004 0108 9253 9002 919</small></i></p>
-	<p> - Par carte bancaire : <i><small>compte.cvvt.fr</small></i></p>
+{{-- ── Sous-en-tête : pilote + date ── --}}
+<div id="subheader">
+    <table>
+        <tr>
+            <td style="width:70%;">
+                <div class="sh-label">Pilote</div>
+                <div class="sh-value">{{ $selectedUser->name }}</div>
+            </td>
+            <td style="width:30%; text-align:right;">
+                <div class="sh-label">Date d'édition</div>
+                <div class="sh-value">{{ date('d/m/Y') }}</div>
+            </td>
+        </tr>
+    </table>
 </div>
-@endisset
+
+{{-- ── Tableau des transactions ── --}}
+<div id="container">
+    @if (count($transactions) > 0)
+    <table class="transactions">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th class="col-right">Montant</th>
+                <th class="col-right">Solde</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($transactions as $transaction)
+            <tr>
+                <td class="col-date">{{ $transaction['time'] }}</td>
+                <td class="col-desc">
+                    {{ $transaction['name'] }}
+                    @if($transaction['observation'] != '')
+                        <br><span class="col-obs">{{ $transaction['observation'] }}</span>
+                    @endif
+                </td>
+                <td class="col-amount {{ $transaction['value'] >= 0 ? 'positive' : 'negative' }}">
+                    {{ $transaction['value'] >= 0 ? '+' : '' }}{{ $transaction['value'] }}€
+                </td>
+                <td class="col-solde {{ $transaction['solde'] < 0 ? 'solde-neg' : 'solde-ok' }}">
+                    {{ $transaction['solde'] }}€
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+</div>
+
+{{-- ── Solde final ── --}}
+@if($lastSolde !== null)
+<div id="solde-block">
+    <div class="solde-label">Solde du compte</div>
+    <div class="solde-value {{ $lastSolde < 0 ? 'neg' : 'ok' }}">{{ $lastSolde }}€</div>
+</div>
+@endif
+
+{{-- ── Informations de paiement ── --}}
+<div id="payment-block">
+    <div class="pay-title">Pour approvisionner votre compte</div>
+    <div class="pay-item">Par virement — indiquer votre nom dans le libellé</div>
+    <div class="pay-detail">IBAN : FR76 1333 5004 0108 9253 9002 919</div>
+    <div class="pay-item" style="margin-top:5px;">Par carte bancaire</div>
+    <div class="pay-detail">compte.cvvt.fr</div>
+</div>
