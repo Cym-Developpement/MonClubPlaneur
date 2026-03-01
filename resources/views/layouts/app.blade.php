@@ -217,6 +217,14 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
+                @auth
+                @php
+                    $helpKey        = \App\Helpers\HelpSystem::keyFromPath(request()->path());
+                    \App\Helpers\HelpSystem::ensureFile($helpKey);
+                    $helpHasContent = \App\Helpers\HelpSystem::hasContent($helpKey);
+                @endphp
+                @endauth
+
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
@@ -225,6 +233,18 @@
 
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ms-auto">
+                        @auth
+                        @if($helpHasContent)
+                        <li class="nav-item d-flex align-items-center me-1">
+                            <button class="btn btn-info btn-sm rounded-circle"
+                                    style="width:32px;height:32px;padding:0;line-height:1;"
+                                    onclick="helpOpen('{{ $helpKey }}')"
+                                    title="Aide">
+                                <i class="fas fa-question"></i>
+                            </button>
+                        </li>
+                        @endif
+                        @endauth
                         <!-- Authentication Links -->
 
                         @guest
@@ -376,6 +396,25 @@
     </footer>
     @endif
 
+    <!-- Modal Aide -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color:#1a3a6b;">
+                    <h5 class="modal-title text-white" id="helpModalLabel">
+                        <i class="fas fa-question-circle me-2"></i>Aide
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body" id="helpModalBody" style="max-width:900px;margin:0 auto;padding:2rem 1rem;">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://kit.fontawesome.com/9724d9dada.js" crossorigin="anonymous"></script>
     <script src="js/jquery.mask.js"></script>
     <script src="js/function.js"></script>
@@ -390,6 +429,45 @@
        });
     </script>
     @stack('scripts')
+
+    <script>
+    function helpOpen(key) {
+        const body  = document.getElementById('helpModalBody');
+        const modal = new bootstrap.Modal(document.getElementById('helpModal'));
+        body.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
+        modal.show();
+        fetch('/help/content/' + encodeURIComponent(key), {
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+        })
+        .then(r => r.json())
+        .then(data => {
+            body.innerHTML = '<div class="help-content">' + data.html + '</div>';
+        })
+        .catch(() => {
+            body.innerHTML = '<div class="alert alert-danger">Impossible de charger l\'aide.</div>';
+        });
+    }
+    </script>
+
+    <style>
+    .help-content h1, .help-content h2, .help-content h3 { margin-top: 1.5rem; margin-bottom: .5rem; color: #1a3a6b; }
+    .help-content h1 { font-size: 1.6rem; border-bottom: 2px solid #e0e8f4; padding-bottom: .4rem; }
+    .help-content h2 { font-size: 1.3rem; border-bottom: 1px solid #e0e8f4; padding-bottom: .3rem; }
+    .help-content h3 { font-size: 1.1rem; }
+    .help-content p  { line-height: 1.7; margin-bottom: .8rem; }
+    .help-content ul, .help-content ol { margin-bottom: .8rem; padding-left: 1.5rem; }
+    .help-content li { margin-bottom: .3rem; line-height: 1.6; }
+    .help-content code { background: #f0f4fa; padding: .1rem .35rem; border-radius: 3px; font-size: .9em; color: #c0392b; }
+    .help-content pre  { background: #f0f4fa; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .help-content pre code { background: none; color: inherit; }
+    .help-content blockquote { border-left: 4px solid #1a3a6b; padding: .5rem 1rem; margin: 1rem 0; background: #f7f9fc; color: #555; }
+    .help-content table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    .help-content table th, .help-content table td { border: 1px solid #dee2e6; padding: .5rem .75rem; }
+    .help-content table th { background: #1a3a6b; color: #fff; }
+    .help-content table tr:nth-child(even) { background: #f7f9fc; }
+    .help-content hr { border: none; border-top: 1px solid #e0e8f4; margin: 1.5rem 0; }
+    .help-content a { color: #1a3a6b; }
+    </style>
 
 </body>
 </html>

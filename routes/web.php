@@ -122,6 +122,9 @@ Route::post('/backups/create', [App\Http\Controllers\BackupController::class, 'c
 Route::get('/backups/download/{filename}', [App\Http\Controllers\BackupController::class, 'download'])->name('backups.download')->middleware('can:admin');
 Route::post('/backups/delete/{filename}', [App\Http\Controllers\BackupController::class, 'destroy'])->name('backups.destroy')->middleware('can:admin');
 
+// AIDE CONTEXTUELLE
+Route::get('/help/content/{key}', [App\Http\Controllers\HelpController::class, 'content'])->middleware('auth')->name('help.content');
+
 // GitHub Webhook — mise à jour automatique
 Route::post('/update', [App\Http\Controllers\GitWebhookController::class, 'update'])->name('git.webhook');
 
