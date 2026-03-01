@@ -89,6 +89,13 @@ return [
             'driver' => 'errorlog',
             'level' => 'debug',
         ],
+
+        'audit' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/audit/audit.log'),
+            'level'  => 'info',
+            'days'   => 365,
+        ],
     ],
 
 ];

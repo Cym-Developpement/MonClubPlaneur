@@ -54,6 +54,24 @@ class flight extends Model
         }
     }
 
+    public function getAuditNameAttribute(): string
+    {
+        return 'vol';
+    }
+
+    public function getAuditLineAttribute(): string
+    {
+        $pilot     = User::find($this->idUser);
+        $pilotName = $pilot ? $pilot->name : "pilote #{$this->idUser}";
+        $ac        = aircraft::find($this->aircraftId);
+        $register  = $ac ? $ac->register : "aéronef #{$this->aircraftId}";
+        $h         = intdiv($this->totalTime, 60);
+        $m         = $this->totalTime % 60;
+        $duration  = $h > 0 ? "{$h}h" . str_pad($m, 2, '0', STR_PAD_LEFT) : "{$m}min";
+        $date      = explode(' ', $this->takeOffTime)[0];
+        return "{$pilotName} {$register} {$duration} {$date}";
+    }
+
     /**
      * Retourne l'objet aircraft associé au vol
      *

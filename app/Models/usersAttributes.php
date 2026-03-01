@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -22,6 +23,18 @@ class usersAttributes extends Model
      * @var string
      */
     protected $table = 'usersAttribute';
+
+    public function getAuditNameAttribute(): string
+    {
+        return 'attribut utilisateur';
+    }
+
+    public function getAuditLineAttribute(): string
+    {
+        $user     = User::find($this->userId);
+        $userName = $user ? $user->name : "utilisateur #{$this->userId}";
+        return "{$userName} - {$this->attributeName}";
+    }
 
     /**
      * Droits d'administration disponibles.

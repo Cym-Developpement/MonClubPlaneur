@@ -83,6 +83,16 @@ class User extends Authenticatable
         }
     }
 
+    public function getAuditNameAttribute(): string
+    {
+        return 'utilisateur';
+    }
+
+    public function getAuditLineAttribute(): string
+    {
+        return $this->name;
+    }
+
     public function getNomAttribute()
     {
         return explode(' ', $this->name)[0];

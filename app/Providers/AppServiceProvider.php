@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use App\Models\refundCategory;
 use App\Models\User;
+use App\Models\transaction;
+use App\Models\flight;
+use App\Models\usersAttributes;
+use App\Observers\TransactionObserver;
+use App\Observers\UserObserver;
+use App\Observers\FlightObserver;
+use App\Observers\UsersAttributesObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,7 +34,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        transaction::observe(TransactionObserver::class);
+        User::observe(UserObserver::class);
+        flight::observe(FlightObserver::class);
+        usersAttributes::observe(UsersAttributesObserver::class);
+
         try {
             $refundCategory = refundCategory::all();
             View::share('refundCategory', $refundCategory);

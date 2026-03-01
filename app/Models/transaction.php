@@ -111,6 +111,23 @@ class transaction extends Model
         return self::$stripeLink . '?prefilled_email=' . urlencode($user->email) . '&client_reference_id=' . $user->id;
     }
 
+    public function getAuditNameAttribute(): string
+    {
+        return 'transaction';
+    }
+
+    public function getAuditLineAttribute(): string
+    {
+        $user     = User::find($this->idUser);
+        $userName = $user ? $user->name : "utilisateur #{$this->idUser}";
+        $amount   = number_format(abs($this->value / 100), 2) . '€';
+        $line     = "{$userName} - {$this->name} {$amount}";
+        if (! empty($this->observation)) {
+            $line .= " ({$this->observation})";
+        }
+        return $line;
+    }
+
     /**
      * Retourne le montant de la transaction en euros formaté
      *
