@@ -977,9 +977,10 @@ class admin extends Controller
                 'motor_price' => 'required|numeric|min:0',
                 'motor_price_type' => 'required|in:centieme,minutes,aucun',
                 'min_price' => 'required|numeric|min:0',
-                'actif' => 'nullable'
+                'actif' => 'nullable',
+                'public' => 'nullable'
             ]);
-            
+
             // Conversion des valeurs pour correspondre au modèle
             $motorPriceType = 0;
             switch($request->motor_price_type) {
@@ -993,7 +994,7 @@ class admin extends Controller
                     $motorPriceType = 0;
                     break;
             }
-            
+
             // Mise à jour des données
             $aircraft->name = $request->name;
             $aircraft->basePrice = $request->base_price;
@@ -1001,6 +1002,7 @@ class admin extends Controller
             $aircraft->motorPriceType = $motorPriceType;
             $aircraft->minPrice = $request->min_price * 100; // Convertir en centimes
             $aircraft->actif = $request->has('actif') ? 1 : 0;
+            $aircraft->public = $request->has('public') ? 1 : 0;
             
             $aircraft->save();
             
@@ -1088,13 +1090,15 @@ class admin extends Controller
             // Validation des données
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'base_price' => 'required|numeric|min:0'
+                'base_price' => 'required|numeric|min:0',
+                'public' => 'nullable'
             ]);
-            
+
             // Mise à jour des données
             $startPrice->name = $request->name;
             $startPrice->basePrice = $request->base_price * 100; // Convertir en centimes
-            
+            $startPrice->public = $request->has('public') ? 1 : 0;
+
             $startPrice->save();
             
             return redirect('/tarifs')->with('success', 'Moyen de mise en l\'air mis à jour avec succès');
@@ -1120,14 +1124,16 @@ class admin extends Controller
             // Validation des données
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'base_price' => 'required|numeric|min:0'
+                'base_price' => 'required|numeric|min:0',
+                'public' => 'nullable'
             ]);
-            
+
             // Créer le nouveau moyen de mise en l'air
             $startPrice = new sailplaneStartPrice();
             $startPrice->name = $request->name;
             $startPrice->basePrice = $request->base_price * 100; // Convertir en centimes
-            
+            $startPrice->public = $request->has('public') ? 1 : 0;
+
             $startPrice->save();
             
             return redirect('/tarifs')->with('success', 'Moyen de mise en l\'air créé avec succès');

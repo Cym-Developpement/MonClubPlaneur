@@ -17,7 +17,7 @@ class PublicController extends Controller
     public function tarifs()
     {
         $aircrafts = aircraft::where('actif', 1)->where('public', 1)->get();
-        $startPrices = sailplaneStartPrice::all();
+        $startPrices = sailplaneStartPrice::where('public', 1)->get();
         $parametres = parametre::where('public', 1)->get();
         
         return view('public.tarifs', [

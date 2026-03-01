@@ -46,6 +46,7 @@
                           <th scope="col">Type de Compteur moteur</th>
                           <th scope="col">Tarification Minimum</th>
                           <th scope="col">Actif</th>
+                          <th scope="col">Page publique</th>
                           <th scope="col">Action</th>
                         </tr>
                       </thead>
@@ -78,7 +79,14 @@
                               </div>  
                           </td>
                           <td>
-                            <button class="btn btn-primary btn-sm" onclick="openEditModal({{ $price->id }}, '{{ $price->type_str }}', '{{ $price->name ?? '' }}', '{{ $price->register }}', {{ $price->basePrice }}, {{ $price->motorPrice }}, {{ $price->motorPriceType }}, {{ $price->minPrice }}, {{ $price->actif }})">Modifier</button>
+                            @if($price->public)
+                              <span class="badge text-bg-success"><i class="fas fa-eye"></i> Oui</span>
+                            @else
+                              <span class="badge text-bg-secondary"><i class="fas fa-eye-slash"></i> Non</span>
+                            @endif
+                          </td>
+                          <td>
+                            <button class="btn btn-primary btn-sm" onclick="openEditModal({{ $price->id }}, '{{ $price->type_str }}', '{{ $price->name ?? '' }}', '{{ $price->register }}', {{ $price->basePrice }}, {{ $price->motorPrice }}, {{ $price->motorPriceType }}, {{ $price->minPrice }}, {{ $price->actif }}, {{ $price->public }})">Modifier</button>
                           </td>
                         </tr>
                         @endforeach
@@ -100,6 +108,7 @@
                           <th scope="col">#</th>
                           <th scope="col">Nom</th>
                           <th scope="col">Prix (€)</th>
+                          <th scope="col">Page publique</th>
                           <th scope="col">Action</th>
                         </tr>
                       </thead>
@@ -110,7 +119,14 @@
                           <td>{{ $startPrice->name }}</td>
                           <td>{{ number_format(($startPrice->basePrice/100), 2).' €' }}</td>
                           <td>
-                            <button class="btn btn-primary btn-sm" onclick="openEditStartPriceModal({{ $startPrice->id }}, '{{ $startPrice->name }}', {{ $startPrice->basePrice }})">Modifier</button>
+                            @if($startPrice->public)
+                              <span class="badge text-bg-success"><i class="fas fa-eye"></i> Oui</span>
+                            @else
+                              <span class="badge text-bg-secondary"><i class="fas fa-eye-slash"></i> Non</span>
+                            @endif
+                          </td>
+                          <td>
+                            <button class="btn btn-primary btn-sm" onclick="openEditStartPriceModal({{ $startPrice->id }}, '{{ $startPrice->name }}', {{ $startPrice->basePrice }}, {{ $startPrice->public ?? 1 }})">Modifier</button>
                           </td>
                         </tr>
                         @endforeach
@@ -201,6 +217,14 @@
                 <div class="form-check form-switch">
                   <input type="checkbox" class="form-check-input" id="edit_actif" name="actif">
                   <label class="form-check-label" for="edit_actif">Actif</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <div class="form-check form-switch">
+                  <input type="checkbox" class="form-check-input" id="edit_public" name="public">
+                  <label class="form-check-label" for="edit_public">Visible sur la page publique des tarifs</label>
                 </div>
               </div>
             </div>
@@ -332,6 +356,13 @@
             <label for="edit_start_price_base_price">Prix (€)</label>
             <input type="number" step="0.01" class="form-control" id="edit_start_price_base_price" name="base_price" required>
           </div>
+
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input type="checkbox" class="form-check-input" id="edit_start_price_public" name="public">
+              <label class="form-check-label" for="edit_start_price_public">Visible sur la page publique des tarifs</label>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -362,6 +393,13 @@
           <div class="mb-3">
             <label for="add_start_price_base_price">Prix (€)</label>
             <input type="number" step="0.01" class="form-control" id="add_start_price_base_price" name="base_price" required>
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input type="checkbox" class="form-check-input" id="add_start_price_public" name="public" checked>
+              <label class="form-check-label" for="add_start_price_public">Visible sur la page publique des tarifs</label>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -405,7 +443,7 @@
     });
   }
   
-  function openEditModal(id, type, name, register, basePrice, motorPrice, motorPriceType, minPrice, actif) {
+  function openEditModal(id, type, name, register, basePrice, motorPrice, motorPriceType, minPrice, actif, publicPage) {
     // Remplir les champs du modal avec les données de la ligne
     $('#edit_aircraft_id').val(id);
     $('#edit_type').val(type);
@@ -431,7 +469,8 @@
     
     $('#edit_min_price').val(minPrice / 100); // Convertir de centimes en euros
     $('#edit_actif').prop('checked', actif == 1);
-    
+    $('#edit_public').prop('checked', publicPage == 1);
+
     // Définir l'URL de soumission du formulaire
     $('#editPriceForm').attr('action', '/admin/aircraft/' + id + '/update-price');
     
@@ -448,14 +487,15 @@
     $('#addAircraftModal').modal('show');
   }
   
-  function openEditStartPriceModal(id, name, basePrice) {
+  function openEditStartPriceModal(id, name, basePrice, publicPage) {
     $('#edit_start_price_id').val(id);
     $('#edit_start_price_name').val(name);
     $('#edit_start_price_base_price').val(basePrice / 100);
-    
+    $('#edit_start_price_public').prop('checked', publicPage == 1);
+
     // Définir l'URL de soumission du formulaire
     $('#editStartPriceForm').attr('action', '/admin/start-price/' + id + '/update');
-    
+
     $('#editStartPriceModal').modal('show');
   }
 
