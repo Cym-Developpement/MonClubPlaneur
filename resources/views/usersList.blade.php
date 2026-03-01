@@ -83,7 +83,9 @@
                           </td>
                           <td>
                             @foreach($user->userAttributes as $attribute)
-                              <span class="badge bg-secondary">{{ $attribute }}</span>
+                              @if(!str_starts_with($attribute, 'admin:') || auth()->user()->can('admin:rights'))
+                                <span class="badge bg-secondary">{{ $attribute }}</span>
+                              @endif
                             @endforeach
                           </td>
                           <td>
