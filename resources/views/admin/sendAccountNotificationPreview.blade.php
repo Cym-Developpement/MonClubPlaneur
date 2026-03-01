@@ -45,15 +45,25 @@
                             </tbody>
                         </table>
 
-                        <form method="post" action="/usersSendAccountNotification">
-                            @csrf
-                            <div class="d-flex gap-2">
+                        @if(session('success'))
+                            <div class="alert alert-success">{{ session('success') }}</div>
+                        @endif
+
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form method="post" action="/usersSendAccountNotification">
+                                @csrf
                                 <button type="submit" class="btn btn-warning">
                                     <i class="fas fa-paper-plane me-2"></i>Confirmer l'envoi ({{ count($users) }} email(s))
                                 </button>
-                                <a href="/usersList" class="btn btn-outline-secondary">Annuler</a>
-                            </div>
-                        </form>
+                            </form>
+                            <form method="post" action="/usersSendAccountNotification/test">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-flask me-2"></i>Envoi de test à {{ auth()->user()->email }}
+                                </button>
+                            </form>
+                            <a href="/usersList" class="btn btn-outline-secondary">Annuler</a>
+                        </div>
                     @endif
                 </div>
             </div>

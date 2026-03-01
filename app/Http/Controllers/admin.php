@@ -922,6 +922,40 @@ class admin extends Controller
         return redirect('/usersList')->with('success', 'Emails envoyés à ' . count($users) . ' adhérent(s) ' . $year . '.');
     }
 
+    public function sendAccountStateForYearTest(Request $request, $year)
+    {
+        $testEmail = auth()->user()->email;
+        $year      = intval($year);
+        $userIds   = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+        $users     = User::whereIn('id', $userIds)->get();
+
+        $file = new Filesystem;
+        $file->cleanDirectory('userAcountState');
+
+        $transactionType = [];
+        foreach (transactionType::all() as $value) {
+            $value->name       = $value->name . ' ' . $year;
+            $transactionType[] = $value;
+        }
+
+        $aircraft            = aircraft::all();
+        $sailplaneStartPrice = sailplaneStartPrice::all();
+
+        foreach ($users as $user) {
+            $transactionsUser = transaction::where('idUser', $user->id)->orderBy('time', 'asc')->orderBy('id', 'ASC')->get();
+            $transactions = [];
+            foreach ($transactionsUser as $value) {
+                $transactions[] = ['time' => date('d/m/Y H:i', $value->time), 'value' => number_format($value->value / 100, 2), 'solde' => number_format($value->solde / 100, 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation];
+            }
+            $filename = 'CVVT-' . str_replace(' ', '_', strtoupper($user->name)) . '_' . date('d-m-Y_H-i') . '.pdf';
+            $pdf = Pdf::loadView('exportPdfAccount', ['transactions' => $transactions, 'selectedUser' => $user, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice]);
+            $pdf->save('../storage/app/userAcountState/' . $filename);
+            Mail::to($testEmail)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
+        }
+
+        return redirect('/sendAccountState/preview/' . $year)->with('success', 'Test envoyé à ' . $testEmail . ' (' . count($users) . ' email(s)).');
+    }
+
     /**
      * @param Request $request
      */
@@ -1313,6 +1347,37 @@ class admin extends Controller
     {
         User::sendAccountAlertNotification();
         return redirect('/usersList')->with('success', 'Emails envoyés à ' . count(User::all()->filter(fn($u) => $u->real_amount_account < 0 && $u->state == 1)) . ' utilisateur(s).');
+    }
+
+    public function usersSendAccountNotificationTest()
+    {
+        $testEmail = auth()->user()->email;
+        $users     = User::all()->filter(fn($u) => $u->real_amount_account < 0 && $u->state == 1 && !$u->isAttr('user:technique'));
+
+        $file = new Filesystem;
+        $file->cleanDirectory('userAcountState');
+
+        $aircraft            = aircraft::all();
+        $sailplaneStartPrice = sailplaneStartPrice::all();
+        $transactionType     = [];
+        foreach (transactionType::all() as $value) {
+            $value->name       = $value->name . ' ' . date('Y');
+            $transactionType[] = $value;
+        }
+
+        foreach ($users as $user) {
+            $transactionsUser = transaction::where('idUser', $user->id)->orderBy('time', 'asc')->orderBy('id', 'ASC')->get();
+            $transactions = [];
+            foreach ($transactionsUser as $value) {
+                $transactions[] = ['time' => date('d/m/Y H:i', $value->time), 'value' => number_format($value->value / 100, 2), 'solde' => number_format($value->solde / 100, 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation];
+            }
+            $filename = 'CVVT-' . str_replace(' ', '_', strtoupper($user->name)) . '_' . date('d-m-Y_H-i') . '.pdf';
+            $pdf = Pdf::loadView('exportPdfAccount', ['transactions' => $transactions, 'selectedUser' => $user, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice]);
+            $pdf->save('../storage/app/userAcountState/' . $filename);
+            Mail::to($testEmail)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
+        }
+
+        return redirect('/usersSendAccountNotification/preview')->with('success', 'Test envoyé à ' . $testEmail . ' (' . count($users) . ' email(s)).');
     }
 
     /**
