@@ -45,8 +45,8 @@
                     <div id="adminPermsBlock" @if($user->isAdmin != 1) style="display:none" @endif>
                         <p class="text-muted small mb-2">
                             <i class="fas fa-info-circle"></i>
-                            Cochez les sections accessibles. <strong>Si aucune case n'est cochée, l'admin a accès à tout.</strong>
-                            Retirer le rôle admin supprimera toutes ces permissions.
+                            Cochez les sections accessibles. <strong>admin:super</strong> donne accès à tout.
+                            Retirer le rôle administrateur supprimera toutes ces permissions.
                         </p>
                         <div class="row">
                             @foreach(\App\Models\usersAttributes::$userRights as $right => $info)
