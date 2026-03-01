@@ -8,13 +8,13 @@
 
                                     <a class="dropdown-item" href="/home"
                                        onclick="">
-                                        Mon Compte Pilote
+                                        <i class="fas fa-user-circle me-2"></i>Mon Compte Pilote
                                     </a>
                                     <a class="dropdown-item" href="/carnet">
-                                        Mon carnet de vol
+                                        <i class="fas fa-book me-2"></i>Mon carnet de vol
                                     </a>
                                     <a class="dropdown-item" href="/planches">
-                                        Planches de vol
+                                        <i class="fas fa-clipboard me-2"></i>Planches de vol
                                     </a>
                                     <a class="dropdown-item" href="{{ route('todolist.index') }}">
                                         <i class="fas fa-tasks me-2"></i>Todolist partagée
@@ -23,7 +23,7 @@
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
-                                        {{ __('Se déconnecter') }}
+                                        <i class="fas fa-sign-out-alt me-2"></i>{{ __('Se déconnecter') }}
                                     </a>
 
                                     

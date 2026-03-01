@@ -1,61 +1,57 @@
 <hr>
 <a class="dropdown-item" href="/manuel">
-  Gestion club / Aide
+  <i class="fas fa-question-circle me-2"></i>Gestion club / Aide
 </a>
-<a class="dropdown-item" href="/saisie"
-   onclick="">
-    Saisie
+<a class="dropdown-item" href="/saisie">
+    <i class="fas fa-pencil-alt me-2"></i>Saisie
 </a>
-<a class="dropdown-item" href="/importGesasso"
-   onclick="">
-    Import GESASSO
+<a class="dropdown-item" href="/importGesasso">
+    <i class="fas fa-file-import me-2"></i>Import GESASSO
 </a>
-<a class="dropdown-item" href="/planchesOgn"
-   onclick="">
-    Planches à saisir ({{ App\Models\ognFlight::getNbNotImported() }})
+<a class="dropdown-item" href="/planchesOgn">
+    <i class="fas fa-clipboard-list me-2"></i>Planches à saisir ({{ App\Models\ognFlight::getNbNotImported() }})
 </a>
-<a class="dropdown-item" href="/saisiePeriodique"
-   onclick="">
-    Saisie Périodique
+<a class="dropdown-item" href="/saisiePeriodique">
+    <i class="fas fa-calendar-alt me-2"></i>Saisie Périodique
 </a>
 <a class="dropdown-item" href="#"
    data-bs-toggle="modal" data-bs-target="#addUserModal">
-    Nouvelle Utilisateur
+    <i class="fas fa-user-plus me-2"></i>Nouvelle Utilisateur
 </a>
 <a class="dropdown-item" href="/usersList">
-    Liste des utilisateurs
+    <i class="fas fa-users me-2"></i>Liste des utilisateurs
 </a>
 <a class="dropdown-item" href="/validTransactions">
-    Transactions a valider &nbsp;&nbsp;
+    <i class="fas fa-check-circle me-2"></i>Transactions a valider &nbsp;&nbsp;
     @if(App\Models\transaction::getNotValidNumber() > 0)<span class="badge badge-primary">{{ App\Models\transaction::getNotValidNumber() }}</span>@endif
 </a>
 <a class="dropdown-item" href="/route?filterID=0&year={{ date('Y') }}">
-    Carnet de route Appareil
+    <i class="fas fa-plane me-2"></i>Carnet de route Appareil
 </a>
 <a class="dropdown-item" href="/vol?filterID=0&year={{ date('Y') }}">
-    Carnet de vol Pilote
+    <i class="fas fa-book-open me-2"></i>Carnet de vol Pilote
 </a>
 <a class="dropdown-item" href="/towing">
-    Remorquage
+    <i class="fas fa-link me-2"></i>Remorquage
 </a>
 <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#controlData" data-bs-backdrop="static" onclick="controlBDDData();">
-    Controle des données
+    <i class="fas fa-database me-2"></i>Controle des données
 </a>
 
-<a class="dropdown-item" href="/tarifs" >
-    Tarifs
+<a class="dropdown-item" href="/tarifs">
+    <i class="fas fa-tags me-2"></i>Tarifs
 </a>
 
-<a class="dropdown-item" href="/instruction" >
-    Instruction
+<a class="dropdown-item" href="/instruction">
+    <i class="fas fa-graduation-cap me-2"></i>Instruction
 </a>
 
 <a class="dropdown-item" href="/backups">
-    Sauvegardes
+    <i class="fas fa-archive me-2"></i>Sauvegardes
 </a>
 
 <hr>
-<a class="dropdown-item" >
+<a class="dropdown-item">
     <small>
       <i>
         <b>Informations Système : </b><br>
