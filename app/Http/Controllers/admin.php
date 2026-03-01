@@ -1237,10 +1237,22 @@ class admin extends Controller
         return back();
     }
 
+    public function usersSendAccountNotificationPreview()
+    {
+        $users = User::all();
+        $notifUsers = [];
+        foreach ($users as $user) {
+            if ($user->real_amount_account < 0 && $user->state == 1) {
+                $notifUsers[] = $user;
+            }
+        }
+        return view('admin.sendAccountNotificationPreview', ['users' => $notifUsers]);
+    }
+
     public function usersSendAccountNotification()
     {
         User::sendAccountAlertNotification();
-        return redirect('/usersList');
+        return redirect('/usersList')->with('success', 'Emails envoyés à ' . count(User::all()->filter(fn($u) => $u->real_amount_account < 0 && $u->state == 1)) . ' utilisateur(s).');
     }
 
     /**

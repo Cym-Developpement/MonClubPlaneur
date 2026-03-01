@@ -93,7 +93,8 @@ Route::post('/userMod/{id}', [App\Http\Controllers\admin::class, 'saveUserMod'])
 Route::get('/adminAccess/{id}', [App\Http\Controllers\admin::class, 'getAdminAccess'])->name('getAdminAccess')->middleware('can:admin');
 Route::get('/aircraft/state', [App\Http\Controllers\admin::class, 'aircraftState'])->name('aircraftState')->middleware('can:admin');
 
-Route::get('/usersSendAccountNotification', [App\Http\Controllers\admin::class, 'usersSendAccountNotification'])->name('usersSendAccountNotification')->middleware('can:admin');
+Route::get('/usersSendAccountNotification/preview', [App\Http\Controllers\admin::class, 'usersSendAccountNotificationPreview'])->name('usersSendAccountNotification.preview')->middleware('can:admin');
+Route::post('/usersSendAccountNotification', [App\Http\Controllers\admin::class, 'usersSendAccountNotification'])->name('usersSendAccountNotification')->middleware('can:admin');
 
 // WIKI SYSTEM
 Route::get('/wiki/delete/{page}', [App\Http\Controllers\WikiController::class, 'deletePage']);
