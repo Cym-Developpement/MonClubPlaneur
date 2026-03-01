@@ -109,6 +109,10 @@ Route::post('/wiki/update/{page}', [App\Http\Controllers\WikiController::class, 
 Route::post('/wiki/new', [App\Http\Controllers\WikiController::class, 'newPage']);
 Route::post('/wikipassword', [App\Http\Controllers\WikiController::class, 'password']);
 
+// PARAMÈTRES
+Route::get('/admin/parametres', [App\Http\Controllers\ParametreController::class, 'index'])->name('admin.parametres')->middleware('can:admin:super');
+Route::post('/admin/parametres', [App\Http\Controllers\ParametreController::class, 'update'])->name('admin.parametres.update')->middleware('can:admin:super');
+
 // AUDIT
 Route::get('/audit', [App\Http\Controllers\AuditController::class, 'index'])->name('audit.index')->middleware('can:admin:audit');
 

@@ -61,14 +61,15 @@
 </style>
 
 <div id="header">
-	<img src="../storage/app/img/logo-pdf.png" style="max-width:20%;">
+	@php $logoParam = \App\Models\parametre::getValue('club-logo', ''); @endphp
+	@if($logoParam)
+		<img src="{{ $logoParam }}" style="max-width:30%;">
+	@else
+		<img src="../storage/app/img/logo-pdf.png" style="max-width:30%;">
+	@endif
 	<h3>Extrait de compte</h3>
 	<h4>{{$selectedUser->name}}</h4>
-	<h4>date : 
-	@php
-		echo date('d-m-Y');
-	@endphp
-	</h4>
+	<h4>date : {{ \Carbon\Carbon::now()->locale('fr')->isoFormat('DD-MM-YYYY') }}</h4>
 </div>
 <hr>
 <div id="container">
@@ -109,17 +110,13 @@
 <hr>
 @isset($transaction['solde'])
 <div id="solde">
-	Le solde votre compte est de : 	{{ $transaction['solde'] }}€
+	Le solde de votre compte est de : {{ $transaction['solde'] }}€
 </div>
 
-@if($transaction['solde'] < 0)
-	<div id="requirePayment">
-		<p><b>Le solde de votre compte est négatif, pour approvisionner votre compte : </b></p>
-		<p> - Par Chèques à l'ordre du CVVT.</p>
-		<p> - Par virement en indiquant votre nom dans le libélé du virement.<br>
-			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i><small>IBAN  : FR76 1333 5004 0108 9253 9002 919 </small></i></p>
-		{{-- <p> - Par carte bancaire : dans votre compte a cette adresse : compte.cvvt.fr</p> --}}
-	</div>
-
-@endif
-@endisset()
+<div id="requirePayment">
+	<p><b>Pour approvisionner votre compte :</b></p>
+	<p> - Par virement en indiquant votre nom dans le libellé du virement.<br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i><small>IBAN : FR76 1333 5004 0108 9253 9002 919</small></i></p>
+	<p> - Par carte bancaire : <i><small>compte.cvvt.fr</small></i></p>
+</div>
+@endisset

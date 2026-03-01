@@ -15,10 +15,11 @@
                     {{-- En-tête avec logo --}}
                     <tr>
                         <td align="center" style="background-color:#1a3a6b;padding:28px 40px;">
-                            {{-- Logo à intégrer ici --}}
-                            {{-- <img src="..." alt="CVVT" style="max-height:70px;"> --}}
-                            <p style="color:#ffffff;font-size:22px;font-weight:bold;margin:0;letter-spacing:1px;">CVVT</p>
-                            <p style="color:#a8c4e8;font-size:13px;margin:6px 0 0;">Club de Vol à Voile de Thionville</p>
+                            @if($logo)
+                                <img src="{{ $logo }}" alt="{{ $nomCourt }}" style="max-height:70px;max-width:200px;margin-bottom:10px;"><br>
+                            @endif
+                            <p style="color:#ffffff;font-size:22px;font-weight:bold;margin:0;letter-spacing:1px;">{{ $nomCourt }}</p>
+                            <p style="color:#a8c4e8;font-size:13px;margin:6px 0 0;">{{ $nomComplet }}</p>
                         </td>
                     </tr>
 
@@ -33,7 +34,7 @@
                             </p>
                             <p style="margin:0 0 8px;font-size:15px;color:#333333;line-height:1.6;">
                                 Pour toute question concernant votre compte :
-                                <a href="mailto:yann@cymdev.com" style="color:#1a3a6b;text-decoration:none;font-weight:bold;">yann@cymdev.com</a>
+                                <a href="mailto:{{ $emailClub }}" style="color:#1a3a6b;text-decoration:none;font-weight:bold;">{{ $emailClub }}</a>
                             </p>
                         </td>
                     </tr>
@@ -50,8 +51,8 @@
                         <td style="padding:24px 40px 36px;">
                             <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;">
                                 Cordialement,<br>
-                                <strong style="color:#1a3a6b;">Yann Challet</strong><br>
-                                <span style="color:#888888;">Trésorier CVVT</span>
+                                <strong style="color:#1a3a6b;">{{ $tresorier }}</strong><br>
+                                <span style="color:#888888;">Trésorier {{ $nomCourt }}</span>
                             </p>
                         </td>
                     </tr>
