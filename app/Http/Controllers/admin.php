@@ -1262,6 +1262,7 @@ class admin extends Controller
         $user->email         = $request->email;
         $user->licenceNumber = $request->licenceNumber;
         $user->isSupervisor  = $request->isSupervisor;
+        $user->isAdmin       = $request->has('isAdmin') ? 1 : 0;
         $user->saveAttr($request->userState);
         $user->save();
         return view('admin.userMod', ['user' => $user]);
