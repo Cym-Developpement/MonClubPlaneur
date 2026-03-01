@@ -7,7 +7,25 @@
 
             <div class="card">
                 <div class="card-header">Liste des Pilotes &mdash; <span class="text-muted">{{ $filterLabel }} ({{ count($users) }})</span>
-                  <a style="margin-left: 10px;" href="/usersSendAccountNotification/preview" class="btn btn-sm btn-warning float-end">Envoyer l'email de compte débiteur</a>
+                  <div class="dropdown float-end ms-1">
+                    <button class="btn btn-sm btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="fas fa-envelope me-1"></i>Envoyer un email
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                      <h6 class="dropdown-header">Comptes débiteurs</h6>
+                      <a class="dropdown-item" href="/usersSendAccountNotification/preview">
+                        <i class="fas fa-exclamation-circle me-2 text-danger"></i>Email compte débiteur
+                      </a>
+                      <div class="dropdown-divider"></div>
+                      <h6 class="dropdown-header">État de compte adhérents</h6>
+                      <a class="dropdown-item" href="/sendAccountState/preview/{{ date('Y') }}">
+                        <i class="fas fa-paper-plane me-2 text-primary"></i>Adhérents {{ date('Y') }}
+                      </a>
+                      <a class="dropdown-item" href="/sendAccountState/preview/{{ date('Y') - 1 }}">
+                        <i class="fas fa-paper-plane me-2 text-secondary"></i>Adhérents {{ date('Y') - 1 }}
+                      </a>
+                    </div>
+                  </div>
                   <a href="{{ route('usersExportCsv', request()->only('filter')) }}" class="btn btn-sm btn-success float-end me-1 text-white">
                     <i class="fas fa-file-csv"></i> Export CSV
                   </a>

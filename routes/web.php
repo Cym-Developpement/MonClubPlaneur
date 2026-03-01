@@ -95,6 +95,8 @@ Route::get('/aircraft/state', [App\Http\Controllers\admin::class, 'aircraftState
 
 Route::get('/usersSendAccountNotification/preview', [App\Http\Controllers\admin::class, 'usersSendAccountNotificationPreview'])->name('usersSendAccountNotification.preview')->middleware('can:admin');
 Route::post('/usersSendAccountNotification', [App\Http\Controllers\admin::class, 'usersSendAccountNotification'])->name('usersSendAccountNotification')->middleware('can:admin');
+Route::get('/sendAccountState/preview/{year}', [App\Http\Controllers\admin::class, 'sendAccountStatePreview'])->name('sendAccountState.preview')->middleware('can:admin');
+Route::post('/sendAccountState/{year}', [App\Http\Controllers\admin::class, 'sendAccountStateForYear'])->name('sendAccountState.send')->middleware('can:admin');
 
 // WIKI SYSTEM
 Route::get('/wiki/delete/{page}', [App\Http\Controllers\WikiController::class, 'deletePage']);

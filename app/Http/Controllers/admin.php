@@ -862,6 +862,66 @@ class admin extends Controller
         }
     }
 
+    public function sendAccountStatePreview(Request $request, $year)
+    {
+        $year = intval($year);
+        $userIds = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+        $users = User::whereIn('id', $userIds)->orderBy('name')->get();
+        return view('admin.sendAccountStatePreview', compact('users', 'year'));
+    }
+
+    public function sendAccountStateForYear(Request $request, $year)
+    {
+        $year    = intval($year);
+        $userIds = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+        $users   = User::whereIn('id', $userIds)->get();
+
+        $file = new Filesystem;
+        $file->cleanDirectory('userAcountState');
+
+        $transactionType     = [];
+        $transactionTypeData = transactionType::all();
+        foreach ($transactionTypeData as $value) {
+            $value->name       = $value->name . ' ' . $year;
+            $transactionType[] = $value;
+        }
+
+        $aircraft            = aircraft::all();
+        $sailplaneStartPrice = sailplaneStartPrice::all();
+
+        foreach ($users as $user) {
+            $transactionsUser = transaction::where('idUser', $user->id)
+                ->orderBy('time', 'asc')
+                ->orderBy('id', 'ASC')
+                ->get();
+
+            $transactions = [];
+            foreach ($transactionsUser as $value) {
+                $transactions[] = [
+                    'time'        => date('d/m/Y H:i', $value->time),
+                    'value'       => number_format($value->value / 100, 2),
+                    'solde'       => number_format($value->solde / 100, 2),
+                    'name'        => $value->name,
+                    'id'          => $value->id,
+                    'observation' => $value->observation,
+                ];
+            }
+
+            $filename = 'CVVT-' . str_replace(' ', '_', strtoupper($user->name)) . '_' . date('d-m-Y_H-i') . '.pdf';
+            $pdf = Pdf::loadView('exportPdfAccount', [
+                'transactions'       => $transactions,
+                'selectedUser'       => $user,
+                'transactionType'    => $transactionType,
+                'aircrafts'          => $aircraft,
+                'sailplaneStartPrices' => $sailplaneStartPrice,
+            ]);
+            $pdf->save('../storage/app/userAcountState/' . $filename);
+            Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
+        }
+
+        return redirect('/usersList')->with('success', 'Emails envoyés à ' . count($users) . ' adhérent(s) ' . $year . '.');
+    }
+
     /**
      * @param Request $request
      */
