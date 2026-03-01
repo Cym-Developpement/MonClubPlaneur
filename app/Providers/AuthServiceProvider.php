@@ -42,8 +42,14 @@ class AuthServiceProvider extends ServiceProvider
             [$prefix] = explode(':', $ability, 2);
 
             // Pour admin:*, l'utilisateur doit être admin
-            if ($prefix === 'admin' && $user->isAdmin != 1) {
-                return false;
+            if ($prefix === 'admin') {
+                if ($user->isAdmin != 1) {
+                    return false;
+                }
+                // admin:super supplante tous les autres droits admin
+                if ($user->isAttr('admin:super')) {
+                    return true;
+                }
             }
 
             return $user->isAttr($ability);

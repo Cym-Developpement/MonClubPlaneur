@@ -30,6 +30,10 @@ class usersAttributes extends Model
      * @var array<string, array{name: string, description: string}>
      */
     public static array $userRights = [
+        'admin:super' => [
+            'name'        => 'Super administrateur',
+            'description' => 'Accès total à toutes les sections, supplante tous les autres droits',
+        ],
         'admin:saisie' => [
             'name'        => 'Saisie & Imports',
             'description' => 'Saisie de vols, import GESASSO, planches OGN, saisie périodique',
