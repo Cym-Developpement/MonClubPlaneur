@@ -61,7 +61,7 @@
 </style>
 
 <div id="header">
-	<img src="../storage/app/img/logo-pdf.png">
+	<img src="../storage/app/img/logo-pdf.png" style="max-width:20%;">
 	<h3>Extrait de compte</h3>
 	<h4>{{$selectedUser->name}}</h4>
 	<h4>date : 

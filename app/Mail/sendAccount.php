@@ -31,7 +31,7 @@ class sendAccount extends Mailable
      */
     public function build()
     {
-        return $this->subject('[CVVT] Extrait de compte')
+        return $this->subject('Votre compte au CVVT')
                     ->attachFromStorage($this->filename)
                     ->view('sendAccount_mail')
                     ->with([

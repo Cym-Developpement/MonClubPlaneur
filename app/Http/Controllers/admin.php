@@ -866,7 +866,12 @@ class admin extends Controller
     {
         $user = User::findOrFail($id);
 
+        $currentYear = intval(date('Y'));
+        $hasCurrentYear = transaction::where('idUser', $user->id)->where('year', $currentYear)->exists();
+        $statementYear  = $hasCurrentYear ? $currentYear : ($currentYear - 1);
+
         $transactionsUser = transaction::where('idUser', $user->id)
+            ->where('year', $statementYear)
             ->orderBy('time', 'asc')
             ->orderBy('id', 'ASC')
             ->get();
