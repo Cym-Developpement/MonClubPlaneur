@@ -61,9 +61,10 @@ class AppUpdate extends Command
             if (! $this->step('route:cache', [$php, $artisan, 'route:cache'])) {
                 return 1;
             }
-            if (! $this->step('view:cache', [$php, $artisan, 'view:cache'])) {
-                return 1;
-            }
+            // view:cache volontairement omis sur OVH mutualisé :
+            // le CLI et le processus web tournent dans des contextes différents,
+            // ce qui rend les vues compilées non modifiables par le web.
+            // Blade recompile à la demande sans impact sur les performances.
         }
 
         $this->newLine();
