@@ -12,16 +12,16 @@ class AuditController extends Controller
 
         if ($type === 'update') {
             $this->authorize('admin:super');
-            $lines = $this->readSingleLog(storage_path('logs/update.log'), 'raw');
-            return view('admin.audit', compact('lines', 'type'))
-                ->with(['dates' => [], 'selectedDate' => null, 'search' => '']);
+            $rawContent = $this->readRaw(storage_path('logs/update.log'));
+            return view('admin.audit', compact('type', 'rawContent'))
+                ->with(['dates' => [], 'selectedDate' => null, 'search' => '', 'lines' => []]);
         }
 
         if ($type === 'error') {
             $this->authorize('admin:super');
-            $lines = $this->readSingleLog(storage_path('logs/laravel.log'), 'monolog');
-            return view('admin.audit', compact('lines', 'type'))
-                ->with(['dates' => [], 'selectedDate' => null, 'search' => '']);
+            $rawContent = $this->readRaw(storage_path('logs/laravel.log'));
+            return view('admin.audit', compact('type', 'rawContent'))
+                ->with(['dates' => [], 'selectedDate' => null, 'search' => '', 'lines' => []]);
         }
 
         // type = audit (défaut)
@@ -65,24 +65,13 @@ class AuditController extends Controller
         return view('admin.audit', compact('dates', 'selectedDate', 'lines', 'search', 'type'));
     }
 
-    private function readSingleLog(string $path, string $format): array
+    private function readRaw(string $path): string
     {
         if (! file_exists($path)) {
-            return [];
+            return '';
         }
 
-        $raw   = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $lines = [];
-
-        foreach (array_reverse($raw) as $line) {
-            if ($format === 'monolog') {
-                $lines[] = $this->parseLine($line);
-            } else {
-                $lines[] = ['time' => '', 'level' => 'info', 'message' => $line];
-            }
-        }
-
-        return $lines;
+        return file_get_contents($path) ?: '';
     }
 
     private function parseLine(string $line, ?string $datePrefix = null): array

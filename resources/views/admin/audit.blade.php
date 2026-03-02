@@ -57,42 +57,53 @@
                 </div>
 
                 <div class="card-body p-0">
-                    @if($type === 'audit' && $search !== '')
-                        <div class="px-3 pt-2 pb-1 text-muted small border-bottom">
-                            {{ count($lines) }} résultat(s) pour « {{ $search }} »
-                        </div>
+
+                    @if($type !== 'audit')
+
+                        @if(empty($rawContent ?? ''))
+                            <p class="text-muted p-3 mb-0">Aucune entrée.</p>
+                        @else
+                            <textarea readonly class="form-control font-monospace border-0 rounded-0"
+                                      style="height:75vh; resize:vertical; font-size:0.8rem; background:#1e1e1e; color:#d4d4d4;">{{ $rawContent }}</textarea>
+                        @endif
+
+                    @else
+
+                        @if($search !== '')
+                            <div class="px-3 pt-2 pb-1 text-muted small border-bottom">
+                                {{ count($lines) }} résultat(s) pour « {{ $search }} »
+                            </div>
+                        @endif
+
+                        @if(count($lines) === 0)
+                            <p class="text-muted p-3 mb-0">Aucune entrée pour cette journée.</p>
+                        @else
+                            <table class="table table-sm table-hover mb-0 font-monospace">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width:170px;">Date / Heure</th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($lines as $entry)
+                                    <tr @if(isset($entry['level']) && in_array($entry['level'], ['error','critical','alert','emergency'])) class="table-danger" @elseif(isset($entry['level']) && $entry['level'] === 'warning') class="table-warning" @endif>
+                                        <td class="text-muted small text-nowrap">{{ $entry['time'] }}</td>
+                                        <td class="small">
+                                            @if($search !== '')
+                                                {!! preg_replace('/(' . preg_quote(e($search), '/') . ')/i', '<mark>$1</mark>', e($entry['message'])) !!}
+                                            @else
+                                                {{ $entry['message'] }}
+                                            @endif
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+
                     @endif
 
-                    @if(count($lines) === 0)
-                        <p class="text-muted p-3 mb-0">Aucune entrée.</p>
-                    @else
-                        <table class="table table-sm table-hover mb-0 font-monospace">
-                            <thead class="table-light">
-                                <tr>
-                                    @if($type !== 'update')
-                                    <th style="width:170px;">Date / Heure</th>
-                                    @endif
-                                    <th>Message</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($lines as $entry)
-                                <tr @if(isset($entry['level']) && in_array($entry['level'], ['error','critical','alert','emergency'])) class="table-danger" @elseif(isset($entry['level']) && $entry['level'] === 'warning') class="table-warning" @endif>
-                                    @if($type !== 'update')
-                                    <td class="text-muted small text-nowrap">{{ $entry['time'] }}</td>
-                                    @endif
-                                    <td class="small">
-                                        @if($type === 'audit' && $search !== '')
-                                            {!! preg_replace('/(' . preg_quote(e($search), '/') . ')/i', '<mark>$1</mark>', e($entry['message'])) !!}
-                                        @else
-                                            {{ $entry['message'] }}
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @endif
                 </div>
             </div>
 
