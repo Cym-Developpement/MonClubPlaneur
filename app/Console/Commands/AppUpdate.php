@@ -31,6 +31,10 @@ class AppUpdate extends Command
             $this->gitStashPop();
         }
 
+        $lastCommit = new Process(['git', 'log', '-1', '--oneline'], base_path());
+        $lastCommit->run();
+        $this->line('  ↳ ' . trim($lastCommit->getOutput()));
+
         $php      = PHP_BINARY;
         $composer = base_path('composer.phar');
 
