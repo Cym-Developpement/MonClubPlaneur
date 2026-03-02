@@ -92,31 +92,37 @@
                       </table>
                     </div> --}}
 
+                    <div class="d-flex justify-content-center mb-3">
+                      <div class="btn-group">
+                        @can('debug')
+                        <a class="btn btn-success btn-sm" href="addFlight">
+                          <i class="fas fa-plane me-1"></i>Enregistrer un vol
+                        </a>
+                        @endcan
+                        <a class="btn btn-sm btn-info" href="{{ route('transfer') }}">
+                          <i class="fas fa-exchange-alt me-1"></i>Transfert pilote
+                        </a>
+                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#remboursementModal">
+                          <i class="fas fa-shopping-cart me-1"></i>Achat club
+                        </button>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#payModal">
+                          <i class="fas fa-wallet me-1"></i>Approvisionner mon compte
+                        </button>
+                      </div>
+                    </div>
+
                     <x-transaction-table
                         :transactions="$transactions"
                         :availableYears="$availableYears"
                         :solde="$solde"
                         :userId="0"
                     />
-                    <br>
+
                     @if($solde < 0)
-                      <div class="alert alert-warning" role="alert">
+                      <div class="alert alert-warning mt-2" role="alert">
                         Le solde de votre compte est négatif. merci d'approvisionner votre compte.
-                      </div>         
-                    @endif
-                    
-                    <div class="d-flex justify-content-end">
-                      <div class="btn-group">
-                        @can('debug')
-                        <a class="btn btn-success btn-sm" href="addFlight">Enregistrer un vol</a>
-                        @endcan
-                        <a class="btn btn-sm btn-info" href="{{ route('transfer') }}">
-                          <i class="fas fa-exchange-alt me-1"></i>Transfert pilote
-                        </a>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#remboursementModal">Achat club</button>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#payModal">Approvisionner mon compte</button>
                       </div>
-                    </div>
+                    @endif
                     
                     
                     <!--<button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#helloAssoModal">Approvisionner mon compte par carte bancaire</button>-->

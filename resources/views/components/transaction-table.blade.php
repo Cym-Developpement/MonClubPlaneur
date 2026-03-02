@@ -11,13 +11,13 @@
 @endphp
 
 <div class="table-responsive">
-  <table class="table {{ $striped ? 'table-striped' : '' }}">
-    <thead>
+  <table class="table table-hover align-middle {{ $striped ? 'table-striped' : '' }}">
+    <thead class="table-light">
       <tr>
         <th scope="col">Date</th>
         <th scope="col">Description</th>
-        <th scope="col">Montant</th>
-        <th scope="col">Solde</th>
+        <th scope="col" class="text-end">Montant</th>
+        <th scope="col" class="text-end">Solde</th>
         @can('admin:transactions')
         <th scope="col"></th>
         @endcan
@@ -27,23 +27,17 @@
 
       {{-- Ligne de solde final (home uniquement, quand $solde est fourni) --}}
       @if($solde !== null)
-      <tr>
-        <td></td>
-        <th>Solde au {{ date('d/m/Y') }}
+      <tr class="fw-bold border-top border-2">
+        <td class="text-muted">{{ date('d/m/Y') }}</td>
+        <td>Solde actuel
           @if($hasPending)
           <br><span class="badge bg-danger">En attente de validation.</span>
           @endif
-        </th>
+        </td>
         <td></td>
-        <th @if($solde < 0)
-              class="table-danger"
-            @elseif($solde > 0 && $hasPending)
-              class="table-warning"
-            @else
-              class="table-success"
-            @endif>
+        <td class="text-end @if($solde < 0) table-danger @elseif($solde > 0 && $hasPending) table-warning @else table-success @endif">
           {{ $solde }}€
-        </th>
+        </td>
         @can('admin:transactions')
         <td></td>
         @endcan
@@ -53,42 +47,42 @@
       {{-- Transactions de l'année courante --}}
       @foreach ($transactions as $transaction)
       <tr class="@if($transaction['valid'] == 0) table-warning @endif year-{{ $transaction['year'] }}">
-        <th scope="row">
+        <td class="text-muted small">
           @can('admin:transactions')
           <div id="currentTrDateBlock-{{ $transaction['id'] }}">
-            <button class="btn btn-link"
-                    style="font-weight: bold; text-decoration: none; color: black;"
+            <button class="btn btn-link p-0 text-muted small"
+                    style="text-decoration: none;"
                     onclick="displayNewTrDate({{ $transaction['id'] }})">
               {{ $transaction['time'] }}
             </button>
           </div>
           <div id="newTrDateBlock-{{ $transaction['id'] }}" style="display: none;">
-            <div class="input-group mb-3">
+            <div class="input-group input-group-sm">
               <input type="text" value="{{ $transaction['time'] }}"
                      class="form-control form-control-sm newTrDateBlock-datePicker"
                      id="newTrDateInput-{{ $transaction['id'] }}">
               <button class="btn btn-success btn-sm" type="button"
                       onclick="validNewTrDate({{ $transaction['id'] }});">
-                <i data-feather="check" style="width: 16px; height: 16px;"></i>
+                <i data-feather="check" style="width: 14px; height: 14px;"></i>
               </button>
             </div>
           </div>
           @else
           {{ $transaction['time'] }}
           @endcan
-        </th>
-        <td style="font-weight: bold;">{{ $transaction['name'] }}
+        </td>
+        <td class="fw-semibold">{{ $transaction['name'] }}
           @if($transaction['valid'] == 0 && $solde !== null)
           <br><span class="badge bg-danger">En attente de validation.</span>
           @endif
           @if($transaction['observation'] != '')
-          <br><small style="font-size: 70%; font-weight: normal;"><i>{{ $transaction['observation'] }}</i></small>
+          <br><small class="text-muted fw-normal fst-italic">{{ $transaction['observation'] }}</small>
           @endif
         </td>
-        <td>{{ $transaction['value'] }}€</td>
-        <td @if($transaction['solde'] < 0) class="table-danger" @endif>{{ $transaction['solde'] }}€</td>
+        <td class="text-end">{{ $transaction['value'] }}€</td>
+        <td class="text-end @if($transaction['solde'] < 0) table-danger @endif">{{ $transaction['solde'] }}€</td>
         @can('admin:transactions')
-        <td>
+        <td class="text-center">
           <form method="POST" action="{{ route('deleteTransactionPost') }}"
                 onsubmit="return confirm('Supprimer la transaction {{ $transaction['id'] }} ?');">
             {{ csrf_field() }}
@@ -104,17 +98,15 @@
 
       {{-- Années passées (chargement différé au clic) --}}
       @foreach ($availableYears as $ay)
-      <tr class="table-active" id="year-sep-{{ $ay['year'] }}"
-          data-year="{{ $ay['year'] }}" data-user="{{ $userId }}" data-loaded="0">
-        <th>
-          <button class="btn btn-default btn-sm"
-                  onclick="toggleYear({{ $ay['year'] }}, {{ $userId }})">
-            Afficher/Masquer {{ $ay['year'] }}
-          </button>
-        </th>
+      <tr class="table-secondary" id="year-sep-{{ $ay['year'] }}"
+          style="cursor: pointer;"
+          data-year="{{ $ay['year'] }}" data-user="{{ $userId }}" data-loaded="0"
+          onclick="toggleYear({{ $ay['year'] }}, {{ $userId }})">
+        <td colspan="2" class="fw-semibold">
+          <i class="fas fa-chevron-right me-2 small"></i>{{ $ay['year'] }}
+        </td>
         <td></td>
-        <td></td>
-        <td class="text-muted fst-italic">Solde au 31/12 : {{ $ay['solde'] }}€</td>
+        <td class="text-end text-muted fst-italic small">Solde au 31/12 : {{ $ay['solde'] }}€</td>
         @can('admin:transactions')
         <td></td>
         @endcan
