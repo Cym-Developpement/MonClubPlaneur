@@ -60,8 +60,9 @@
                     
 
                       <hr>
-                      @if (count($transactions) > 0)
-                      <table class="table table-striped">
+                      @if (count($transactions) > 0 || count($availableYears) > 0)
+                      {{-- OLD: table statique avec toutes les années chargées --}}
+                      {{-- <table class="table table-striped">
                         <thead>
                           <tr>
                             <th scope="col">Date</th>
@@ -86,7 +87,7 @@
                               </tr>
                               @endif
                               <tr class="@if($transaction['valid'] == 0) table-warning @endif {{ $transaction['year'] }}" @if($transaction['year'] !== date('Y'))
-                                style="display: none;" 
+                                style="display: none;"
                               @endif>
                                 <th scope="row">
                                   <div id="currentTrDateBlock-{{ $transaction['id'] }}">
@@ -127,7 +128,15 @@
                               @endphp
                           @endforeach
                         </tbody>
-                      </table>
+                      </table> --}}
+
+                      <x-transaction-table
+                          :transactions="$transactions"
+                          :availableYears="$availableYears"
+                          :userId="$selectedUser"
+                          :striped="true"
+                      />
+
                       <div class="row">
                         <div class="col-md-6" style="text-align: center;">
                           <a href="updateSolde?selectUserInTransaction={{ $selectedUser }}" class="btn btn-warning btn-block">Recalculer le solde</a>

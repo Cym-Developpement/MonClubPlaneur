@@ -16,7 +16,8 @@
                             {{ session('status') }}
                         </div>
                     @endif
-                    <div class="table-responsive">
+                    {{-- OLD: table statique avec toutes les années chargées --}}
+                    {{-- <div class="table-responsive">
                       <table class="table">
                         <thead>
                           <tr>
@@ -42,7 +43,7 @@
                               @endif
                               <tr class="@if($transaction['valid'] == 0) table-warning @endif {{ $transaction['year'] }}"
                               @if($transaction['year'] !== date('Y'))
-                                style="display: none;" 
+                                style="display: none;"
                               @endif
                               >
                                 <th scope="row">{{ $transaction['time'] }}</th>
@@ -67,8 +68,7 @@
 
                           <tr>
                               <td></td>
-                              
-                              <th>Solde au 
+                              <th>Solde au
                               @php
                                   echo date('d/m/Y');
                               @endphp
@@ -77,7 +77,7 @@
                               @endif
                               </th>
                               <td></td>
-                              <th 
+                              <th
                               @if($solde<0)
                                class="table-danger"
                               @elseif($solde>0 && $temporySolde == 1)
@@ -90,7 +90,14 @@
                           </tr>
                         </tbody>
                       </table>
-                    </div>
+                    </div> --}}
+
+                    <x-transaction-table
+                        :transactions="$transactions"
+                        :availableYears="$availableYears"
+                        :solde="$solde"
+                        :userId="0"
+                    />
                     <br>
                     @if($solde < 0)
                       <div class="alert alert-warning" role="alert">

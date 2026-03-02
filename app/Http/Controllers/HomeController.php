@@ -55,14 +55,39 @@ class HomeController extends Controller
         Auth::user()->resetAdminAccess();
         $userData = $this->getUserData();
         $alerts = alerts::getAlertsList(Auth::user()->id);
-        $transactions = array();
-        $transactionsData = transaction::where('idUser',  Auth::user()->id)
-                                        ->orderBy('time', 'asc')
-                                        ->orderBy('id', 'ASC')
+
+        // OLD: toutes les transactions chargées d'un coup
+        // $transactions = array();
+        // $transactionsData = transaction::where('idUser',  Auth::user()->id)
+        //                                 ->orderBy('time', 'asc')
+        //                                 ->orderBy('id', 'ASC')
+        //                                 ->get();
+        // foreach ($transactionsData as $key => $value) {
+        //     $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'quantity' => $value->quantity, 'valid' => $value->valid, 'observation' => $value->observation, 'year' => date('Y', $value->time)];
+        // }
+
+        // NEW: année courante uniquement + années passées chargées à la demande
+        $startOfYear = mktime(0, 0, 0, 1, 1, (int)date('Y'));
+        $transactions = [];
+        $transactionsData = transaction::where('idUser', Auth::user()->id)
+                                        ->where('time', '>=', $startOfYear)
+                                        ->orderBy('time', 'desc')
+                                        ->orderBy('id', 'desc')
                                         ->get();
-        foreach ($transactionsData as $key => $value) {
-            $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'quantity' => $value->quantity, 'valid' => $value->valid, 'observation' => $value->observation, 'year' => date('Y', $value->time)];
+        foreach ($transactionsData as $value) {
+            $transactions[] = [
+                'time'        => date('d/m/Y H:i', $value->time),
+                'value'       => number_format(($value->value/100), 2),
+                'solde'       => number_format(($value->solde/100), 2),
+                'name'        => $value->name,
+                'id'          => $value->id,
+                'quantity'    => $value->quantity,
+                'valid'       => $value->valid,
+                'observation' => $value->observation,
+                'year'        => date('Y', $value->time),
+            ];
         }
+        $availableYears = $this->getAvailableYears(Auth::user()->id, $startOfYear);
 
         if (Auth::user()->can('admin')) {
             $allUsers = User::where('id', '>', 0)->orderBy('name', 'asc')->get();
@@ -71,8 +96,8 @@ class HomeController extends Controller
         }
 
         $attributes = usersAttributes::where('userId', Auth::user()->id)->get();
-        
-        return view('home', ['userAttributes' => $attributes, 'transactions' => $transactions, 'solde' => number_format(($this->getSolde(Auth::user()->id)/100), 2), 'userData' => $userData, 'alertsList' => $alerts, 'allUsers' => $allUsers]);
+
+        return view('home', ['userAttributes' => $attributes, 'transactions' => $transactions, 'availableYears' => $availableYears, 'solde' => number_format(($this->getSolde(Auth::user()->id)/100), 2), 'userData' => $userData, 'alertsList' => $alerts, 'allUsers' => $allUsers]);
     }
 
     /**
@@ -105,25 +130,50 @@ class HomeController extends Controller
             }
 
             $selectedUser = $request->selectUserInTransaction;
-            $transactionsUser = transaction::where('idUser',  $request->selectUserInTransaction)
-                                            ->orderBy('time', 'asc')
-                                            ->orderBy('id', 'ASC')
+
+            // OLD: toutes les transactions chargées d'un coup
+            // $transactionsUser = transaction::where('idUser',  $request->selectUserInTransaction)
+            //                                 ->orderBy('time', 'asc')
+            //                                 ->orderBy('id', 'ASC')
+            //                                 ->get();
+            // foreach ($transactionsUser as $key => $value) {
+            //     $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation, 'valid' => $value->valid, 'year' => date('Y', $value->time)];
+            // }
+
+            // NEW: année courante uniquement
+            $startOfYear = mktime(0, 0, 0, 1, 1, (int)date('Y'));
+            $transactionsUser = transaction::where('idUser', $request->selectUserInTransaction)
+                                            ->where('time', '>=', $startOfYear)
+                                            ->orderBy('time', 'desc')
+                                            ->orderBy('id', 'desc')
                                             ->get();
-            foreach ($transactionsUser as $key => $value) {
-                $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation, 'valid' => $value->valid, 'year' => date('Y', $value->time)];
+            foreach ($transactionsUser as $value) {
+                $transactions[] = [
+                    'time'        => date('d/m/Y H:i', $value->time),
+                    'value'       => number_format(($value->value/100), 2),
+                    'solde'       => number_format(($value->solde/100), 2),
+                    'name'        => $value->name,
+                    'id'          => $value->id,
+                    'observation' => $value->observation,
+                    'valid'       => $value->valid,
+                    'year'        => date('Y', $value->time),
+                ];
             }
+            $availableYears = $this->getAvailableYears($request->selectUserInTransaction, $startOfYear);
+        } else {
+            $availableYears = [];
         }
 
 
         $transactionType = transactionType::all();
-        
+
 
         $aircraft = aircraft::all();
         $sailplaneStartPrice = sailplaneStartPrice::all();
 
         $currentUserName = $selectedUser ? (User::find($selectedUser)?->name ?? '') : '';
 
-        return view('transaction', ['users' => $users, 'transactions' => $transactions, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice, 'currentUserName' => $currentUserName]);
+        return view('transaction', ['users' => $users, 'transactions' => $transactions, 'availableYears' => $availableYears, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice, 'currentUserName' => $currentUserName]);
     }
 
     private function getSolde($user)
@@ -134,6 +184,75 @@ class HomeController extends Controller
             $solde = $transaction->solde;
         }
         return $solde;
+    }
+
+    /**
+     * Retourne les années passées avec le solde au 31/12 de chaque année.
+     * Utilisé pour le chargement différé des transactions par année.
+     */
+    private function getAvailableYears($userId, $startOfYear)
+    {
+        $pastTransactions = transaction::where('idUser', $userId)
+            ->where('time', '<', $startOfYear)
+            ->orderBy('time', 'desc')
+            ->orderBy('id', 'desc')
+            ->get(['time', 'solde']);
+
+        $years = [];
+        $seenYears = [];
+        foreach ($pastTransactions as $tx) {
+            $year = (int)date('Y', $tx->time);
+            if (!in_array($year, $seenYears)) {
+                $seenYears[] = $year;
+                $years[] = [
+                    'year'  => $year,
+                    'solde' => number_format($tx->solde / 100, 2),
+                ];
+            }
+        }
+        return $years;
+    }
+
+    /**
+     * Retourne le HTML des transactions d'une année (chargement AJAX différé).
+     */
+    public function getTransactionsYear(Request $request)
+    {
+        $year   = (int)$request->year;
+        $userId = (int)($request->user ?? 0);
+
+        if ($userId > 0) {
+            if (!Auth::user()->can('admin:transactions')) {
+                abort(403);
+            }
+        } else {
+            $userId = Auth::user()->id;
+        }
+
+        $startOfYear = mktime(0, 0, 0, 1, 1, $year);
+        $endOfYear   = mktime(23, 59, 59, 12, 31, $year);
+
+        $transactionsData = transaction::where('idUser', $userId)
+            ->whereBetween('time', [$startOfYear, $endOfYear])
+            ->orderBy('time', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $transactions = [];
+        foreach ($transactionsData as $value) {
+            $transactions[] = [
+                'time'        => date('d/m/Y H:i', $value->time),
+                'value'       => number_format(($value->value / 100), 2),
+                'solde'       => number_format(($value->solde / 100), 2),
+                'name'        => $value->name,
+                'id'          => $value->id,
+                'observation' => $value->observation,
+                'valid'       => $value->valid,
+                'year'        => date('Y', $value->time),
+            ];
+        }
+
+        return view('partials.transaction-rows', ['transactions' => $transactions]);
     }
 
     private function saveTransaction($user, $type, $amount)

@@ -533,6 +533,35 @@ function markReadAlert(id)
 	});
 }
 
+function toggleYear(year, userId)
+{
+	var sep = $('#year-sep-' + year);
+	if (!sep.data('loaded')) {
+		$.ajaxSetup({
+		    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+		});
+		$.get('transactionsYear', {year: year, user: userId}, function(html) {
+			sep.after(html);
+			sep.data('loaded', true);
+			// Ré-initialiser le datepicker sur les lignes insérées dynamiquement
+			var start = new Date();
+			start.setHours(0);
+			start.setMinutes(0);
+			sep.nextUntil('[id^="year-sep-"]').find('.newTrDateBlock-datePicker').datepicker({
+				language: 'fr',
+				startDate: start,
+				autoClose: true,
+				showEvent: 'focus',
+				timepicker: true,
+				position: 'bottom left'
+			});
+			feather.replace();
+		});
+	} else {
+		$('.year-' + year).toggle();
+	}
+}
+
 function strToJsDate(strDate)
 {
 	let data = strDate.split(' ');
