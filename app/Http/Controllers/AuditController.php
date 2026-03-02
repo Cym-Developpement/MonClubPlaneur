@@ -11,12 +11,14 @@ class AuditController extends Controller
         $type = $request->get('type', 'audit');
 
         if ($type === 'update') {
+            $this->authorize('admin:super');
             $lines = $this->readSingleLog(storage_path('logs/update.log'), 'raw');
             return view('admin.audit', compact('lines', 'type'))
                 ->with(['dates' => [], 'selectedDate' => null, 'search' => '']);
         }
 
         if ($type === 'error') {
+            $this->authorize('admin:super');
             $lines = $this->readSingleLog(storage_path('logs/laravel.log'), 'monolog');
             return view('admin.audit', compact('lines', 'type'))
                 ->with(['dates' => [], 'selectedDate' => null, 'search' => '']);

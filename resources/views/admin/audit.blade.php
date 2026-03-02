@@ -14,8 +14,10 @@
                         <form method="get" action="/audit" id="typeForm" class="mb-0">
                             <select name="type" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
                                 <option value="audit"  @if($type === 'audit')  selected @endif>Journal d'audit</option>
+                                @can('admin:super')
                                 <option value="update" @if($type === 'update') selected @endif>Mise à jour</option>
                                 <option value="error"  @if($type === 'error')  selected @endif>Erreurs Laravel</option>
+                                @endcan
                             </select>
                         </form>
 
