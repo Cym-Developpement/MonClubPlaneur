@@ -537,10 +537,15 @@ function toggleYear(year, userId)
 {
 	var sep = $('#year-sep-' + year);
 	if (!sep.data('loaded')) {
+		var spinner = $('<span class="spinner-border spinner-border-sm ms-2" role="status"></span>');
+		sep.find('td:first').append(spinner);
+		sep.css('pointer-events', 'none');
 		$.ajaxSetup({
 		    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
 		});
 		$.get('transactionsYear', {year: year, user: userId}, function(html) {
+			spinner.remove();
+			sep.css('pointer-events', '');
 			sep.after(html);
 			sep.data('loaded', true);
 			// Ré-initialiser le datepicker sur les lignes insérées dynamiquement
