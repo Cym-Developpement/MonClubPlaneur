@@ -98,21 +98,17 @@
                       </div>         
                     @endif
                     
-                    <div class="row">
-                      <div class="col-md-3" style="margin-top: 5px;">
+                    <div class="d-flex justify-content-end">
+                      <div class="btn-group">
                         @can('debug')
-                        <a class="btn btn-success btn-sm btn-block float-end" href="addFlight">Enregistrer un vol</a>
+                        <a class="btn btn-success btn-sm" href="addFlight">Enregistrer un vol</a>
                         @endcan
+                        <a class="btn btn-sm btn-info" href="{{ route('transfer') }}">
+                          <i class="fas fa-exchange-alt me-1"></i>Transfert pilote
+                        </a>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#remboursementModal">Achat club</button>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#payModal">Approvisionner mon compte</button>
                       </div>
-                      
-                      <div class="col-md-3" style="margin-top: 5px;">
-                          <a class="btn btn-sm btn-block btn-info float-end" href="{{ route('transfer') }}">
-                            <i class="fas fa-exchange-alt me-1"></i>Transfert pilote
-                          </a>
-                      </div>
-                           
-                      <div class="col-md-3" style="margin-top: 5px;"><button class="btn btn-sm btn-block btn-primary float-end" data-bs-toggle="modal" data-bs-target="#remboursementModal">Achat club</button></div>
-                      <div class="col-md-3" style="margin-top: 5px;"><button class="btn btn-sm btn-block btn-primary float-end" data-bs-toggle="modal" data-bs-target="#payModal">Approvisionner mon compte</button></div>
                     </div>
                     
                     
