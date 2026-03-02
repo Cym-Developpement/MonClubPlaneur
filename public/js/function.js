@@ -546,6 +546,7 @@ function toggleYear(year, userId)
 		$.get('transactionsYear', {year: year, user: userId}, function(html) {
 			spinner.remove();
 			sep.css('pointer-events', '');
+			sep.find('.year-chevron').addClass('open');
 			sep.after(html);
 			sep.data('loaded', true);
 			// Ré-initialiser le datepicker sur les lignes insérées dynamiquement
@@ -564,6 +565,7 @@ function toggleYear(year, userId)
 		});
 	} else {
 		$('.year-' + year).toggle();
+		sep.find('.year-chevron').toggleClass('open');
 	}
 }
 

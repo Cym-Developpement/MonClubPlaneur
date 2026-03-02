@@ -8,3 +8,11 @@
 @import '~bootstrap/scss/bootstrap';
 
 @import '~air-datepicker/dist/css/datepicker.css';
+
+.year-chevron {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    &.open {
+        transform: rotate(90deg);
+    }
+}

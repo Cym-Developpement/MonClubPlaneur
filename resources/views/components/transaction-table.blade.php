@@ -103,7 +103,7 @@
           data-year="{{ $ay['year'] }}" data-user="{{ $userId }}" data-loaded="0"
           onclick="toggleYear({{ $ay['year'] }}, {{ $userId }})">
         <td colspan="2" class="fw-semibold">
-          <i class="fas fa-chevron-right me-2 small"></i>{{ $ay['year'] }}
+          <i class="fas fa-chevron-right me-2 small year-chevron"></i>{{ $ay['year'] }}
         </td>
         <td></td>
         <td class="text-end text-muted fst-italic small">Solde au 31/12 : {{ $ay['solde'] }}€</td>
