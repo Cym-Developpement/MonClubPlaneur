@@ -8,6 +8,21 @@ class AuditController extends Controller
 {
     public function index(Request $request)
     {
+        $type = $request->get('type', 'audit');
+
+        if ($type === 'update') {
+            $lines = $this->readSingleLog(storage_path('logs/update.log'), 'raw');
+            return view('admin.audit', compact('lines', 'type'))
+                ->with(['dates' => [], 'selectedDate' => null, 'search' => '']);
+        }
+
+        if ($type === 'error') {
+            $lines = $this->readSingleLog(storage_path('logs/laravel.log'), 'monolog');
+            return view('admin.audit', compact('lines', 'type'))
+                ->with(['dates' => [], 'selectedDate' => null, 'search' => '']);
+        }
+
+        // type = audit (défaut)
         $dir = storage_path('logs/audit');
 
         $files = [];
@@ -20,7 +35,7 @@ class AuditController extends Controller
             }
         }
 
-        krsort($files); // plus récent en premier
+        krsort($files);
 
         $dates        = array_keys($files);
         $selectedDate = $request->get('date', $dates[0] ?? null);
@@ -29,7 +44,6 @@ class AuditController extends Controller
         $lines = [];
 
         if ($search !== '') {
-            // Recherche dans tous les fichiers, du plus récent au plus ancien
             foreach ($files as $date => $path) {
                 $raw = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
                 foreach (array_reverse($raw) as $line) {
@@ -46,12 +60,31 @@ class AuditController extends Controller
             }
         }
 
-        return view('admin.audit', compact('dates', 'selectedDate', 'lines', 'search'));
+        return view('admin.audit', compact('dates', 'selectedDate', 'lines', 'search', 'type'));
+    }
+
+    private function readSingleLog(string $path, string $format): array
+    {
+        if (! file_exists($path)) {
+            return [];
+        }
+
+        $raw   = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = [];
+
+        foreach (array_reverse($raw) as $line) {
+            if ($format === 'monolog') {
+                $lines[] = $this->parseLine($line);
+            } else {
+                $lines[] = ['time' => '', 'level' => 'info', 'message' => $line];
+            }
+        }
+
+        return $lines;
     }
 
     private function parseLine(string $line, ?string $datePrefix = null): array
     {
-        // [2026-03-01 14:23:45] local.INFO: message [] []
         if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] \w+\.(\w+): (.+?)(?:\s+\[\]\s*\[\])?$/', $line, $m)) {
             return [
                 'time'    => $m[1],
