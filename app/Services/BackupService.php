@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\flight;
+use App\Models\transaction;
+use App\Models\User;
 use ZipArchive;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
@@ -47,9 +50,90 @@ class BackupService
             $zip->addFile($dbPath, 'database/database.sqlite');
         }
 
+        // CSV transactions et vols par utilisateur
+        $users = User::orderBy('name')->get();
+        foreach ($users as $user) {
+            $slug = $this->userSlug($user->id, $user->name);
+
+            $zip->addFromString(
+                "transactions/{$slug}.csv",
+                $this->buildTransactionsCsv($user->id)
+            );
+
+            $zip->addFromString(
+                "flights/{$slug}.csv",
+                $this->buildFlightsCsv($user->id)
+            );
+        }
+
         $zip->close();
 
         return $filename;
+    }
+
+    private function userSlug(int $id, string $name): string
+    {
+        $clean = preg_replace('/[^a-z0-9]+/', '_', strtolower($name));
+        return "{$id}_{$clean}";
+    }
+
+    private function buildTransactionsCsv(int $userId): string
+    {
+        $rows = transaction::where('idUser', $userId)
+            ->orderBy('time')
+            ->get();
+
+        $lines = ["id;date;libelle;montant_eur;solde_eur;valide;observation"];
+
+        foreach ($rows as $tr) {
+            $lines[] = implode(';', [
+                $tr->id,
+                date('Y-m-d H:i:s', $tr->time),
+                $this->escapeCsv($tr->name),
+                number_format($tr->value / 100, 2, '.', ''),
+                number_format($tr->solde, 2, '.', ''),
+                $tr->valid ? '1' : '0',
+                $this->escapeCsv($tr->observation ?? ''),
+            ]);
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function buildFlightsCsv(int $userId): string
+    {
+        $rows = flight::where('idUser', $userId)
+            ->orWhere('userPayId', $userId)
+            ->orderBy('flightTimestamp')
+            ->get();
+
+        $lines = ["id;date;aeronef;pilote_id;payeur_id;instructeur_id;depart;arrivee;duree_min;type_lancement;atterrissages"];
+
+        foreach ($rows as $f) {
+            $lines[] = implode(';', [
+                $f->id,
+                date('Y-m-d', $f->flightTimestamp),
+                $this->escapeCsv($f->aircraftId),
+                $f->idUser,
+                $f->userPayId,
+                $f->idInstructor ?? '',
+                $this->escapeCsv($f->airPortStartCode ?? ''),
+                $this->escapeCsv($f->airPortEndCode ?? ''),
+                $f->totalTime,
+                $f->startType,
+                $f->landing ?? '',
+            ]);
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function escapeCsv(string $value): string
+    {
+        if (str_contains($value, ';') || str_contains($value, '"') || str_contains($value, "\n")) {
+            return '"' . str_replace('"', '""', $value) . '"';
+        }
+        return $value;
     }
 
     private function addDirectoryToZip(ZipArchive $zip, string $dirPath, string $zipBasePath): void
