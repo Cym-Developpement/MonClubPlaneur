@@ -36,7 +36,7 @@ class GitWebhookController extends Controller
         $log     = storage_path('logs/update.log');
 
         $php = PHP_BINARY ?: (PHP_BINDIR . '/php');
-        exec(escapeshellarg($php) . ' ' . escapeshellarg($artisan) . " app:update >> {$log} 2>&1 &");
+        exec('nohup ' . escapeshellarg($php) . ' ' . escapeshellarg($artisan) . " app:update < /dev/null >> {$log} 2>&1 &");
 
         return response()->json([
             'status'  => 'update started',
