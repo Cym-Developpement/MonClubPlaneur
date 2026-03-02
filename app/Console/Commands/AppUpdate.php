@@ -18,8 +18,17 @@ class AppUpdate extends Command
         $this->info('=== Mise à jour de l\'application ===');
         $this->newLine();
 
+        $stashed = $this->gitStash();
+
         if (! $this->step('git pull', ['git', 'pull'])) {
+            if ($stashed) {
+                $this->gitStashPop();
+            }
             return 1;
+        }
+
+        if ($stashed) {
+            $this->gitStashPop();
         }
 
         if (! $this->step('composer install', ['composer', 'install', '--no-dev', '--optimize-autoloader', '--no-interaction'])) {
@@ -47,6 +56,33 @@ class AppUpdate extends Command
         $this->newLine();
         $this->info('✓ Application mise à jour avec succès.');
         return 0;
+    }
+
+    private function gitStash(): bool
+    {
+        $process = new Process(['git', 'stash'], base_path());
+        $process->setTimeout(30);
+        $process->run();
+
+        $stashed = str_contains($process->getOutput(), 'Saved working directory');
+        if ($stashed) {
+            $this->line('  → git stash : modifications locales mises de côté.');
+        }
+
+        return $stashed;
+    }
+
+    private function gitStashPop(): void
+    {
+        $process = new Process(['git', 'stash', 'pop'], base_path());
+        $process->setTimeout(30);
+        $process->run();
+
+        if ($process->isSuccessful()) {
+            $this->line('  ✓ git stash pop : modifications locales restaurées.');
+        } else {
+            $this->warn('  ⚠ git stash pop a échoué — vérifiez manuellement.');
+        }
     }
 
     private function step(string $label, array $command): bool
