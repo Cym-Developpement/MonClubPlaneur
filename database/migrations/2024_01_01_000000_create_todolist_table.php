@@ -13,6 +13,10 @@ class CreateTodolistTable extends Migration
      */
     public function up()
     {
+        if (Schema::hasTable('todolist')) {
+            return;
+        }
+
         Schema::create('todolist', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('title');
