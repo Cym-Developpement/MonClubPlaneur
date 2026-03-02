@@ -31,7 +31,13 @@ class AppUpdate extends Command
             $this->gitStashPop();
         }
 
-        if (! $this->step('composer install', ['composer', 'install', '--no-dev', '--optimize-autoloader', '--no-interaction'])) {
+        $composer = base_path('composer.phar');
+
+        if (! $this->step('composer install', ['php', $composer, 'install', '--no-dev', '--optimize-autoloader', '--no-interaction'])) {
+            return 1;
+        }
+
+        if (! $this->step('composer update', ['php', $composer, 'update', '--no-dev', '--optimize-autoloader', '--no-interaction'])) {
             return 1;
         }
 
