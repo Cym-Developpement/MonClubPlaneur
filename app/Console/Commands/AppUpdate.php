@@ -43,19 +43,25 @@ class AppUpdate extends Command
         }
 
         if (! $this->option('no-migrate')) {
-            if (! $this->step('migrations', ['php', 'artisan', 'migrate', '--force'])) {
+            if (! $this->step('migrations', [$php, base_path('artisan'), 'migrate', '--force'])) {
                 return 1;
             }
         }
 
         if (! $this->option('no-cache')) {
-            if (! $this->step('config:cache', ['php', 'artisan', 'config:cache'])) {
+            $artisan = base_path('artisan');
+
+            $this->step('config:clear', [$php, $artisan, 'config:clear']);
+            $this->step('route:clear',  [$php, $artisan, 'route:clear']);
+            $this->step('view:clear',   [$php, $artisan, 'view:clear']);
+
+            if (! $this->step('config:cache', [$php, $artisan, 'config:cache'])) {
                 return 1;
             }
-            if (! $this->step('route:cache', ['php', 'artisan', 'route:cache'])) {
+            if (! $this->step('route:cache', [$php, $artisan, 'route:cache'])) {
                 return 1;
             }
-            if (! $this->step('view:cache', ['php', 'artisan', 'view:cache'])) {
+            if (! $this->step('view:cache', [$php, $artisan, 'view:cache'])) {
                 return 1;
             }
         }
