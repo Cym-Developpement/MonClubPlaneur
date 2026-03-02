@@ -18,13 +18,13 @@ class BackupService
         $this->backupPath = storage_path('backups');
     }
 
-    public function create(): string
+    public function create(string $tag = 'auto'): string
     {
         if (! is_dir($this->backupPath)) {
             mkdir($this->backupPath, 0755, true);
         }
 
-        $filename = 'sauvegarde_' . date('Y-m-d_H-i-s') . '.zip';
+        $filename = "sauvegarde_{$tag}_" . date('Y-m-d_H-i-s') . '.zip';
         $zipPath  = $this->backupPath . '/' . $filename;
 
         $zip = new ZipArchive();

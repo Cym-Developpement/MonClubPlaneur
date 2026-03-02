@@ -49,7 +49,7 @@ class BackupController extends Controller
     public function create()
     {
         try {
-            $filename = (new BackupService())->create();
+            $filename = (new BackupService())->create('manuel');
             return back()->with('success', "Sauvegarde créée : {$filename}");
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
