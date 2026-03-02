@@ -1,7 +1,7 @@
 @props([
     'transactions'   => [],
     'availableYears' => [],
-    'solde'          => null,
+    'solde'          => false,
     'userId'         => 0,
     'striped'        => false,
 ])
@@ -26,7 +26,7 @@
     <tbody>
 
       {{-- Ligne de solde final (home uniquement, quand $solde est fourni) --}}
-      @if($solde !== null)
+      @if($solde !== false)
       <tr class="fw-bold border-top border-2">
         <td class="text-muted">{{ date('d/m/Y') }}</td>
         <td>Solde actuel
@@ -72,7 +72,7 @@
           @endcan
         </td>
         <td class="fw-semibold">{{ $transaction['name'] }}
-          @if($transaction['valid'] == 0 && $solde !== null)
+          @if($transaction['valid'] == 0 && $solde !== false)
           <br><span class="badge bg-danger">En attente de validation.</span>
           @endif
           @if($transaction['observation'] != '')
