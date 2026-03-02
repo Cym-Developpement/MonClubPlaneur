@@ -91,7 +91,7 @@ class BackupService
                 date('Y-m-d H:i:s', $tr->time),
                 $this->escapeCsv($tr->name),
                 number_format($tr->value / 100, 2, '.', ''),
-                number_format($tr->solde, 2, '.', ''),
+                number_format($tr->solde / 100, 2, '.', ''),
                 $tr->valid ? '1' : '0',
                 $this->escapeCsv($tr->observation ?? ''),
             ]);
