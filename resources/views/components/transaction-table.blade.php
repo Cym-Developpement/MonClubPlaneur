@@ -25,24 +25,30 @@
     </thead>
     <tbody>
 
-      {{-- Années passées (chargement différé au clic) --}}
-      @foreach ($availableYears as $ay)
-      <tr class="table-active" id="year-sep-{{ $ay['year'] }}"
-          data-year="{{ $ay['year'] }}" data-user="{{ $userId }}" data-loaded="0">
-        <th>
-          <button class="btn btn-default btn-sm"
-                  onclick="toggleYear({{ $ay['year'] }}, {{ $userId }})">
-            Afficher/Masquer {{ $ay['year'] }}
-          </button>
+      {{-- Ligne de solde final (home uniquement, quand $solde est fourni) --}}
+      @if($solde !== null)
+      <tr>
+        <td></td>
+        <th>Solde au {{ date('d/m/Y') }}
+          @if($hasPending)
+          <br><span class="badge bg-danger">En attente de validation.</span>
+          @endif
         </th>
         <td></td>
-        <td></td>
-        <td class="text-muted fst-italic">Solde au 31/12 : {{ $ay['solde'] }}€</td>
+        <th @if($solde < 0)
+              class="table-danger"
+            @elseif($solde > 0 && $hasPending)
+              class="table-warning"
+            @else
+              class="table-success"
+            @endif>
+          {{ $solde }}€
+        </th>
         @can('admin:transactions')
         <td></td>
         @endcan
       </tr>
-      @endforeach
+      @endif
 
       {{-- Transactions de l'année courante --}}
       @foreach ($transactions as $transaction)
@@ -96,30 +102,24 @@
       </tr>
       @endforeach
 
-      {{-- Ligne de solde final (home uniquement, quand $solde est fourni) --}}
-      @if($solde !== null)
-      <tr>
-        <td></td>
-        <th>Solde au {{ date('d/m/Y') }}
-          @if($hasPending)
-          <br><span class="badge bg-danger">En attente de validation.</span>
-          @endif
+      {{-- Années passées (chargement différé au clic) --}}
+      @foreach ($availableYears as $ay)
+      <tr class="table-active" id="year-sep-{{ $ay['year'] }}"
+          data-year="{{ $ay['year'] }}" data-user="{{ $userId }}" data-loaded="0">
+        <th>
+          <button class="btn btn-default btn-sm"
+                  onclick="toggleYear({{ $ay['year'] }}, {{ $userId }})">
+            Afficher/Masquer {{ $ay['year'] }}
+          </button>
         </th>
         <td></td>
-        <th @if($solde < 0)
-              class="table-danger"
-            @elseif($solde > 0 && $hasPending)
-              class="table-warning"
-            @else
-              class="table-success"
-            @endif>
-          {{ $solde }}€
-        </th>
+        <td></td>
+        <td class="text-muted fst-italic">Solde au 31/12 : {{ $ay['solde'] }}€</td>
         @can('admin:transactions')
         <td></td>
         @endcan
       </tr>
-      @endif
+      @endforeach
 
     </tbody>
   </table>
