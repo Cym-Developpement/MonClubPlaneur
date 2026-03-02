@@ -71,13 +71,10 @@
 </a>
 @endcan
 
-@can('admin:audit')
+@can('admin:super')
 <a class="dropdown-item" href="/audit">
     <i class="fas fa-shield-alt me-2"></i>Journal d'audit
 </a>
-@endcan
-
-@can('admin:super')
 <a class="dropdown-item" href="/admin/parametres">
     <i class="fas fa-cog me-2"></i>Paramètres du club
 </a>
