@@ -15,7 +15,7 @@ class AppUpdate extends Command
 
     public function handle()
     {
-        $this->info('=== Mise à jour de l\'application ===');
+        $this->info('=== Mise à jour de l\'application — ' . now()->format('Y-m-d H:i:s') . ' ===');
         $this->newLine();
 
         $stashed = $this->gitStash();
@@ -34,11 +34,17 @@ class AppUpdate extends Command
         $php      = PHP_BINARY;
         $composer = base_path('composer.phar');
 
-        if (! $this->step('composer install', [$php, $composer, 'install', '--no-dev', '--optimize-autoloader', '--no-interaction'])) {
+        if (! $this->step('composer install', [$php, $composer, 'install', '--no-dev', '--optimize-autoloader', '--no-interaction', '--no-scripts'])) {
             return 1;
         }
 
-        if (! $this->step('composer update', [$php, $composer, 'update', '--no-dev', '--optimize-autoloader', '--no-interaction'])) {
+        if (! $this->step('composer update', [$php, $composer, 'update', '--no-dev', '--optimize-autoloader', '--no-interaction', '--no-scripts'])) {
+            return 1;
+        }
+
+        $artisan = base_path('artisan');
+
+        if (! $this->step('package:discover', [$php, $artisan, 'package:discover', '--ansi'])) {
             return 1;
         }
 
@@ -49,9 +55,9 @@ class AppUpdate extends Command
         }
 
         if (! $this->option('no-cache')) {
-            $artisan = base_path('artisan');
 
             $this->step('config:clear', [$php, $artisan, 'config:clear']);
+
             $this->step('route:clear',  [$php, $artisan, 'route:clear']);
             $this->step('view:clear',   [$php, $artisan, 'view:clear']);
 
