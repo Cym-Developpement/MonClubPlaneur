@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('wiki')) {
+            return;
+        }
+
         Schema::create('wiki', function (Blueprint $table) {
             $table->id();
             $table->text('pageName')->nullable();

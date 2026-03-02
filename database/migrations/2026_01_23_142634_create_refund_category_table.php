@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('refundCategory')) {
+            return;
+        }
+
         Schema::create('refundCategory', function (Blueprint $table) {
             $table->id();
             $table->text('name')->nullable();
