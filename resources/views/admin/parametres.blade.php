@@ -80,45 +80,70 @@
 
             @if(!$autresParams->isEmpty())
             <div class="card mt-4">
-                <div class="card-header">
-                    <i class="fas fa-sliders-h me-2"></i>Autres paramètres
-                    <small class="text-muted ms-2">(lecture seule — gérés par l'application)</small>
-                </div>
+                <div class="card-header"><i class="fas fa-sliders-h me-2"></i>Autres paramètres</div>
 
                 <div class="card-body p-0">
-                    @foreach($autresParams as $categorie => $items)
-                        <div class="px-3 pt-3 pb-1">
-                            <h6 class="text-muted text-uppercase small fw-bold mb-1">{{ $categorie }}</h6>
+                    <form method="post" action="/admin/parametres/autres">
+                        @csrf
+
+                        @foreach($autresParams as $categorie => $items)
+                            <div class="px-3 pt-3 pb-1">
+                                <h6 class="text-muted text-uppercase small fw-bold mb-1">{{ $categorie }}</h6>
+                            </div>
+                            <table class="table table-sm table-hover mb-0">
+                                <tbody>
+                                    @foreach($items as $p)
+                                        @php
+                                            $parts = explode('-', $p->nom, 2);
+                                            $label = count($parts) > 1 ? trim($parts[1]) : $p->nom;
+                                        @endphp
+                                        <tr>
+                                            <td class="ps-3" style="width:38%">
+                                                <span class="fw-semibold">{{ $label }}</span>
+                                                @if($p->description)
+                                                    <br><small class="text-muted">{{ $p->description }}</small>
+                                                @endif
+                                            </td>
+                                            <td style="width:12%">
+                                                <span class="badge bg-secondary">{{ $p->type }}</span>
+                                                @if($p->monetary)
+                                                    <span class="badge bg-info text-dark">€</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($p->type === 'boolean')
+                                                    <input type="hidden"   name="autres[{{ $p->id }}]" value="0">
+                                                    <input type="checkbox" name="autres[{{ $p->id }}]" value="1"
+                                                           class="form-check-input" {{ $p->value ? 'checked' : '' }}>
+                                                @elseif($p->type === 'integer')
+                                                    <input type="number" step="1"
+                                                           name="autres[{{ $p->id }}]" value="{{ $p->value }}"
+                                                           class="form-control form-control-sm" style="max-width:140px;">
+                                                @elseif($p->type === 'double')
+                                                    <input type="number" step="any"
+                                                           name="autres[{{ $p->id }}]" value="{{ $p->value }}"
+                                                           class="form-control form-control-sm" style="max-width:140px;">
+                                                @else
+                                                    <input type="text"
+                                                           name="autres[{{ $p->id }}]" value="{{ $p->value }}"
+                                                           class="form-control form-control-sm">
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            @if(!$loop->last)
+                                <hr class="my-0">
+                            @endif
+                        @endforeach
+
+                        <div class="px-3 py-3">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-save me-2"></i>Enregistrer les autres paramètres
+                            </button>
                         </div>
-                        <table class="table table-sm table-hover mb-0">
-                            <tbody>
-                                @foreach($items as $p)
-                                    @php
-                                        $parts = explode('-', $p->nom, 2);
-                                        $label = count($parts) > 1 ? trim($parts[1]) : $p->nom;
-                                    @endphp
-                                    <tr>
-                                        <td class="ps-3" style="width:38%">
-                                            <span class="fw-semibold">{{ $label }}</span>
-                                            @if($p->description)
-                                                <br><small class="text-muted">{{ $p->description }}</small>
-                                            @endif
-                                        </td>
-                                        <td style="width:12%">
-                                            <span class="badge bg-secondary">{{ $p->type }}</span>
-                                            @if($p->monetary)
-                                                <span class="badge bg-info text-dark">€</span>
-                                            @endif
-                                        </td>
-                                        <td class="font-monospace">{{ $p->value }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        @if(!$loop->last)
-                            <hr class="my-0">
-                        @endif
-                    @endforeach
+                    </form>
                 </div>
             </div>
             @endif
