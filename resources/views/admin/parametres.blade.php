@@ -78,6 +78,51 @@
                 </div>
             </div>
 
+            @if(!$autresParams->isEmpty())
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-sliders-h me-2"></i>Autres paramètres
+                    <small class="text-muted ms-2">(lecture seule — gérés par l'application)</small>
+                </div>
+
+                <div class="card-body p-0">
+                    @foreach($autresParams as $categorie => $items)
+                        <div class="px-3 pt-3 pb-1">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-1">{{ $categorie }}</h6>
+                        </div>
+                        <table class="table table-sm table-hover mb-0">
+                            <tbody>
+                                @foreach($items as $p)
+                                    @php
+                                        $parts = explode('-', $p->nom, 2);
+                                        $label = count($parts) > 1 ? trim($parts[1]) : $p->nom;
+                                    @endphp
+                                    <tr>
+                                        <td class="ps-3" style="width:38%">
+                                            <span class="fw-semibold">{{ $label }}</span>
+                                            @if($p->description)
+                                                <br><small class="text-muted">{{ $p->description }}</small>
+                                            @endif
+                                        </td>
+                                        <td style="width:12%">
+                                            <span class="badge bg-secondary">{{ $p->type }}</span>
+                                            @if($p->monetary)
+                                                <span class="badge bg-info text-dark">€</span>
+                                            @endif
+                                        </td>
+                                        <td class="font-monospace">{{ $p->value }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @if(!$loop->last)
+                            <hr class="my-0">
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
         </div>
     </div>
 </div>

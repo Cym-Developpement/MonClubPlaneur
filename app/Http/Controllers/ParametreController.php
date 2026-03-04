@@ -14,6 +14,16 @@ class ParametreController extends Controller
         'club-email',
     ];
 
+    /** Clés gérées par les sections dédiées du formulaire — exclues des "Autres paramètres". */
+    private array $managedKeys = [
+        'club-nom_court',
+        'club-nom_complet',
+        'club-tresorier',
+        'club-email',
+        'club-logo',
+        'backup-purge_auto',
+    ];
+
     public function index()
     {
         $params = [];
@@ -23,7 +33,15 @@ class ParametreController extends Controller
         $params['club-logo']          = parametre::getValue('club-logo', '');
         $params['backup-purge_auto']  = parametre::getValue('backup-purge_auto', 10);
 
-        return view('admin.parametres', compact('params'));
+        $autresParams = parametre::whereNotIn('nom', $this->managedKeys)
+            ->orderBy('nom')
+            ->get()
+            ->groupBy(function ($p) {
+                $parts = explode('-', $p->nom, 2);
+                return count($parts) > 1 ? trim($parts[0]) : 'Divers';
+            });
+
+        return view('admin.parametres', compact('params', 'autresParams'));
     }
 
     public function update(Request $request)
