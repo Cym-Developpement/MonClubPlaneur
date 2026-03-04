@@ -8,6 +8,13 @@
                 <div class="card-header">Connexion</div>
 
                 <div class="card-body">
+                    @php $logo = \App\Models\parametre::getValue('club-logo', ''); @endphp
+                    @if($logo)
+                        <div class="text-center mb-4">
+                            <img src="{{ $logo }}" alt="Logo du club" style="max-height:100px;max-width:240px;">
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
