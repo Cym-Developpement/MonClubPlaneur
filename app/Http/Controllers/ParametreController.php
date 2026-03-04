@@ -20,7 +20,8 @@ class ParametreController extends Controller
         foreach ($this->textKeys as $key) {
             $params[$key] = parametre::getValue($key, '');
         }
-        $params['club-logo'] = parametre::getValue('club-logo', '');
+        $params['club-logo']          = parametre::getValue('club-logo', '');
+        $params['backup-purge_auto']  = parametre::getValue('backup-purge_auto', 10);
 
         return view('admin.parametres', compact('params'));
     }
@@ -38,6 +39,8 @@ class ParametreController extends Controller
             $this->saveParam('club-logo', 'data:' . $mime . ';base64,' . $base64);
         }
 
+        $this->saveIntParam('backup-purge_auto', $request->input('backup-purge_auto', 10));
+
         return redirect('/admin/parametres')->with('success', 'Paramètres enregistrés.');
     }
 
@@ -46,6 +49,14 @@ class ParametreController extends Controller
         $p = parametre::firstOrNew(['nom' => $key]);
         $p->type  = 'string';
         $p->value = $value;
+        $p->save();
+    }
+
+    private function saveIntParam(string $key, mixed $value): void
+    {
+        $p = parametre::firstOrNew(['nom' => $key]);
+        $p->type  = 'integer';
+        $p->value = (string) max(0, (int) $value);
         $p->save();
     }
 }

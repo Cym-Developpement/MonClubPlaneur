@@ -61,6 +61,16 @@
                             <div class="form-text">Le logo sera converti en base64 et stocké en base de données.</div>
                         </div>
 
+                        <hr>
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3"><i class="fas fa-archive me-2"></i>Sauvegardes</h6>
+
+                        <div class="mb-4">
+                            <label class="form-label">Nombre maximum de sauvegardes automatiques</label>
+                            <input type="number" name="backup-purge_auto" class="form-control" style="max-width:120px;"
+                                   value="{{ $params['backup-purge_auto'] }}" min="0" step="1">
+                            <div class="form-text">Les plus anciennes sauvegardes automatiques sont supprimées au-delà de ce seuil. <strong>0 = désactivé.</strong></div>
+                        </div>
+
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-2"></i>Enregistrer
                         </button>

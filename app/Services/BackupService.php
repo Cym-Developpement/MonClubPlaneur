@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\flight;
+use App\Models\parametre;
 use App\Models\transaction;
 use App\Models\User;
 use ZipArchive;
@@ -68,7 +69,39 @@ class BackupService
 
         $zip->close();
 
+        if ($tag === 'auto') {
+            $this->purgeAutoBackups();
+        }
+
         return $filename;
+    }
+
+    private function purgeAutoBackups(): void
+    {
+        $max = (int) parametre::getValue('backup-purge_auto', 0);
+        if ($max <= 0) {
+            return;
+        }
+
+        $files = [];
+        foreach (scandir($this->backupPath) as $item) {
+            if (! str_starts_with($item, 'sauvegarde_auto_') || ! str_ends_with($item, '.zip')) {
+                continue;
+            }
+            $path    = $this->backupPath . '/' . $item;
+            $files[] = ['path' => $path, 'mtime' => filemtime($path)];
+        }
+
+        if (count($files) <= $max) {
+            return;
+        }
+
+        usort($files, fn($a, $b) => $a['mtime'] - $b['mtime']);
+
+        $toDelete = array_slice($files, 0, count($files) - $max);
+        foreach ($toDelete as $f) {
+            @unlink($f['path']);
+        }
     }
 
     private function userSlug(int $id, string $name): string
