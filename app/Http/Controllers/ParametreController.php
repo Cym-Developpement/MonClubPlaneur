@@ -70,6 +70,25 @@ class ParametreController extends Controller
         $p->save();
     }
 
+    public function updateAutres(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        foreach ($request->input('autres', []) as $id => $value) {
+            $p = parametre::find((int) $id);
+            if (! $p || in_array($p->nom, $this->managedKeys)) {
+                continue;
+            }
+            $p->value = match ($p->type) {
+                'integer' => (string) (int) $value,
+                'double'  => (string) (float) $value,
+                'boolean' => $value ? '1' : '0',
+                default   => (string) $value,
+            };
+            $p->save();
+        }
+
+        return redirect('/admin/parametres')->with('success', 'Paramètres enregistrés.');
+    }
+
     private function saveIntParam(string $key, mixed $value): void
     {
         $p = parametre::firstOrNew(['nom' => $key]);
