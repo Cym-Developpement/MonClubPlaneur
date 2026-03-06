@@ -6,6 +6,8 @@ use App\Services\HelloAssoService;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\transaction;
+use App\Models\VolInitiation;
+use App\Models\parametre;
 
 class HelloAssoController extends Controller
 {
@@ -90,11 +92,57 @@ class HelloAssoController extends Controller
             'full_data' => $data
         ]);
         
-        // TODO: Ajouter votre logique métier ici
-        // Par exemple : mettre à jour le statut d'une commande en base de données
-        // - Créer une transaction dans votre système
-        // - Mettre à jour le solde du compte utilisateur
-        // - Envoyer un email de confirmation
+        // Détecter les commandes de vols d'initiation via le slug du formulaire HelloAsso
+        $viFormSlug = parametre::getValue('vi_config-helloasso_form_slug', '');
+        $orderFormSlug = $data['data']['form']['slug'] ?? null;
+
+        if ($viFormSlug && $orderFormSlug && $orderFormSlug === $viFormSlug) {
+            $this->createVolInitiationFromOrder($data);
+            return;
+        }
+    }
+
+    /**
+     * Créer un vol d'initiation depuis une commande HelloAsso
+     */
+    private function createVolInitiationFromOrder(array $data): void
+    {
+        try {
+            $order   = $data['data'] ?? [];
+            $payer   = $order['payer'] ?? [];
+            $items   = $order['items'] ?? [];
+
+            // Déterminer le type et le prix depuis le premier item de la commande
+            $type     = null;
+            $prixCts  = null;
+            if (!empty($items[0])) {
+                $item    = $items[0];
+                $type    = $item['name'] ?? null;
+                $prixCts = isset($item['amount']) ? (int) $item['amount'] : null;
+            }
+
+            // HelloAsso inverse firstName/lastName par rapport à la convention française
+            $vi = new VolInitiation();
+            $vi->source              = 'helloasso';
+            $vi->nom                 = $payer['lastName'] ?? null;
+            $vi->prenom              = $payer['firstName'] ?? null;
+            $vi->email               = $payer['email'] ?? null;
+            $vi->type                = $type;
+            $vi->prix_cts            = $prixCts;
+            $vi->helloasso_order_id  = $order['id'] ?? null;
+            $vi->helloasso_payment_id = $data['id'] ?? null;
+            $vi->save();
+
+            Log::info('Vol d\'initiation créé depuis HelloAsso', [
+                'vi_code'  => $vi->code,
+                'order_id' => $vi->helloasso_order_id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erreur création VI depuis HelloAsso', [
+                'message' => $e->getMessage(),
+                'data'    => $data,
+            ]);
+        }
     }
 
     /**

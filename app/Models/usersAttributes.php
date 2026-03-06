@@ -87,5 +87,9 @@ class usersAttributes extends Model
             'name'        => 'Journal d\'audit',
             'description' => 'Consultation des logs d\'activité de l\'application',
         ],
+        'admin:vi' => [
+            'name'        => 'Vols d\'initiation',
+            'description' => 'Gestion des bons de vol d\'initiation',
+        ],
     ];
 }

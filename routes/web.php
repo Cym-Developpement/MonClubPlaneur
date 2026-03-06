@@ -173,3 +173,16 @@ Route::get('/payment/error', function () {
 Route::get('/payment/cancelled', function () {
     return redirect()->route('helloasso.page')->with('info', 'Paiement annulé. Vous pouvez réessayer quand vous le souhaitez.');
 })->name('payment.cancelled');
+
+// Vols d'initiation — pages publiques (sans auth)
+Route::get('/vi/{code}', [App\Http\Controllers\VolInitiationController::class, 'activationForm'])->name('vi.activation');
+Route::post('/vi/{code}', [App\Http\Controllers\VolInitiationController::class, 'activationStore'])->name('vi.activation.store');
+
+// Vols d'initiation — administration
+Route::get('/admin/vi', [App\Http\Controllers\VolInitiationController::class, 'index'])->name('admin.vi.index')->middleware('can:admin:vi');
+Route::get('/admin/vi/create', [App\Http\Controllers\VolInitiationController::class, 'create'])->name('admin.vi.create')->middleware('can:admin:vi');
+Route::post('/admin/vi', [App\Http\Controllers\VolInitiationController::class, 'store'])->name('admin.vi.store')->middleware('can:admin:vi');
+Route::get('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::class, 'show'])->name('admin.vi.show')->middleware('can:admin:vi');
+Route::get('/admin/vi/{id}/edit', [App\Http\Controllers\VolInitiationController::class, 'edit'])->name('admin.vi.edit')->middleware('can:admin:vi');
+Route::put('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::class, 'update'])->name('admin.vi.update')->middleware('can:admin:vi');
+Route::post('/admin/vi/{id}/realise', [App\Http\Controllers\VolInitiationController::class, 'marquerRealise'])->name('admin.vi.realise')->middleware('can:admin:vi');
