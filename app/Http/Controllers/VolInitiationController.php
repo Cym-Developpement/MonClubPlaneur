@@ -178,6 +178,73 @@ class VolInitiationController extends Controller
             ->with('success', 'Vol d\'initiation marqué comme réalisé.');
     }
 
+    // ─── Gestion des types VI (parametres) ───────────────────────────────────
+
+    /**
+     * Crée un type VI dans la table parametres
+     */
+    public function viTypeStore(Request $request)
+    {
+        $request->validate([
+            'label' => 'required|string|max:100',
+            'prix'  => 'required|numeric|min:0',
+        ]);
+
+        $label = trim($request->input('label'));
+        $nom   = 'vi-' . $label;
+
+        if (parametre::where('nom', $nom)->exists()) {
+            return redirect()->route('tarifs')
+                ->with('error', 'Un type VI "' . $label . '" existe déjà.');
+        }
+
+        $p = new parametre();
+        $p->nom      = $nom;
+        $p->type     = 'integer';
+        $p->value    = (string) (int) round((float) $request->input('prix') * 100);
+        $p->monetary = 1;
+        $p->public   = $request->boolean('public') ? 1 : 0;
+        $p->save();
+
+        return redirect()->route('tarifs')
+            ->with('success', 'Type VI "' . $label . '" créé.');
+    }
+
+    /**
+     * Met à jour un type VI
+     */
+    public function viTypeUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'label' => 'required|string|max:100',
+            'prix'  => 'required|numeric|min:0',
+        ]);
+
+        $p = parametre::findOrFail($id);
+        $label = trim($request->input('label'));
+
+        $p->nom      = 'vi-' . $label;
+        $p->value    = (string) (int) round((float) $request->input('prix') * 100);
+        $p->public   = $request->boolean('public') ? 1 : 0;
+        $p->save();
+
+        return redirect()->route('tarifs')
+            ->with('success', 'Type VI "' . $label . '" mis à jour.');
+    }
+
+    /**
+     * Supprime un type VI
+     */
+    public function viTypeDestroy($id)
+    {
+        $p = parametre::findOrFail($id);
+        $label = trim(explode('-', $p->nom, 2)[1] ?? $p->nom);
+        $p->delete();
+
+        return redirect()->route('tarifs')
+            ->with('success', 'Type VI "' . $label . '" supprimé.');
+    }
+
     // ─── Pages publiques d'activation ────────────────────────────────────────
 
     /**

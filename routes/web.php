@@ -186,3 +186,6 @@ Route::get('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::clas
 Route::get('/admin/vi/{id}/edit', [App\Http\Controllers\VolInitiationController::class, 'edit'])->name('admin.vi.edit')->middleware('can:admin:vi');
 Route::put('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::class, 'update'])->name('admin.vi.update')->middleware('can:admin:vi');
 Route::post('/admin/vi/{id}/realise', [App\Http\Controllers\VolInitiationController::class, 'marquerRealise'])->name('admin.vi.realise')->middleware('can:admin:vi');
+Route::post('/admin/vi-types', [App\Http\Controllers\VolInitiationController::class, 'viTypeStore'])->name('admin.vi.type.store')->middleware('can:admin:vi');
+Route::put('/admin/vi-types/{id}', [App\Http\Controllers\VolInitiationController::class, 'viTypeUpdate'])->name('admin.vi.type.update')->middleware('can:admin:vi');
+Route::delete('/admin/vi-types/{id}', [App\Http\Controllers\VolInitiationController::class, 'viTypeDestroy'])->name('admin.vi.type.destroy')->middleware('can:admin:vi');

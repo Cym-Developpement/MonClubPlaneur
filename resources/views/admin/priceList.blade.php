@@ -411,6 +411,131 @@
   </div>
 </div>
 
+@can('admin:vi')
+                  <hr>
+                  <h5>Vols d'initiation</h5>
+
+                  <div class="mb-3">
+                    <button class="btn btn-success" onclick="openAddViTypeModal()">
+                      <i class="fas fa-plus"></i> Nouveau type VI
+                    </button>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Nom</th>
+                          <th>Prix</th>
+                          <th>Page publique</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @forelse($viTypes as $vt)
+                        <tr>
+                          <td>{{ $loop->iteration }}</td>
+                          <td>{{ trim(explode('-', $vt->nom, 2)[1] ?? $vt->nom) }}</td>
+                          <td>{{ number_format($vt->value / 100, 2) }} €</td>
+                          <td>
+                            @if($vt->public)
+                              <span class="badge text-bg-success"><i class="fas fa-eye"></i> Oui</span>
+                            @else
+                              <span class="badge text-bg-secondary"><i class="fas fa-eye-slash"></i> Non</span>
+                            @endif
+                          </td>
+                          <td>
+                            <button class="btn btn-primary btn-sm"
+                                    onclick="openEditViTypeModal({{ $vt->id }}, '{{ addslashes(trim(explode('-', $vt->nom, 2)[1] ?? $vt->nom)) }}', {{ $vt->value }}, {{ $vt->public ?? 0 }})">
+                              Modifier
+                            </button>
+                            <form action="{{ route('admin.vi.type.destroy', $vt->id) }}" method="POST"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Supprimer ce type VI ?')">
+                              @csrf @method('DELETE')
+                              <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </form>
+                          </td>
+                        </tr>
+                        @empty
+                        <tr>
+                          <td colspan="5" class="text-muted text-center">Aucun type configuré.</td>
+                        </tr>
+                        @endforelse
+                      </tbody>
+                    </table>
+                  </div>
+@endcan
+
+<!-- Modal ajout type VI -->
+<div class="modal fade" id="addViTypeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Nouveau type de vol d'initiation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ route('admin.vi.type.store') }}">
+        @csrf
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nom du type</label>
+            <input type="text" name="label" class="form-control" placeholder="Ex : Baptême de l'air" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Prix (€)</label>
+            <input type="number" name="prix" class="form-control" step="0.01" min="0" placeholder="50.00" required>
+          </div>
+          <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="add_vi_public" name="public" value="1" checked>
+            <label class="form-check-label" for="add_vi_public">Visible sur la page publique des tarifs</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal modification type VI -->
+<div class="modal fade" id="editViTypeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modifier le type VI</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="editViTypeForm" method="POST" action="">
+        @csrf @method('PUT')
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nom du type</label>
+            <input type="text" name="label" id="edit_vi_label" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Prix (€)</label>
+            <input type="number" name="prix" id="edit_vi_prix" class="form-control" step="0.01" min="0" required>
+          </div>
+          <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="edit_vi_public" name="public" value="1">
+            <label class="form-check-label" for="edit_vi_public">Visible sur la page publique des tarifs</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 @include('flights.flightModal')
 
 <script type="text/javascript">
@@ -509,6 +634,18 @@
     // Laisser le formulaire se soumettre normalement
     // Le contrôleur redirigera vers /tarifs
   });
+
+  function openAddViTypeModal() {
+    $('#addViTypeModal').modal('show');
+  }
+
+  function openEditViTypeModal(id, label, prixCts, publicPage) {
+    $('#edit_vi_label').val(label);
+    $('#edit_vi_prix').val((prixCts / 100).toFixed(2));
+    $('#edit_vi_public').prop('checked', publicPage == 1);
+    $('#editViTypeForm').attr('action', '/admin/vi-types/' + id);
+    $('#editViTypeModal').modal('show');
+  }
 </script>
 
 @endsection

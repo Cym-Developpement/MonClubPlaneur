@@ -18,12 +18,21 @@ class PublicController extends Controller
     {
         $aircrafts = aircraft::where('actif', 1)->where('public', 1)->get();
         $startPrices = sailplaneStartPrice::where('public', 1)->get();
-        $parametres = parametre::where('public', 1)->get();
-        
+        $parametres = parametre::where('public', 1)
+            ->where('nom', 'not like', 'vi-%')
+            ->where('nom', 'not like', 'vi_config-%')
+            ->get();
+        $viTypes = parametre::where('nom', 'like', 'vi-%')
+            ->where('nom', 'not like', 'vi_config-%')
+            ->where('public', 1)
+            ->orderBy('nom')
+            ->get();
+
         return view('public.tarifs', [
-            'aircrafts' => $aircrafts,
+            'aircrafts'   => $aircrafts,
             'startPrices' => $startPrices,
-            'parametres' => $parametres
+            'parametres'  => $parametres,
+            'viTypes'     => $viTypes,
         ]);
     }
 } 

@@ -214,6 +214,35 @@
                         @endif
                     </div>
 
+                    <!-- Section Vols d'initiation -->
+                    @if($viTypes->count() > 0)
+                    <div class="mb-5">
+                        <h4 class="text-primary mb-3">
+                            <i class="fas fa-plane"></i> Vols d'initiation
+                        </h4>
+                        <div class="row">
+                            @foreach($viTypes as $vt)
+                            @php
+                                $label = trim(explode('-', $vt->nom, 2)[1] ?? $vt->nom);
+                                $prixEur = number_format($vt->value / 100, 2, ',', ' ');
+                            @endphp
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-plane-departure me-1"></i> {{ $label }}
+                                        </h5>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <h3 class="text-success fw-bold">{{ $prixEur }} €</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Section Informations -->
                     <div class="mt-5">
                         <div class="alert alert-info">

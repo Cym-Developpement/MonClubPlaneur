@@ -1098,7 +1098,11 @@ class admin extends Controller
     {
         $prices = aircraft::all();
         $startPrices = sailplaneStartPrice::all();
-        return view('admin.priceList', ['prices' => $prices, 'startPrices' => $startPrices]);
+        $viTypes = parametre::where('nom', 'like', 'vi-%')
+            ->where('nom', 'not like', 'vi_config-%')
+            ->orderBy('nom')
+            ->get();
+        return view('admin.priceList', ['prices' => $prices, 'startPrices' => $startPrices, 'viTypes' => $viTypes]);
     }
 
     /**
