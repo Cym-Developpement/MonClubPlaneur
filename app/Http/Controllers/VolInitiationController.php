@@ -165,6 +165,19 @@ class VolInitiationController extends Controller
     }
 
     /**
+     * Supprime un VI
+     */
+    public function destroy($id)
+    {
+        $vi = VolInitiation::findOrFail($id);
+        $code = $vi->code;
+        $vi->delete();
+
+        return redirect()->route('admin.vi.index')
+            ->with('success', 'Bon VI ' . $code . ' supprimé.');
+    }
+
+    /**
      * Marquer le vol comme réalisé
      */
     public function marquerRealise(Request $request, $id)
@@ -246,6 +259,35 @@ class VolInitiationController extends Controller
     }
 
     // ─── Pages publiques d'activation ────────────────────────────────────────
+
+    /**
+     * Affiche la page de saisie du code
+     */
+    public function lookupForm()
+    {
+        return view('vi.index');
+    }
+
+    /**
+     * Redirige vers la page d'activation selon le code saisi
+     */
+    public function lookup(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|size:8',
+        ], [
+            'code.required' => 'Veuillez saisir votre code.',
+            'code.size'     => 'Le code doit faire exactement 8 caractères.',
+        ]);
+
+        $code = strtolower(trim($request->input('code')));
+
+        if (!VolInitiation::where('code', $code)->exists()) {
+            return back()->with('error', 'Code introuvable. Vérifiez votre bon et réessayez.')->withInput();
+        }
+
+        return redirect()->route('vi.activation', $code);
+    }
 
     /**
      * Affiche le formulaire public d'activation

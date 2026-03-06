@@ -79,8 +79,11 @@
                     <hr>
                     <div class="text-center">
                         <h6>Informations utiles :</h6>
-                        <a href="{{ route('tarifs-public') }}" class="btn btn-outline-primary btn-sm">
+                        <a href="{{ route('tarifs-public') }}" class="btn btn-outline-primary btn-sm me-2">
                             <i class="fas fa-euro-sign"></i> Consulter nos tarifs
+                        </a>
+                        <a href="{{ route('vi.index') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-plane me-1"></i>Vol d'initiation
                         </a>
                     </div>
                 </div>

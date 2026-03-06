@@ -14,6 +14,13 @@
                         <a href="{{ route('admin.vi.index') }}" class="btn btn-sm btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>Liste
                         </a>
+                        <form action="{{ route('admin.vi.destroy', $vi->id) }}" method="POST"
+                              onsubmit="return confirm('Supprimer définitivement ce bon VI ?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash me-1"></i>Supprimer
+                            </button>
+                        </form>
                     </div>
                 </div>
                 <div class="card-body">

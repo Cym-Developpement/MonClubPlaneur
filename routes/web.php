@@ -175,6 +175,8 @@ Route::get('/payment/cancelled', function () {
 })->name('payment.cancelled');
 
 // Vols d'initiation — pages publiques (sans auth)
+Route::get('/vi', [App\Http\Controllers\VolInitiationController::class, 'lookupForm'])->name('vi.index');
+Route::post('/vi', [App\Http\Controllers\VolInitiationController::class, 'lookup'])->name('vi.lookup');
 Route::get('/vi/{code}', [App\Http\Controllers\VolInitiationController::class, 'activationForm'])->name('vi.activation');
 Route::post('/vi/{code}', [App\Http\Controllers\VolInitiationController::class, 'activationStore'])->name('vi.activation.store');
 
@@ -186,6 +188,7 @@ Route::get('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::clas
 Route::get('/admin/vi/{id}/edit', [App\Http\Controllers\VolInitiationController::class, 'edit'])->name('admin.vi.edit')->middleware('can:admin:vi');
 Route::put('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::class, 'update'])->name('admin.vi.update')->middleware('can:admin:vi');
 Route::post('/admin/vi/{id}/realise', [App\Http\Controllers\VolInitiationController::class, 'marquerRealise'])->name('admin.vi.realise')->middleware('can:admin:vi');
+Route::delete('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::class, 'destroy'])->name('admin.vi.destroy')->middleware('can:admin:vi');
 Route::post('/admin/vi-types', [App\Http\Controllers\VolInitiationController::class, 'viTypeStore'])->name('admin.vi.type.store')->middleware('can:admin:vi');
 Route::put('/admin/vi-types/{id}', [App\Http\Controllers\VolInitiationController::class, 'viTypeUpdate'])->name('admin.vi.type.update')->middleware('can:admin:vi');
 Route::delete('/admin/vi-types/{id}', [App\Http\Controllers\VolInitiationController::class, 'viTypeDestroy'])->name('admin.vi.type.destroy')->middleware('can:admin:vi');
