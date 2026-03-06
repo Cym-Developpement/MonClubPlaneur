@@ -348,6 +348,6 @@ class VolInitiationController extends Controller
         }
 
         return redirect()->route('vi.activation', $code)
-            ->with('success', 'Votre bon a bien été activé ! Un email de confirmation vous a été envoyé.');
+            ->with('success', 'Votre bon a bien été activé ! Un email de confirmation vous a été envoyé. Nous vous contacterons prochainement pour fixer la date de votre vol.');
     }
 }
