@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Helpers\AuditLog;
 use App\Models\User;
 use App\Services\HelloAssoService;
 
@@ -23,6 +24,10 @@ class PublicPaymentController extends Controller
         $prefillAmount = $request->query('amount');
         $prefillEmail  = $request->query('email');
         $mode          = $request->query('mode', 'don'); // 'don' ou 'paiement'
+
+        $member = $prefillEmail ? User::where('email', $prefillEmail)->first() : null;
+        $memberLabel = $member ? ' (membre : ' . $member->name . ')' : '';
+        AuditLog::log('visite page paiement ' . $request->fullUrl() . $memberLabel);
 
         return view('public.payment', compact('prefillAmount', 'prefillEmail', 'mode'));
     }
