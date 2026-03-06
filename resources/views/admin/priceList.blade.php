@@ -133,6 +133,66 @@
                       </tbody>
                     </table>
                   </div>
+
+                  @can('admin:vi')
+                  <hr>
+                  <h5>Vols d'initiation</h5>
+
+                  <div class="mb-3">
+                    <button class="btn btn-success" onclick="openAddViTypeModal()">
+                      <i class="fas fa-plus"></i> Nouveau type VI
+                    </button>
+                  </div>
+
+                  <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Nom</th>
+                          <th>Prix</th>
+                          <th>Page publique</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @forelse($viTypes as $vt)
+                        <tr>
+                          <td>{{ $loop->iteration }}</td>
+                          <td>{{ trim(explode('-', $vt->nom, 2)[1] ?? $vt->nom) }}</td>
+                          <td>{{ number_format($vt->value / 100, 2) }} €</td>
+                          <td>
+                            @if($vt->public)
+                              <span class="badge text-bg-success"><i class="fas fa-eye"></i> Oui</span>
+                            @else
+                              <span class="badge text-bg-secondary"><i class="fas fa-eye-slash"></i> Non</span>
+                            @endif
+                          </td>
+                          <td>
+                            <button class="btn btn-primary btn-sm"
+                                    onclick="openEditViTypeModal({{ $vt->id }}, '{{ addslashes(trim(explode('-', $vt->nom, 2)[1] ?? $vt->nom)) }}', {{ $vt->value }}, {{ $vt->public ?? 0 }})">
+                              Modifier
+                            </button>
+                            <form action="{{ route('admin.vi.type.destroy', $vt->id) }}" method="POST"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Supprimer ce type VI ?')">
+                              @csrf @method('DELETE')
+                              <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </form>
+                          </td>
+                        </tr>
+                        @empty
+                        <tr>
+                          <td colspan="5" class="text-muted text-center">Aucun type configuré.</td>
+                        </tr>
+                        @endforelse
+                      </tbody>
+                    </table>
+                  </div>
+                  @endcan
+
                 </div>
             </div>
         </div>
@@ -410,65 +470,6 @@
     </div>
   </div>
 </div>
-
-@can('admin:vi')
-                  <hr>
-                  <h5>Vols d'initiation</h5>
-
-                  <div class="mb-3">
-                    <button class="btn btn-success" onclick="openAddViTypeModal()">
-                      <i class="fas fa-plus"></i> Nouveau type VI
-                    </button>
-                  </div>
-
-                  <div class="table-responsive">
-                    <table class="table table-striped table-sm">
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Nom</th>
-                          <th>Prix</th>
-                          <th>Page publique</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @forelse($viTypes as $vt)
-                        <tr>
-                          <td>{{ $loop->iteration }}</td>
-                          <td>{{ trim(explode('-', $vt->nom, 2)[1] ?? $vt->nom) }}</td>
-                          <td>{{ number_format($vt->value / 100, 2) }} €</td>
-                          <td>
-                            @if($vt->public)
-                              <span class="badge text-bg-success"><i class="fas fa-eye"></i> Oui</span>
-                            @else
-                              <span class="badge text-bg-secondary"><i class="fas fa-eye-slash"></i> Non</span>
-                            @endif
-                          </td>
-                          <td>
-                            <button class="btn btn-primary btn-sm"
-                                    onclick="openEditViTypeModal({{ $vt->id }}, '{{ addslashes(trim(explode('-', $vt->nom, 2)[1] ?? $vt->nom)) }}', {{ $vt->value }}, {{ $vt->public ?? 0 }})">
-                              Modifier
-                            </button>
-                            <form action="{{ route('admin.vi.type.destroy', $vt->id) }}" method="POST"
-                                  class="d-inline"
-                                  onsubmit="return confirm('Supprimer ce type VI ?')">
-                              @csrf @method('DELETE')
-                              <button type="submit" class="btn btn-danger btn-sm">
-                                <i class="fas fa-trash"></i>
-                              </button>
-                            </form>
-                          </td>
-                        </tr>
-                        @empty
-                        <tr>
-                          <td colspan="5" class="text-muted text-center">Aucun type configuré.</td>
-                        </tr>
-                        @endforelse
-                      </tbody>
-                    </table>
-                  </div>
-@endcan
 
 <!-- Modal ajout type VI -->
 <div class="modal fade" id="addViTypeModal" tabindex="-1" aria-hidden="true">
