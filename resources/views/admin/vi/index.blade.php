@@ -26,7 +26,7 @@
                             Tous ({{ \App\Models\VolInitiation::count() }})
                         </a>
                         <a href="{{ route('admin.vi.index', ['filtre' => 'non_actifs']) }}"
-                           class="btn btn-sm {{ $filtre === 'non_actifs' ? 'btn-warning' : 'btn-outline-warning' }}">
+                           class="btn btn-sm {{ $filtre === 'non_actifs' ? 'btn-secondary' : 'btn-outline-secondary' }}">
                             Non activés ({{ \App\Models\VolInitiation::where('actif', false)->count() }})
                         </a>
                         <a href="{{ route('admin.vi.index', ['filtre' => 'actifs_non_realises']) }}"
