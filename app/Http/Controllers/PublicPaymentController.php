@@ -49,27 +49,33 @@ class PublicPaymentController extends Controller
         $isPaiement = $mode === 'paiement';
 
         try {
-            // Préparer les données pour HelloAsso
-            $itemName    = $isPaiement ? 'Régularisation de compte' : 'Don au club de planeur';
-            $descPrefix  = $isPaiement ? 'Paiement de' : 'Don de';
-            $formData = [
-                'itemName' => $itemName,
-                'totalAmount' => $amount * 100, // En centimes
-                'payerFirstName' => $payerFirstname,
-                'payerLastName' => $payerLastname,
-                'payerEmail' => $payerEmail,
-                'containsDonation' => $isPaiement ? 0 : 1,
-                'description' => $message ? "{$descPrefix} {$payerFirstname} {$payerLastname} - {$message}" : "{$descPrefix} {$payerFirstname} {$payerLastname}"
-            ];
+            $itemName   = $isPaiement ? 'Régularisation de compte' : 'Don au club de planeur';
+            $amountCts  = (int) round($amount * 100);
+            $baseUrl    = config('app.url');
 
-            // Faire un appel AJAX pour obtenir l'URL de redirection HelloAsso
-            $response = $this->helloAssoService->createPayment($formData);
+            $paymentData = $this->helloAssoService->buildPaymentData(
+                $amountCts,
+                $amountCts,
+                $itemName,
+                $baseUrl . '/cb',
+                $baseUrl . '/cb',
+                $baseUrl . '/cb',
+                !$isPaiement, // containsDonation
+                [
+                    'firstName' => $payerFirstname,
+                    'lastName'  => $payerLastname,
+                    'email'     => $payerEmail,
+                ],
+                $message ? ['message' => $message] : []
+            );
 
-            if ($response && isset($response['redirect_url'])) {
-                return redirect($response['redirect_url']);
-            } else {
-                return redirect()->back()->with('error', 'Erreur lors de la création du paiement. Veuillez réessayer.');
+            $result = $this->helloAssoService->createCheckoutIntent($paymentData);
+
+            if ($result && isset($result['redirectUrl'])) {
+                return redirect($result['redirectUrl']);
             }
+
+            return redirect()->back()->with('error', 'Erreur lors de la création du paiement. Veuillez réessayer.');
 
         } catch (\Exception $e) {
             \Log::error('Erreur paiement public: ' . $e->getMessage());
