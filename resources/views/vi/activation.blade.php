@@ -1,27 +1,16 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Activation bon de vol d'initiation — {{ config('app.name') }}</title>
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
-</head>
-<body style="background-image: url('/img/back.jpg'); background-repeat: no-repeat; background-attachment: fixed;">
+@extends('layouts.app')
 
-<div class="container py-5">
+@section('content')
+<div class="container">
     <div class="row justify-content-center">
         <div class="col-md-7">
-
-            <div class="text-center mb-4">
-                <h2 class="fw-bold">{{ config('app.name') }}</h2>
-                <p class="text-muted">Vol d'initiation</p>
-            </div>
-
             <div class="card shadow-sm">
                 <div class="card-header text-center">
-                    <i class="fas fa-plane me-2"></i>Activation de votre bon de vol
+                    @php $logo = \App\Models\parametre::getValue('club-logo', ''); @endphp
+                    @if($logo)
+                        <img src="{{ $logo }}" alt="Logo du club" style="max-height:70px;max-width:180px;" class="mb-2 d-block mx-auto">
+                    @endif
+                    <strong><i class="fas fa-plane me-2"></i>Vol d'initiation</strong>
                 </div>
                 <div class="card-body">
 
@@ -46,7 +35,7 @@
 
                     {{-- Informations du bon --}}
                     <div class="alert alert-secondary py-2 mb-4">
-                        <div class="d-flex justify-content-between">
+                        <div class="d-flex justify-content-between flex-wrap gap-2">
                             <span><strong>Code :</strong> <code>{{ $vi->code }}</code></span>
                             @if($vi->type)
                                 <span><strong>Type :</strong> {{ $vi->type }}</span>
@@ -99,7 +88,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Téléphone</label>
-                                    <input type="tel" name="telephone" class="form-control @error('telephone') is-invalid @enderror"
+                                    <input type="tel" name="telephone" class="form-control"
                                            value="{{ old('telephone') }}">
                                 </div>
                                 <div class="col-12">
@@ -137,15 +126,7 @@
 
                 </div>
             </div>
-
-            <p class="text-center text-muted small mt-3">
-                {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
-            </p>
-
         </div>
     </div>
 </div>
-
-<script src="https://kit.fontawesome.com/9724d9dada.js" crossorigin="anonymous"></script>
-</body>
-</html>
+@endsection

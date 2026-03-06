@@ -1,30 +1,16 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Vol d'initiation — {{ config('app.name') }}</title>
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
-</head>
-<body style="background-image: url('/img/back.jpg'); background-repeat: no-repeat; background-attachment: fixed;">
+@extends('layouts.app')
 
-<div class="container py-5">
+@section('content')
+<div class="container">
     <div class="row justify-content-center">
         <div class="col-md-5">
-
-            <div class="text-center mb-4">
-                @php $logo = \App\Models\parametre::getValue('club-logo', ''); @endphp
-                @if($logo)
-                    <img src="{{ $logo }}" alt="Logo du club" style="max-height:90px;max-width:220px;" class="mb-3">
-                @endif
-                <h2 class="fw-bold">{{ config('app.name') }}</h2>
-                <p class="text-muted">Vol d'initiation</p>
-            </div>
-
             <div class="card shadow-sm">
                 <div class="card-header text-center">
-                    <i class="fas fa-plane me-2"></i>Activer votre bon de vol
+                    @php $logo = \App\Models\parametre::getValue('club-logo', ''); @endphp
+                    @if($logo)
+                        <img src="{{ $logo }}" alt="Logo du club" style="max-height:70px;max-width:180px;" class="mb-2 d-block mx-auto">
+                    @endif
+                    <strong><i class="fas fa-plane me-2"></i>Vol d'initiation</strong>
                 </div>
                 <div class="card-body">
 
@@ -59,15 +45,7 @@
 
                 </div>
             </div>
-
-            <p class="text-center text-muted small mt-3">
-                {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
-            </p>
-
         </div>
     </div>
 </div>
-
-<script src="https://kit.fontawesome.com/9724d9dada.js" crossorigin="anonymous"></script>
-</body>
-</html>
+@endsection
