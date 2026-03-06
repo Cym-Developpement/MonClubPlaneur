@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Faire un don - {{ config('app.name', 'Laravel') }}</title>
+    <title>{{ isset($mode) && $mode === 'paiement' ? 'Paiement' : 'Faire un don' }} - {{ config('app.name', 'Laravel') }}</title>
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <style>
         body {
@@ -34,8 +34,13 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="mb-0">
-                        <i class="fas fa-heart me-2 text-danger"></i>
-                        Faire un don au club de planeur
+                        @if(isset($mode) && $mode === 'paiement')
+                            <i class="fas fa-credit-card me-2 text-primary"></i>
+                            Régularisation de compte
+                        @else
+                            <i class="fas fa-heart me-2 text-danger"></i>
+                            Faire un don au club de planeur
+                        @endif
                     </h4>
                 </div>
                 <div class="card-body">
@@ -57,21 +62,22 @@
                     @endif
 
                     {{-- Message d'introduction --}}
+                    @if(isset($mode) && $mode === 'paiement')
+                    <div class="alert alert-warning mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Votre compte présente un solde négatif.</strong> Effectuez votre paiement ci-dessous pour le régulariser.
+                    </div>
+                    @else
                     <div class="alert alert-info mb-4">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Votre soutien nous aide !</strong> Les dons permettent au club d'entretenir les planeurs,
                         d'organiser des événements et de former de nouveaux pilotes. Merci pour votre générosité !
                     </div>
-
-                    @if($isMember)
-                    <div class="alert alert-success mb-4">
-                        <i class="fas fa-user-check me-2"></i>
-                        <strong>Compte membre détecté.</strong> Ce paiement sera automatiquement crédité sur votre compte pilote.
-                    </div>
                     @endif
 
                     <form method="POST" action="{{ route('public.payment.process') }}">
                         @csrf
+                        <input type="hidden" name="mode" value="{{ $mode ?? 'don' }}">
                         
                         {{-- Informations du donateur --}}
                         <div class="mb-4">
@@ -132,10 +138,10 @@
                             </div>
                         </div>
                         
-                        {{-- Montant du don --}}
+                        {{-- Montant --}}
                         <div class="mb-4">
                             <label for="amount" class="form-label">
-                                <strong>Montant du don :</strong>
+                                <strong>{{ isset($mode) && $mode === 'paiement' ? 'Montant du paiement :' : 'Montant du don :' }}</strong>
                             </label>
                             <div class="row">
                                 <div class="col-md-6">
@@ -196,13 +202,13 @@
                                     <strong>Description :</strong>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <strong>Don au club de planeur</strong>
+                                    <strong>{{ isset($mode) && $mode === 'paiement' ? 'Régularisation de compte' : 'Don au club de planeur' }}</strong>
                                 </div>
                             </div>
                             <hr>
                             <div class="row">
                                 <div class="col-6">
-                                    <strong>Montant du don :</strong>
+                                    <strong>{{ isset($mode) && $mode === 'paiement' ? 'Montant du paiement :' : 'Montant du don :' }}</strong>
                                 </div>
                                 <div class="col-6 text-end">
                                     <span class="h4 text-primary" id="display-amount">0 €</span>
@@ -329,8 +335,11 @@ document.getElementById('amount').addEventListener('input', updateAmount);
 document.addEventListener('DOMContentLoaded', function() {
     updateAmount();
 
-    // Si l'email est pré-rempli, vérifier en temps réel si c'est un membre
+    // Si l'email est pré-rempli, vérifier immédiatement
     const emailInput = document.getElementById('payer_email');
+    if (emailInput.value) {
+        checkMemberEmail();
+    }
     emailInput.addEventListener('change', checkMemberEmail);
 });
 
@@ -338,7 +347,7 @@ function checkMemberEmail() {
     const email = document.getElementById('payer_email').value;
     if (!email) return;
 
-    fetch('/don/check-member?email=' + encodeURIComponent(email))
+    fetch('/cb/check-member?email=' + encodeURIComponent(email))
         .then(r => r.json())
         .then(data => {
             const existing = document.getElementById('member-alert');
@@ -348,7 +357,17 @@ function checkMemberEmail() {
                 alert.id = 'member-alert';
                 alert.className = 'alert alert-success mt-2';
                 alert.innerHTML = '<i class="fas fa-user-check me-2"></i><strong>Compte membre détecté.</strong> Ce paiement sera automatiquement crédité sur votre compte pilote.';
-                emailInput.closest('.form-group').appendChild(alert);
+                document.getElementById('payer_email').closest('.form-group').appendChild(alert);
+
+                // Pré-remplir prénom et nom si les champs sont vides
+                const firstnameInput = document.getElementById('payer_firstname');
+                const lastnameInput  = document.getElementById('payer_lastname');
+                if (!firstnameInput.value && data.first_name) {
+                    firstnameInput.value = data.first_name;
+                }
+                if (!lastnameInput.value && data.last_name) {
+                    lastnameInput.value = data.last_name;
+                }
             }
         })
         .catch(() => {});

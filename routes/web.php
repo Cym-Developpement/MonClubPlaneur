@@ -21,10 +21,10 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('ho
 Route::get('/tarifs-public', [App\Http\Controllers\PublicController::class, 'tarifs'])->name('tarifs-public');
 
 // Paiement public (sans authentification)
-Route::get('/don', [App\Http\Controllers\PublicPaymentController::class, 'index'])->name('public.payment');
-Route::post('/don', [App\Http\Controllers\PublicPaymentController::class, 'processPayment'])->name('public.payment.process');
-Route::post('/don/callback', [App\Http\Controllers\PublicPaymentController::class, 'callback'])->name('public.payment.callback');
-Route::get('/don/check-member', [App\Http\Controllers\PublicPaymentController::class, 'checkMember'])->name('public.payment.check-member');
+Route::get('/cb', [App\Http\Controllers\PublicPaymentController::class, 'index'])->name('public.payment');
+Route::post('/cb', [App\Http\Controllers\PublicPaymentController::class, 'processPayment'])->name('public.payment.process');
+Route::post('/cb/callback', [App\Http\Controllers\PublicPaymentController::class, 'callback'])->name('public.payment.callback');
+Route::get('/cb/check-member', [App\Http\Controllers\PublicPaymentController::class, 'checkMember'])->name('public.payment.check-member');
 Route::get('/getPrice', [App\Http\Controllers\HomeController::class, 'getPrice']);
 Route::post('/getAddFlightInfoTime', [App\Http\Controllers\HomeController::class, 'getAddFlightInfoTime']);
 

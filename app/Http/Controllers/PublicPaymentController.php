@@ -22,13 +22,9 @@ class PublicPaymentController extends Controller
     {
         $prefillAmount = $request->query('amount');
         $prefillEmail  = $request->query('email');
+        $mode          = $request->query('mode', 'don'); // 'don' ou 'paiement'
 
-        // Vérifie si l'email correspond à un membre (pour afficher un message d'info)
-        $isMember = $prefillEmail
-            ? User::where('email', $prefillEmail)->exists()
-            : false;
-
-        return view('public.payment', compact('prefillAmount', 'prefillEmail', 'isMember'));
+        return view('public.payment', compact('prefillAmount', 'prefillEmail', 'mode'));
     }
 
     /**
@@ -49,17 +45,21 @@ class PublicPaymentController extends Controller
         $payerLastname = $request->payer_lastname;
         $payerEmail = $request->payer_email;
         $message = $request->message;
+        $mode = $request->input('mode', 'don');
+        $isPaiement = $mode === 'paiement';
 
         try {
             // Préparer les données pour HelloAsso
+            $itemName    = $isPaiement ? 'Régularisation de compte' : 'Don au club de planeur';
+            $descPrefix  = $isPaiement ? 'Paiement de' : 'Don de';
             $formData = [
-                'itemName' => 'Don au club de planeur',
+                'itemName' => $itemName,
                 'totalAmount' => $amount * 100, // En centimes
                 'payerFirstName' => $payerFirstname,
                 'payerLastName' => $payerLastname,
                 'payerEmail' => $payerEmail,
-                'containsDonation' => 1, // C'est un don
-                'description' => $message ? "Don de {$payerFirstname} {$payerLastname} - {$message}" : "Don de {$payerFirstname} {$payerLastname}"
+                'containsDonation' => $isPaiement ? 0 : 1,
+                'description' => $message ? "{$descPrefix} {$payerFirstname} {$payerLastname} - {$message}" : "{$descPrefix} {$payerFirstname} {$payerLastname}"
             ];
 
             // Faire un appel AJAX pour obtenir l'URL de redirection HelloAsso
@@ -83,9 +83,20 @@ class PublicPaymentController extends Controller
     public function checkMember(Request $request)
     {
         $email = $request->query('email', '');
-        $isMember = $email ? User::where('email', $email)->exists() : false;
+        if (!$email) {
+            return response()->json(['is_member' => false]);
+        }
 
-        return response()->json(['is_member' => $isMember]);
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return response()->json(['is_member' => false]);
+        }
+
+        return response()->json([
+            'is_member'  => true,
+            'first_name' => $user->prenom ?? '',
+            'last_name'  => $user->nom ?? '',
+        ]);
     }
 
     /**

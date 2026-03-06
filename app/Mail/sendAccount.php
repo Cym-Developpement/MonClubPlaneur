@@ -38,7 +38,7 @@ class sendAccount extends Mailable
         $paymentUrl = null;
         if ($this->balanceCts < 0 && $this->userEmail) {
             $amount = (int) ceil(abs($this->balanceCts) / 100);
-            $paymentUrl = config('app.url') . '/don?amount=' . $amount . '&email=' . urlencode($this->userEmail);
+            $paymentUrl = config('app.url') . '/cb?mode=paiement&amount=' . $amount . '&email=' . urlencode($this->userEmail);
         }
 
         return $this->subject('Votre compte au ' . $nomCourt)
