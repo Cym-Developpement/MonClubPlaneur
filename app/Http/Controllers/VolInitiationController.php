@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\VolInitiationConfirmation;
 use App\Models\VolInitiation;
 use App\Models\parametre;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class VolInitiationController extends Controller
 {
@@ -335,7 +337,17 @@ class VolInitiationController extends Controller
         ]);
         $vi->save();
 
+        try {
+            Mail::to($vi->email)->send(new VolInitiationConfirmation($vi));
+        } catch (\Exception $e) {
+            \Log::error('Erreur envoi email confirmation VI', [
+                'code'    => $vi->code,
+                'email'   => $vi->email,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
         return redirect()->route('vi.activation', $code)
-            ->with('success', 'Votre bon a bien été activé ! Nous vous contacterons prochainement pour fixer la date de votre vol.');
+            ->with('success', 'Votre bon a bien été activé ! Un email de confirmation vous a été envoyé.');
     }
 }
