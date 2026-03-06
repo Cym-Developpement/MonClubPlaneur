@@ -24,6 +24,7 @@ Route::get('/tarifs-public', [App\Http\Controllers\PublicController::class, 'tar
 Route::get('/don', [App\Http\Controllers\PublicPaymentController::class, 'index'])->name('public.payment');
 Route::post('/don', [App\Http\Controllers\PublicPaymentController::class, 'processPayment'])->name('public.payment.process');
 Route::post('/don/callback', [App\Http\Controllers\PublicPaymentController::class, 'callback'])->name('public.payment.callback');
+Route::get('/don/check-member', [App\Http\Controllers\PublicPaymentController::class, 'checkMember'])->name('public.payment.check-member');
 Route::get('/getPrice', [App\Http\Controllers\HomeController::class, 'getPrice']);
 Route::post('/getAddFlightInfoTime', [App\Http\Controllers\HomeController::class, 'getAddFlightInfoTime']);
 

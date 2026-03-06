@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
 use App\Services\HelloAssoService;
 
 class PublicPaymentController extends Controller
@@ -17,9 +18,17 @@ class PublicPaymentController extends Controller
     /**
      * Afficher la page de paiement public
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('public.payment');
+        $prefillAmount = $request->query('amount');
+        $prefillEmail  = $request->query('email');
+
+        // Vérifie si l'email correspond à un membre (pour afficher un message d'info)
+        $isMember = $prefillEmail
+            ? User::where('email', $prefillEmail)->exists()
+            : false;
+
+        return view('public.payment', compact('prefillAmount', 'prefillEmail', 'isMember'));
     }
 
     /**
@@ -66,6 +75,17 @@ class PublicPaymentController extends Controller
             \Log::error('Erreur paiement public: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Une erreur est survenue. Veuillez réessayer plus tard.');
         }
+    }
+
+    /**
+     * Vérifie si un email correspond à un membre (AJAX)
+     */
+    public function checkMember(Request $request)
+    {
+        $email = $request->query('email', '');
+        $isMember = $email ? User::where('email', $email)->exists() : false;
+
+        return response()->json(['is_member' => $isMember]);
     }
 
     /**

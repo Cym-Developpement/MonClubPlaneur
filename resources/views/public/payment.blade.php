@@ -59,9 +59,16 @@
                     {{-- Message d'introduction --}}
                     <div class="alert alert-info mb-4">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Votre soutien nous aide !</strong> Les dons permettent au club d'entretenir les planeurs, 
+                        <strong>Votre soutien nous aide !</strong> Les dons permettent au club d'entretenir les planeurs,
                         d'organiser des événements et de former de nouveaux pilotes. Merci pour votre générosité !
                     </div>
+
+                    @if($isMember)
+                    <div class="alert alert-success mb-4">
+                        <i class="fas fa-user-check me-2"></i>
+                        <strong>Compte membre détecté.</strong> Ce paiement sera automatiquement crédité sur votre compte pilote.
+                    </div>
+                    @endif
 
                     <form method="POST" action="{{ route('public.payment.process') }}">
                         @csrf
@@ -116,7 +123,7 @@
                                        class="form-control @error('payer_email') is-invalid @enderror" 
                                        id="payer_email" 
                                        name="payer_email" 
-                                       value="{{ old('payer_email') }}"
+                                       value="{{ old('payer_email', $prefillEmail) }}"
                                        placeholder="votre@email.com"
                                        required>
                                 @error('payer_email')
@@ -141,7 +148,7 @@
                                                max="10000" 
                                                step="1" 
                                                placeholder="0"
-                                               value="{{ old('amount') }}"
+                                               value="{{ old('amount', $prefillAmount) }}"
                                                required>
                                         <span class="input-group-text">€</span>
                                     </div>
@@ -318,10 +325,34 @@ function updateAmount() {
 // Écouter les changements dans le champ montant
 document.getElementById('amount').addEventListener('input', updateAmount);
 
-// Initialiser au chargement
+// Initialiser au chargement (gère aussi le pré-remplissage depuis l'URL)
 document.addEventListener('DOMContentLoaded', function() {
     updateAmount();
+
+    // Si l'email est pré-rempli, vérifier en temps réel si c'est un membre
+    const emailInput = document.getElementById('payer_email');
+    emailInput.addEventListener('change', checkMemberEmail);
 });
+
+function checkMemberEmail() {
+    const email = document.getElementById('payer_email').value;
+    if (!email) return;
+
+    fetch('/don/check-member?email=' + encodeURIComponent(email))
+        .then(r => r.json())
+        .then(data => {
+            const existing = document.getElementById('member-alert');
+            if (existing) existing.remove();
+            if (data.is_member) {
+                const alert = document.createElement('div');
+                alert.id = 'member-alert';
+                alert.className = 'alert alert-success mt-2';
+                alert.innerHTML = '<i class="fas fa-user-check me-2"></i><strong>Compte membre détecté.</strong> Ce paiement sera automatiquement crédité sur votre compte pilote.';
+                emailInput.closest('.form-group').appendChild(alert);
+            }
+        })
+        .catch(() => {});
+}
 </script>
 
 @if(request()->get('iframe') == '1')
