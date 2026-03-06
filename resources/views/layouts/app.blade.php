@@ -384,7 +384,7 @@
     </div>
 
     @if(request()->get('iframe') != '1')
-    <footer class="text-center text-muted py-3 mt-4 border-top small" style="background-color: rgba(255,255,255,0.75);">
+    <footer class="text-center text-muted py-2 border-top small" style="background-color: rgba(255,255,255,0.75); position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;">
         {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
         @if($gitCommitMessage)
             &mdash; {{ $gitCommitMessage }}
@@ -393,6 +393,7 @@
             @endif
         @endif
     </footer>
+    <div style="height: 48px;"></div>
     @endif
 
     <!-- Modal Aide -->
