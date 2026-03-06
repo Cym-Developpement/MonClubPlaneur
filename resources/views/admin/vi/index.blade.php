@@ -77,7 +77,7 @@
                                         @if($vi->actif)
                                             <span class="badge bg-success">Oui</span>
                                         @else
-                                            <span class="badge bg-warning text-dark">Non</span>
+                                            <span class="badge bg-secondary">Non activé</span>
                                         @endif
                                     </td>
                                     <td>
