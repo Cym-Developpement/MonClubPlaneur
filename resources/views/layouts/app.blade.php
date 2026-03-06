@@ -7,7 +7,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ \App\Models\parametre::getValue('club-nom_complet', config('app.name', 'Laravel')) }}</title>
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
@@ -211,7 +211,7 @@
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Laravel') }}
+                    {{ \App\Models\parametre::getValue('club-nom_complet', config('app.name', 'Laravel')) }}
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
@@ -385,7 +385,7 @@
 
     @if(request()->get('iframe') != '1')
     <footer class="text-center text-muted py-2 border-top small" style="background-color: rgba(255,255,255,0.75); position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;">
-        {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
+        {{ \App\Models\parametre::getValue('club-nom_complet', config('app.name')) }} &mdash; &copy; {{ date('Y') }}
         @if($gitCommitMessage)
             &mdash; {{ $gitCommitMessage }}
             @if($gitCommitDate)
