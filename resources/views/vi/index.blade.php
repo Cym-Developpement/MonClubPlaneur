@@ -6,13 +6,15 @@
         <div class="col-md-5">
             <div class="card shadow-sm">
                 <div class="card-header text-center">
-                    @php $logo = \App\Models\parametre::getValue('club-logo', ''); @endphp
-                    @if($logo)
-                        <img src="{{ $logo }}" alt="Logo du club" style="max-height:70px;max-width:180px;" class="mb-2 d-block mx-auto">
-                    @endif
                     <strong><i class="fas fa-plane me-2"></i>Vol d'initiation</strong>
                 </div>
                 <div class="card-body">
+                    @php $logo = \App\Models\parametre::getValue('club-logo', ''); @endphp
+                    @if($logo)
+                        <div class="text-center mb-4">
+                            <img src="{{ $logo }}" alt="Logo du club" style="max-height:80px;max-width:200px;">
+                        </div>
+                    @endif
 
                     @if(session('error'))
                         <div class="alert alert-danger">{{ session('error') }}</div>
