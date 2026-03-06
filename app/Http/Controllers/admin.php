@@ -906,7 +906,7 @@ class admin extends Controller
             'sailplaneStartPrices' => $sailplaneStartPrice,
         ]);
         $pdf->save('../storage/app/userAcountState/' . $filename);
-        Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
+        Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/' . $filename, $user->realAmountAccount, $user->email));
 
         return redirect('/usersList')->with('success', 'Extrait de compte envoyé à ' . $user->name . '.');
     }
@@ -999,7 +999,7 @@ class admin extends Controller
             $filename = 'CVVT-' . str_replace(' ', '_', strtoupper($user->name)) . '_' . date('d-m-Y_H-i') . '.pdf';
             $pdf = Pdf::loadView('exportPdfAccount', ['transactions' => $transactions, 'selectedUser' => $user, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice]);
             $pdf->save('../storage/app/userAcountState/' . $filename);
-            Mail::to($testEmail)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
+            Mail::to($testEmail)->send(new sendAccount($user->name, 'userAcountState/' . $filename, $user->realAmountAccount, $user->email));
         }
 
         return redirect('/sendAccountState/preview/' . $year)->with('success', 'Test envoyé à ' . $testEmail . ' (' . count($users) . ' email(s)).');
@@ -1044,7 +1044,7 @@ class admin extends Controller
             $pdf->save('../storage/app/userAcountState/' . $filename);
 
             //Mail::to($selectedUser->email)->send(new sendAccount($selectedUser->name, 'userAcountState/'.$filename));
-            Mail::to('yann@cymdev.com')->send(new sendAccount($selectedUser->name, 'userAcountState/' . $filename));
+            Mail::to('yann@cymdev.com')->send(new sendAccount($selectedUser->name, 'userAcountState/' . $filename, $selectedUser->realAmountAccount, $selectedUser->email));
         }
         return 'OK!';
     }
@@ -1427,7 +1427,7 @@ class admin extends Controller
             $filename = 'CVVT-' . str_replace(' ', '_', strtoupper($user->name)) . '_' . date('d-m-Y_H-i') . '.pdf';
             $pdf = Pdf::loadView('exportPdfAccount', ['transactions' => $transactions, 'selectedUser' => $user, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice]);
             $pdf->save('../storage/app/userAcountState/' . $filename);
-            Mail::to($testEmail)->send(new sendAccount($user->name, 'userAcountState/' . $filename));
+            Mail::to($testEmail)->send(new sendAccount($user->name, 'userAcountState/' . $filename, $user->realAmountAccount, $user->email));
         }
 
         return redirect('/usersSendAccountNotification/preview')->with('success', 'Test envoyé à ' . $testEmail . ' (' . count($users) . ' email(s)).');

@@ -15,21 +15,17 @@ class sendAccount extends Mailable
     public $fileName;
 
     /**
-     * Create a new message instance.
-     *
-     * @return void
+     * @param string $userName
+     * @param string $filename
+     * @param int    $balanceCts  Solde en centimes (négatif = débiteur)
+     * @param string $userEmail   Email de l'utilisateur (pour le lien de paiement)
      */
-    public function __construct($userName, $filename)
+    public function __construct($userName, $filename, public int $balanceCts = 0, public string $userEmail = '')
     {
         $this->userName = $userName;
         $this->filename = $filename;
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
     public function build()
     {
         $nomCourt   = parametre::getValue('club-nom_court', 'CVVT');
@@ -37,6 +33,13 @@ class sendAccount extends Mailable
         $tresorier  = parametre::getValue('club-tresorier', 'Yann Challet');
         $email      = parametre::getValue('club-email', 'yann@cymdev.com');
         $logo       = parametre::getValue('club-logo', '');
+
+        // Lien de paiement si le solde est négatif
+        $paymentUrl = null;
+        if ($this->balanceCts < 0 && $this->userEmail) {
+            $amount = (int) ceil(abs($this->balanceCts) / 100);
+            $paymentUrl = config('app.url') . '/don?amount=' . $amount . '&email=' . urlencode($this->userEmail);
+        }
 
         return $this->subject('Votre compte au ' . $nomCourt)
                     ->attachFromStorage($this->filename)
@@ -48,6 +51,8 @@ class sendAccount extends Mailable
                         'tresorier'   => $tresorier,
                         'emailClub'   => $email,
                         'logo'        => $logo,
+                        'balanceCts'  => $this->balanceCts,
+                        'paymentUrl'  => $paymentUrl,
                     ]);
     }
 }

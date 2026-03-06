@@ -32,6 +32,27 @@
                             <p style="margin:0 0 24px;font-size:15px;color:#333333;line-height:1.6;">
                                 Vous trouverez en pièce jointe le récapitulatif de votre compte au CVVT.
                             </p>
+
+                            @if($paymentUrl)
+                            {{-- Solde négatif : bloc de paiement --}}
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+                                <tr>
+                                    <td style="background-color:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:18px 24px;">
+                                        <p style="margin:0 0 10px;font-size:15px;color:#856404;font-weight:bold;">
+                                            Solde débiteur : {{ number_format(abs($balanceCts) / 100, 2, ',', ' ') }} €
+                                        </p>
+                                        <p style="margin:0 0 16px;font-size:14px;color:#856404;line-height:1.5;">
+                                            Votre compte présente un solde négatif. Vous pouvez le régulariser directement en ligne.
+                                        </p>
+                                        <a href="{{ $paymentUrl }}"
+                                           style="display:inline-block;background-color:#1a3a6b;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 28px;border-radius:4px;">
+                                            Payer {{ number_format(abs($balanceCts) / 100, 2, ',', ' ') }} €
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            @endif
+
                             <p style="margin:0 0 8px;font-size:15px;color:#333333;line-height:1.6;">
                                 Pour toute question concernant votre compte :
                                 <a href="mailto:{{ $emailClub }}" style="color:#1a3a6b;text-decoration:none;font-weight:bold;">{{ $emailClub }}</a>
