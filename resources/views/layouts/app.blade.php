@@ -385,7 +385,7 @@
 
     @if(request()->get('iframe') != '1')
     <footer class="text-center text-muted py-2 border-top small" style="background-color: rgba(255,255,255,0.75); position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;">
-        {{ \App\Models\parametre::getValue('club-nom_complet', config('app.name')) }} &mdash; &copy; {{ date('Y') }}
+        {{ config('app.name') }} &mdash; &copy; {{ date('Y') }}
         @if($gitCommitMessage)
             &mdash; {{ $gitCommitMessage }}
             @if($gitCommitDate)
