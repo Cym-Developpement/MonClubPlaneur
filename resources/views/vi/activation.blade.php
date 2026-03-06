@@ -116,6 +116,14 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                <div class="col-12">
+                                    <label class="form-label">Vos disponibilités</label>
+                                    <p class="text-muted small mb-1">
+                                        Pour organiser votre vol au mieux, indiquez-nous vos disponibilités (jours, périodes, contraintes éventuelles).
+                                    </p>
+                                    <textarea name="disponibilites" class="form-control" rows="3"
+                                              placeholder="Ex : disponible le week-end, de préférence le matin, pas avant juin…">{{ old('disponibilites') }}</textarea>
+                                </div>
                             </div>
 
                             <div class="mt-4">

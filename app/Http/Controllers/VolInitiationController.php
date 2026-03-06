@@ -148,6 +148,7 @@ class VolInitiationController extends Controller
             'type'             => $typeLabel,
             'prix_cts'         => $prix_cts,
             'notes'            => $request->input('notes'),
+            'disponibilites'   => $request->input('disponibilites'),
             'nom'              => $request->input('nom'),
             'prenom'           => $request->input('prenom'),
             'date_naissance'   => $request->input('date_naissance'),
@@ -331,9 +332,10 @@ class VolInitiationController extends Controller
             'adresse'        => $request->input('adresse'),
             'cp'             => $request->input('cp'),
             'ville'          => $request->input('ville'),
-            'email'          => $request->input('email'),
-            'telephone'      => $request->input('telephone'),
-            'actif'          => true,
+            'email'           => $request->input('email'),
+            'telephone'       => $request->input('telephone'),
+            'disponibilites'  => $request->input('disponibilites'),
+            'actif'           => true,
         ]);
         $vi->save();
 

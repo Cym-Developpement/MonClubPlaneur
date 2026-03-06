@@ -67,6 +67,11 @@
                             </div>
 
                             <div class="col-12">
+                                <label class="form-label">Disponibilités (renseignées par le bénéficiaire)</label>
+                                <textarea name="disponibilites" class="form-control" rows="2">{{ old('disponibilites', $vi->disponibilites) }}</textarea>
+                            </div>
+
+                            <div class="col-12">
                                 <label class="form-label">Notes internes</label>
                                 <textarea name="notes" class="form-control" rows="2">{{ old('notes', $vi->notes) }}</textarea>
                             </div>

@@ -48,6 +48,7 @@ class VolInitiation extends Model
         'email',
         'telephone',
         'notes',
+        'disponibilites',
         'helloasso_order_id',
         'helloasso_payment_id',
     ];

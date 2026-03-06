@@ -61,6 +61,12 @@
                                                 <td style="padding:4px 0;font-size:14px;color:#333333;">{{ $vi->email }}</td>
                                             </tr>
                                             @endif
+                                            @if($vi->disponibilites)
+                                            <tr>
+                                                <td style="padding:4px 0;font-size:14px;color:#555555;vertical-align:top;">Disponibilités</td>
+                                                <td style="padding:4px 0;font-size:14px;color:#333333;">{{ $vi->disponibilites }}</td>
+                                            </tr>
+                                            @endif
                                         </table>
                                     </td>
                                 </tr>

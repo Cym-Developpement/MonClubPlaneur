@@ -103,6 +103,12 @@
                     </dl>
                     @endif
 
+                    @if($vi->disponibilites)
+                    <hr>
+                    <h6>Disponibilités</h6>
+                    <p class="text-muted">{{ $vi->disponibilites }}</p>
+                    @endif
+
                     @if($vi->notes)
                     <hr>
                     <h6>Notes</h6>
