@@ -212,7 +212,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-            <form method="POST" action="{{ route('solderCompte') }}">
+            <form method="POST" action="/admin/solder-compte">
               @csrf
               <input type="hidden" name="userId" value="{{ $selectedUser }}">
               <button type="submit" class="btn btn-danger">
