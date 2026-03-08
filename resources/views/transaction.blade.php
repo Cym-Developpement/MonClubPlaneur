@@ -143,11 +143,8 @@
                       />
 
                       <div class="row">
-                        <div class="col-md-6" style="text-align: center;">
+                        <div class="col-md-12" style="text-align: center;">
                           <a href="updateSolde?selectUserInTransaction={{ $selectedUser }}" class="btn btn-warning btn-block">Recalculer le solde</a>
-                        </div>
-                        <div class="col-md-6" style="text-align: center;">
-                          <a href="saisie/deleteLast/?deleteLastUserTransaction={{ $selectedUser }}" class="btn btn-danger btn-block">Supprimer la derniére Transaction</a>
                         </div>
                       </div>
                       @endif
