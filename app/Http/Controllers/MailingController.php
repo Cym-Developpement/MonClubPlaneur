@@ -42,6 +42,8 @@ class MailingController extends Controller
         $logo       = parametre::getValue('club-logo', '');
         $emailClub  = parametre::getValue('club-email', '');
 
+        $senderName = auth()->user()->name;
+
         foreach ($users as $user) {
             Mail::to($user->email)->send(new BulkMailing(
                 recipientName: $user->name,
@@ -51,6 +53,7 @@ class MailingController extends Controller
                 nomComplet:    $nomComplet,
                 logo:          $logo,
                 emailClub:     $emailClub,
+                senderName:    $senderName,
             ));
         }
 
@@ -86,6 +89,7 @@ class MailingController extends Controller
             nomComplet:    $nomComplet,
             logo:          $logo,
             emailClub:     $emailClub,
+            senderName:    auth()->user()->name,
         ));
 
         MailingLog::create([

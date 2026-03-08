@@ -42,8 +42,8 @@
                         <td style="padding:24px 40px 36px;">
                             <p style="margin:0;font-size:14px;color:#555555;line-height:1.7;">
                                 Cordialement,<br>
-                                <strong style="color:#1a3a6b;">{{ $nomCourt }}</strong><br>
-                                <a href="mailto:{{ $emailClub }}" style="color:#1a3a6b;text-decoration:none;">{{ $emailClub }}</a>
+                                <strong style="color:#1a3a6b;">{{ $senderName }}</strong><br>
+                                <span style="color:#888888;">{{ $nomCourt }}</span>
                             </p>
                         </td>
                     </tr>
@@ -51,7 +51,7 @@
                     <tr>
                         <td align="center" style="background-color:#f0f4fa;padding:16px 40px;">
                             <p style="margin:0;font-size:11px;color:#aaaaaa;">
-                                Cet email a été envoyé automatiquement par l'application MonClubPlaneur — merci de ne pas y répondre directement.
+                                Cet email a été envoyé automatiquement par l'application MonClubPlaneur.
                             </p>
                         </td>
                     </tr>

@@ -18,11 +18,13 @@ class BulkMailing extends Mailable
         public string $nomComplet,
         public string $logo,
         public string $emailClub,
+        public string $senderName,
     ) {}
 
     public function build(): static
     {
         return $this->subject($this->mailSubject)
+                    ->replyTo($this->emailClub)
                     ->view('emails.bulk_mailing');
     }
 }
