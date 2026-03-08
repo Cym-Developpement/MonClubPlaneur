@@ -527,7 +527,7 @@ class admin extends Controller
         $transactions[$key]->save();
         }
          */
-        return redirect('updateSolde?selectUserInTransaction=' . $userId);
+        return redirect('saisie?selectUserInTransaction=' . $userId);
     }
 
     /**
