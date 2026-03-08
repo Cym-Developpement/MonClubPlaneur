@@ -223,7 +223,7 @@ class admin extends Controller
                 }
             }
 
-            if ($excludeZeroSolde && $this->getSolde($user->id, $soldeTimestamp) === 0) {
+            if ($excludeZeroSolde && $this->getSolde($user->id, $soldeTimestamp) == 0) {
                 continue;
             }
 
