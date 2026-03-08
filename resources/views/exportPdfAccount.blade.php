@@ -3,13 +3,13 @@
     $nomCourt         = \App\Models\parametre::getValue('club-nom_court', 'CVVT');
     $nomComplet       = \App\Models\parametre::getValue('club-nom_complet', 'Club de Vol à Voile de Thionville');
     $iban             = \App\Models\parametre::getValue('paiement-iban', 'FR76 1333 5004 0108 9253 9002 919');
-    $cbUrl            = \App\Models\parametre::getValue('paiement-cb_url', '');
+    $cbUrl            = config('app.url') . '/cb?mode=paiement';
     $cbActif          = (bool) \App\Models\parametre::getValue('paiement-cb_actif', '1');
     $virementActif    = (bool) \App\Models\parametre::getValue('paiement-virement_actif', '1');
     $firstTr          = count($transactions) > 0 ? $transactions[0] : null;
     $lastTr           = count($transactions) > 0 ? $transactions[count($transactions) - 1] : null;
     $periodeDebut     = $firstTr ? $firstTr['time'] : null;
-    $periodeFin       = $lastTr  ? $lastTr['time']  : null;
+    $periodeFin       = date('d/m/Y');
     $soldeDepart      = $firstTr ? $firstTr['solde'] : null;
     $soldeFinal       = $lastTr  ? $lastTr['solde']  : null;
     $lastSolde        = $soldeFinal;
@@ -273,7 +273,7 @@
                 @if($soldeDepart !== null && $soldeFinal !== null)
                 <div class="sh-label" style="margin-top:5px;">Solde initial → Solde final</div>
                 <div class="sh-value" style="font-size:11px;">
-                    {{ $soldeDepart }}€ → <span style="color:{{ $soldeFinal < 0 ? '#c0392b' : '#1a6b3a' }}">{{ $soldeFinal }}€</span>
+                    <span style="color:{{ $soldeDepart < 0 ? '#c0392b' : '#1a6b3a' }}">{{ $soldeDepart }}€</span> → <span style="color:{{ $soldeFinal < 0 ? '#c0392b' : '#1a6b3a' }}">{{ $soldeFinal }}€</span>
                 </div>
                 @endif
             </td>

@@ -23,7 +23,6 @@ class ParametreController extends Controller
         'club-logo',
         'backup-purge_auto',
         'paiement-iban',
-        'paiement-cb_url',
         'paiement-cb_actif',
         'paiement-virement_actif',
         'paiement-cheque_actif',
@@ -38,7 +37,6 @@ class ParametreController extends Controller
         $params['club-logo']                 = parametre::getValue('club-logo', '');
         $params['backup-purge_auto']         = parametre::getValue('backup-purge_auto', 10);
         $params['paiement-iban']             = parametre::getValue('paiement-iban', 'FR76 1333 5004 0108 9253 9002 919');
-        $params['paiement-cb_url']           = parametre::getValue('paiement-cb_url', '');
         $params['paiement-cb_actif']         = (bool) parametre::getValue('paiement-cb_actif', '1');
         $params['paiement-virement_actif']   = (bool) parametre::getValue('paiement-virement_actif', '1');
         $params['paiement-cheque_actif']     = (bool) parametre::getValue('paiement-cheque_actif', '0');
@@ -69,8 +67,7 @@ class ParametreController extends Controller
 
         $this->saveIntParam('backup-purge_auto', $request->input('backup-purge_auto', 10));
 
-        $this->saveParam('paiement-iban',   $request->input('paiement-iban', ''));
-        $this->saveParam('paiement-cb_url', $request->input('paiement-cb_url', ''));
+        $this->saveParam('paiement-iban', $request->input('paiement-iban', ''));
         $this->saveBoolParam('paiement-cb_actif',        $request->has('paiement-cb_actif'));
         $this->saveBoolParam('paiement-virement_actif',  $request->has('paiement-virement_actif'));
         $this->saveBoolParam('paiement-cheque_actif',    $request->has('paiement-cheque_actif'));

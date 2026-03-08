@@ -4,7 +4,7 @@
     $nomComplet      = \App\Models\parametre::getValue('club-nom_complet', 'Club de Vol à Voile de Thionville');
     $emailClub       = \App\Models\parametre::getValue('club-email', '');
     $iban            = \App\Models\parametre::getValue('paiement-iban', 'FR76 1333 5004 0108 9253 9002 919');
-    $cbUrl           = \App\Models\parametre::getValue('paiement-cb_url', '');
+    $cbUrl           = config('app.url') . '/cb?mode=paiement';
     $cbActif         = (bool) \App\Models\parametre::getValue('paiement-cb_actif', '1');
     $virementActif   = (bool) \App\Models\parametre::getValue('paiement-virement_actif', '1');
     $totalAmount = 0;
