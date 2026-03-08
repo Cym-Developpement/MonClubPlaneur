@@ -253,6 +253,182 @@ class admin extends Controller
         return $users->orderBy('name', 'ASC')->get();
     }
 
+    private function resolveExportTransactions(Request $request)
+    {
+        $query    = transaction::query();
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+        if ($dateFrom) {
+            $query->where('time', '>=', strtotime($dateFrom . ' 00:00:00'));
+        }
+        if ($dateTo) {
+            $query->where('time', '<=', strtotime($dateTo . ' 23:59:59'));
+        }
+        switch ($request->input('type', 'all')) {
+            case 'helloasso':
+                $query->where('name', 'like', '%HelloAsso%');
+                break;
+            case 'virement':
+                $query->where('name', 'like', '%Virement%');
+                break;
+        }
+        return $query->orderBy('time', 'desc')->orderBy('id', 'desc')->get();
+    }
+
+    private function buildTransactionExportRows(array $cols, $transactions, array $userNames): array
+    {
+        $colLabels = [
+            'date'        => 'Date',
+            'user'        => 'Adhérent',
+            'name'        => 'Libellé',
+            'observation' => 'Observation',
+            'value'       => 'Montant (€)',
+            'solde'       => 'Solde (€)',
+            'valid'       => 'Validé',
+        ];
+
+        $rows  = [];
+        $trIds = [];
+        foreach ($transactions as $tr) {
+            $row = [];
+            foreach ($cols as $col) {
+                switch ($col) {
+                    case 'date':
+                        $row[$col] = date('d/m/Y', $tr->time);
+                        break;
+                    case 'user':
+                        $row[$col] = $userNames[$tr->idUser] ?? "Utilisateur #{$tr->idUser}";
+                        break;
+                    case 'value':
+                    case 'solde':
+                        $row[$col] = number_format($tr->$col / 100, 2);
+                        break;
+                    case 'valid':
+                        $row[$col] = $tr->valid ? 'Oui' : 'Non';
+                        break;
+                    default:
+                        $row[$col] = $tr->$col ?? '';
+                }
+            }
+            $trIds[] = $tr->id;
+            $rows[]  = $row;
+        }
+
+        $headers = array_map(fn($c) => $colLabels[$c] ?? $c, $cols);
+        return ['headers' => $headers, 'rows' => $rows, 'trIds' => $trIds];
+    }
+
+    public function exportTransactionsPage(Request $request)
+    {
+        $availableCols = [
+            'date'        => 'Date',
+            'user'        => 'Adhérent',
+            'name'        => 'Libellé',
+            'observation' => 'Observation',
+            'value'       => 'Montant (€)',
+            'solde'       => 'Solde (€)',
+            'valid'       => 'Validé',
+        ];
+        $defaultCols = ['date', 'user', 'name', 'value'];
+        $defaultFrom = date('Y-m-01');
+        $defaultTo   = date('Y-m-d');
+
+        $trDefaults = [
+            'activeTab'      => 'transactions',
+            'trAvailableCols'=> $availableCols,
+            'trDefaultCols'  => $defaultCols,
+            'trRows'         => null,
+            'trHeaders'      => [],
+            'trIds'          => [],
+            'trSelectedCols' => $defaultCols,
+            'trType'         => 'all',
+            'dateFrom'       => $defaultFrom,
+            'dateTo'         => $defaultTo,
+            // Users tab defaults
+            'availableCols'     => [],
+            'defaultCols'       => [],
+            'rows'              => null,
+            'headers'           => [],
+            'userIds'           => [],
+            'selectedCols'      => [],
+            'filter'            => 'active',
+            'soldeDate'         => date('Y-m-d'),
+            'excludeTechnique'  => true,
+            'excludeZeroSolde'  => false,
+        ];
+
+        if ($request->isMethod('GET')) {
+            return view('admin.exportUsers', $trDefaults);
+        }
+
+        $cols = $request->input('cols', $defaultCols);
+        $cols = array_filter($cols, fn($c) => isset($availableCols[$c]));
+        $cols = array_values($cols);
+        if (empty($cols)) {
+            $cols = $defaultCols;
+        }
+
+        $transactions = $this->resolveExportTransactions($request);
+        $userNames    = User::pluck('name', 'id')->toArray();
+        $data         = $this->buildTransactionExportRows($cols, $transactions, $userNames);
+
+        return view('admin.exportUsers', array_merge($trDefaults, [
+            'trRows'         => $data['rows'],
+            'trHeaders'      => $data['headers'],
+            'trIds'          => $data['trIds'],
+            'trSelectedCols' => $cols,
+            'trType'         => $request->input('type', 'all'),
+            'dateFrom'       => $request->input('date_from', $defaultFrom),
+            'dateTo'         => $request->input('date_to', $defaultTo),
+        ]));
+    }
+
+    public function exportTransactionsCsvDownload(Request $request)
+    {
+        $availableCols = [
+            'date'        => 'Date',
+            'user'        => 'Adhérent',
+            'name'        => 'Libellé',
+            'observation' => 'Observation',
+            'value'       => 'Montant (€)',
+            'solde'       => 'Solde (€)',
+            'valid'       => 'Validé',
+        ];
+        $defaultCols = ['date', 'user', 'name', 'value'];
+
+        $cols = $request->input('cols', $defaultCols);
+        $cols = array_filter($cols, fn($c) => isset($availableCols[$c]));
+        $cols = array_values($cols);
+        if (empty($cols)) {
+            $cols = $defaultCols;
+        }
+
+        $transactions = $this->resolveExportTransactions($request);
+        $ids          = array_filter((array) $request->input('ids', []));
+        if (!empty($ids)) {
+            $transactions = $transactions->filter(fn($t) => in_array($t->id, $ids))->values();
+        }
+
+        $userNames = User::pluck('name', 'id')->toArray();
+        $data      = $this->buildTransactionExportRows($cols, $transactions, $userNames);
+
+        $lines   = [];
+        $lines[] = implode(';', $data['headers']);
+        foreach ($data['rows'] as $row) {
+            $cells   = array_map(fn($v) => '"' . str_replace('"', '""', $v) . '"', array_values($row));
+            $lines[] = implode(';', $cells);
+        }
+
+        $type     = $request->input('type', 'all');
+        $csv      = "\xEF\xBB\xBF" . implode("\r\n", $lines);
+        $filename = 'transactions_' . $type . '_' . date('Y-m-d') . '.csv';
+
+        return response($csv, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
     public function exportUsersPage(Request $request)
     {
         $availableCols = [
@@ -275,6 +451,7 @@ class admin extends Controller
 
         if ($request->isMethod('GET')) {
             return view('admin.exportUsers', [
+                'activeTab'         => 'users',
                 'availableCols'     => $availableCols,
                 'defaultCols'       => $defaultCols,
                 'rows'              => null,
@@ -285,6 +462,15 @@ class admin extends Controller
                 'soldeDate'         => $today,
                 'excludeTechnique'  => true,
                 'excludeZeroSolde'  => false,
+                'trAvailableCols'   => [],
+                'trDefaultCols'     => [],
+                'trRows'            => null,
+                'trHeaders'         => [],
+                'trIds'             => [],
+                'trSelectedCols'    => [],
+                'trType'            => 'all',
+                'dateFrom'          => date('Y-m-01'),
+                'dateTo'            => date('Y-m-d'),
             ]);
         }
 
@@ -306,6 +492,7 @@ class admin extends Controller
         $data = $this->buildUserExportRows($cols, $users, $allAttributes, $soldeTimestamp, $excludeTechnique, $excludeZeroSolde);
 
         return view('admin.exportUsers', [
+            'activeTab'         => 'users',
             'availableCols'     => $availableCols,
             'defaultCols'       => $defaultCols,
             'rows'              => $data['rows'],
@@ -316,6 +503,15 @@ class admin extends Controller
             'soldeDate'         => $soldeDate,
             'excludeTechnique'  => $excludeTechnique,
             'excludeZeroSolde'  => $excludeZeroSolde,
+            'trAvailableCols'   => [],
+            'trDefaultCols'     => [],
+            'trRows'            => null,
+            'trHeaders'         => [],
+            'trIds'             => [],
+            'trSelectedCols'    => [],
+            'trType'            => 'all',
+            'dateFrom'          => date('Y-m-01'),
+            'dateTo'            => date('Y-m-d'),
         ]);
     }
 

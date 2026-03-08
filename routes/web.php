@@ -92,6 +92,9 @@ Route::get('/admin/export/users',     [App\Http\Controllers\admin::class, 'expor
 Route::post('/admin/export/users',    [App\Http\Controllers\admin::class, 'exportUsersPage'])->middleware('can:admin:export');
 Route::get('/admin/export/users/csv',  [App\Http\Controllers\admin::class, 'exportUsersCsvDownload'])->middleware('can:admin:export');
 Route::post('/admin/export/users/csv', [App\Http\Controllers\admin::class, 'exportUsersCsvDownload'])->middleware('can:admin:export');
+Route::get('/admin/export/transactions',      [App\Http\Controllers\admin::class, 'exportTransactionsPage'])->middleware('can:admin:export');
+Route::post('/admin/export/transactions',     [App\Http\Controllers\admin::class, 'exportTransactionsPage'])->middleware('can:admin:export');
+Route::post('/admin/export/transactions/csv', [App\Http\Controllers\admin::class, 'exportTransactionsCsvDownload'])->middleware('can:admin:export');
 Route::get('/user/state', [App\Http\Controllers\admin::class, 'userState'])->name('userState')->middleware('can:admin');
 Route::get('/userMod/{id}', [App\Http\Controllers\admin::class, 'userMod'])->name('userMod')->middleware('can:admin');
 Route::post('/userMod/{id}', [App\Http\Controllers\admin::class, 'saveUserMod'])->name('saveUserMod')->middleware('can:admin');
