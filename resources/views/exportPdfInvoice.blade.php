@@ -337,9 +337,9 @@
     <div class="pay-detail">IBAN : {{ $iban }}</div>
     @endif
     @if($cbActif && $cbUrl)
-    <div class="pay-item" style="{{ $virementActif ? 'margin-top:5px;' : '' }}">Par carte bancaire</div>
-    <div class="pay-detail">{{ $cbUrl }}</div>
+    <div class="pay-item" style="{{ $virementActif ? 'margin-top:5px;' : '' }}">Par carte bancaire — <a href="{{ $cbUrl }}">Cliquez ici</a></div>
     @endif
+    <div class="pay-detail" style="margin-top:8px;">Ou connectez-vous à votre compte : <a href="{{ config('app.url') }}">{{ config('app.url') }}</a></div>
 </div>
 @endif
 
