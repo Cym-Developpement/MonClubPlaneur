@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\parametre;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -35,11 +36,9 @@ class sendAccount extends Mailable
         $logo       = parametre::getValue('club-logo', '');
 
         // Lien de paiement si le solde est négatif
-        $paymentUrl = null;
-        if ($this->balanceCts < 0 && $this->userEmail) {
-            $amount = (int) ceil(abs($this->balanceCts) / 100);
-            $paymentUrl = config('app.url') . '/cb?mode=paiement&amount=' . $amount . '&email=' . urlencode($this->userEmail);
-        }
+        $paymentUrl = ($this->balanceCts < 0 && $this->userEmail)
+            ? User::buildPayLink($this->userEmail, $this->balanceCts)
+            : null;
 
         return $this->subject('Votre compte au ' . $nomCourt)
                     ->attachFromStorage($this->filename)

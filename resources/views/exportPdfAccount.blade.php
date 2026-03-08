@@ -3,7 +3,7 @@
     $nomCourt         = \App\Models\parametre::getValue('club-nom_court', 'CVVT');
     $nomComplet       = \App\Models\parametre::getValue('club-nom_complet', 'Club de Vol à Voile de Thionville');
     $iban             = \App\Models\parametre::getValue('paiement-iban', 'FR76 1333 5004 0108 9253 9002 919');
-    $cbUrl            = config('app.url') . '/cb?mode=paiement';
+    $cbUrl            = $selectedUser->pay_link;
     $cbActif          = (bool) \App\Models\parametre::getValue('paiement-cb_actif', '1');
     $virementActif    = (bool) \App\Models\parametre::getValue('paiement-virement_actif', '1');
     $firstTr          = count($transactions) > 0 ? $transactions[0] : null;

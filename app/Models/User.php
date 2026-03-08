@@ -172,6 +172,24 @@ class User extends Authenticatable
         return intval($amount);
     }
 
+    /**
+     * Construit le lien de paiement public pour un email et un solde donnés.
+     * Si le solde est négatif, le montant à régler est pré-rempli.
+     */
+    public static function buildPayLink(string $email, int $balanceCts): string
+    {
+        $url = config('app.url') . '/cb?mode=paiement&email=' . urlencode($email);
+        if ($balanceCts < 0) {
+            $url .= '&amount=' . (int) ceil(abs($balanceCts) / 100);
+        }
+        return $url;
+    }
+
+    public function getPayLinkAttribute(): string
+    {
+        return self::buildPayLink($this->email, $this->real_amount_account);
+    }
+
     public function getDayFlight($year, $paid = 0)
     {
         $start = strtotime("$year-01-01 00:00:00");
