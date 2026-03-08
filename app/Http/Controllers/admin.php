@@ -185,8 +185,10 @@ class admin extends Controller
             'created_at'    => 'Date de création',
         ];
 
-        $rows = [];
+        $rows    = [];
+        $userIds = [];
         foreach ($users as $user) {
+            $userIds[] = $user->id;
             $row = [];
             foreach ($cols as $col) {
                 switch ($col) {
@@ -218,7 +220,7 @@ class admin extends Controller
         }
 
         $headers = array_map(fn($c) => $colLabels[$c] ?? $c, $cols);
-        return ['headers' => $headers, 'rows' => $rows];
+        return ['headers' => $headers, 'rows' => $rows, 'userIds' => $userIds];
     }
 
     private function resolveExportUsers(Request $request)
@@ -263,6 +265,7 @@ class admin extends Controller
                 'defaultCols'   => $defaultCols,
                 'rows'          => null,
                 'headers'       => [],
+                'userIds'       => [],
                 'selectedCols'  => $defaultCols,
                 'filter'        => 'active',
             ]);
@@ -285,6 +288,7 @@ class admin extends Controller
             'defaultCols'   => $defaultCols,
             'rows'          => $data['rows'],
             'headers'       => $data['headers'],
+            'userIds'       => $data['userIds'],
             'selectedCols'  => $cols,
             'filter'        => $request->input('filter', 'active'),
         ]);
@@ -316,6 +320,11 @@ class admin extends Controller
         }
 
         $users = $this->resolveExportUsers($request);
+        $ids   = array_filter((array) $request->input('ids', []));
+        if (!empty($ids)) {
+            $users = $users->filter(fn($u) => in_array($u->id, $ids))->values();
+        }
+
         $allAttributes = [];
         foreach (usersAttributes::all() as $attr) {
             $allAttributes[$attr->userId][] = $attr->attributeName;

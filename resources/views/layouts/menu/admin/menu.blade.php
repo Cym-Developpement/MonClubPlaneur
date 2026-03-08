@@ -30,7 +30,7 @@
 
 @can('admin:export')
 <a class="dropdown-item" href="/admin/export/users">
-    <i class="fas fa-file-csv me-2"></i>Export CSV Utilisateurs
+    <i class="fas fa-file-export me-2"></i>Export
 </a>
 @endcan
 
