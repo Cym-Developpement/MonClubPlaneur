@@ -104,6 +104,21 @@ class MailingController extends Controller
         return redirect('/admin/mailing')->with('success', 'Email de test envoyé à ' . $request->input('test_email') . '.');
     }
 
+    public function recipients(Request $request)
+    {
+        $users = $this->resolveUsers($request->input('filter', 'active'));
+        if ($request->boolean('exclude_technique')) {
+            $attrs = $this->loadAttributes();
+            $users = $users->filter(fn($u) =>
+                !isset($attrs[$u->id]) || !in_array('user:technique', $attrs[$u->id])
+            )->values();
+        }
+        return response()->json([
+            'count' => $users->count(),
+            'users' => $users->map(fn($u) => ['name' => $u->name, 'email' => $u->email]),
+        ]);
+    }
+
     private function resolveUsers(string $filter)
     {
         if (str_starts_with($filter, 'year:')) {

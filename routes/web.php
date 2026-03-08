@@ -182,6 +182,7 @@ Route::get('/payment/cancelled', function () {
 })->name('payment.cancelled');
 
 // EMAILING GROUPÉ
+Route::get('/admin/mailing/recipients', [App\Http\Controllers\MailingController::class, 'recipients'])->middleware('can:admin:mailing');
 Route::get('/admin/mailing',       [App\Http\Controllers\MailingController::class, 'index'])    ->middleware('can:admin:mailing');
 Route::post('/admin/mailing/send', [App\Http\Controllers\MailingController::class, 'send'])     ->middleware('can:admin:mailing');
 Route::post('/admin/mailing/test', [App\Http\Controllers\MailingController::class, 'sendTest'])->middleware('can:admin:mailing');

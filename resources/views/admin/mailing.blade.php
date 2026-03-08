@@ -64,7 +64,20 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-end">
+                        <div id="recipients-panel" class="mt-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span id="recipients-count" class="text-muted small"></span>
+                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#recipients-list">
+                                    Voir la liste
+                                </button>
+                            </div>
+                            <div class="collapse mt-2" id="recipients-list">
+                                <ul id="recipients-ul" class="list-group list-group-flush small"
+                                    style="max-height:260px;overflow-y:auto;border:1px solid #dee2e6;border-radius:4px;"></ul>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-3">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-paper-plane me-2"></i>Envoyer
                             </button>
@@ -126,7 +139,14 @@
                                 @foreach($history as $log)
                                 <tr>
                                     <td class="text-nowrap small text-muted">{{ $log->created_at->format('d/m/Y H:i') }}</td>
-                                    <td>{{ $log->subject }}</td>
+                                    <td>
+                                        <a href="#" class="text-decoration-none"
+                                           data-bs-toggle="modal" data-bs-target="#msgModal"
+                                           data-subject="{{ e($log->subject) }}"
+                                           data-body="{{ e($log->body) }}">
+                                            {{ $log->subject }}
+                                        </a>
+                                    </td>
                                     <td><span class="badge bg-secondary">{{ $log->filter }}</span></td>
                                     <td class="text-center">{{ $log->recipient_count }}</td>
                                     <td>{{ $log->sentBy?->name ?? '—' }}</td>
@@ -149,7 +169,51 @@
     </div>
 </div>
 
+{{-- Modal lecture du message --}}
+<div class="modal fade" id="msgModal" tabindex="-1" aria-labelledby="msgModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="msgModalLabel"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="msgModalBody" class="mb-0" style="white-space:pre-wrap;font-family:inherit;font-size:0.95rem;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+document.getElementById('msgModal').addEventListener('show.bs.modal', function (e) {
+    const btn = e.relatedTarget;
+    document.getElementById('msgModalLabel').textContent = btn.dataset.subject;
+    document.getElementById('msgModalBody').textContent  = btn.dataset.body;
+});
+
+// Prévisualisation des destinataires
+function fetchRecipients() {
+    const filter = document.getElementById('filter').value;
+    const exclude = document.getElementById('exclude_technique').checked ? '1' : '0';
+    fetch('/admin/mailing/recipients?filter=' + encodeURIComponent(filter) + '&exclude_technique=' + exclude)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('recipients-count').textContent = data.count + ' destinataire(s)';
+            const ul = document.getElementById('recipients-ul');
+            ul.innerHTML = '';
+            data.users.forEach(u => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item py-1';
+                li.textContent = u.name + ' — ' + u.email;
+                ul.appendChild(li);
+            });
+        });
+}
+
+document.getElementById('filter').addEventListener('change', fetchRecipients);
+document.getElementById('exclude_technique').addEventListener('change', fetchRecipients);
+fetchRecipients();
+
 // Synchronise les champs cachés du formulaire test avec le formulaire principal
 document.querySelector('form[action="/admin/mailing/test"]').addEventListener('submit', function () {
     document.getElementById('test_subject').value = document.getElementById('subject').value;
