@@ -286,10 +286,11 @@ class User extends Authenticatable
                                             ->first();
 
             if ($reportAnterieur) {
+                $soldeReport    = number_format($reportAnterieur->solde / 100, 2);
                 $transactions[] = [
                     'time'        => date('d/m/Y', $twelveMonthsAgo),
-                    'value'       => '',
-                    'solde'       => number_format($reportAnterieur->solde / 100, 2),
+                    'value'       => $soldeReport,
+                    'solde'       => $soldeReport,
                     'name'        => 'Report Antérieur',
                     'id'          => null,
                     'observation' => '',
@@ -302,7 +303,7 @@ class User extends Authenticatable
                                             ->orderBy('id', 'ASC')
                                             ->get();
             foreach ($transactionsUser as $value) {
-                $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation];
+                $transactions[] = ['time' => date('d/m/Y', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation];
             }
 
             $transactionType = array();
