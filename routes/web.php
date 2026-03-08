@@ -181,6 +181,11 @@ Route::get('/payment/cancelled', function () {
     return redirect()->route('helloasso.page')->with('info', 'Paiement annulé. Vous pouvez réessayer quand vous le souhaitez.');
 })->name('payment.cancelled');
 
+// EMAILING GROUPÉ
+Route::get('/admin/mailing',       [App\Http\Controllers\MailingController::class, 'index'])    ->middleware('can:admin:mailing');
+Route::post('/admin/mailing/send', [App\Http\Controllers\MailingController::class, 'send'])     ->middleware('can:admin:mailing');
+Route::post('/admin/mailing/test', [App\Http\Controllers\MailingController::class, 'sendTest'])->middleware('can:admin:mailing');
+
 // Vols d'initiation — pages publiques (sans auth)
 Route::get('/vi', [App\Http\Controllers\VolInitiationController::class, 'lookupForm'])->name('vi.index');
 Route::post('/vi', [App\Http\Controllers\VolInitiationController::class, 'lookup'])->name('vi.lookup');

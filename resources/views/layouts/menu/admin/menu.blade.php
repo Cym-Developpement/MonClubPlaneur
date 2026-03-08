@@ -89,6 +89,12 @@
 </a>
 @endcan
 
+@can('admin:mailing')
+<a class="dropdown-item" href="/admin/mailing">
+    <i class="fas fa-envelope-open-text me-2"></i>Emailing groupé
+</a>
+@endcan
+
 @can('admin:super')
 <a class="dropdown-item" href="/admin/parametres">
     <i class="fas fa-cog me-2"></i>Paramètres du club

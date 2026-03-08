@@ -95,5 +95,9 @@ class usersAttributes extends Model
             'name'        => 'Export CSV',
             'description' => 'Export CSV configurable des utilisateurs',
         ],
+        'admin:mailing' => [
+            'name'        => 'Emailing groupé',
+            'description' => 'Envoi d\'emails groupés aux membres',
+        ],
     ];
 }
