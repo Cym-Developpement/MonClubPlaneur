@@ -277,14 +277,10 @@ class User extends Authenticatable
         
         foreach ($notifUsers as $user) {
             $transactions = [];
-            $year = transaction::where('idUser',  $user->id)->latest()->first();
-            
-            if (!is_null($year)) {
-                $year = $year->year;
-            }
+            $twelveMonthsAgo = strtotime('-12 months');
 
-            $transactionsUser = transaction::where('idUser',  $user->id)
-                                            ->where('year', '>=', $year)
+            $transactionsUser = transaction::where('idUser', $user->id)
+                                            ->where('time', '>=', $twelveMonthsAgo)
                                             ->orderBy('time', 'asc')
                                             ->orderBy('id', 'ASC')
                                             ->get();
