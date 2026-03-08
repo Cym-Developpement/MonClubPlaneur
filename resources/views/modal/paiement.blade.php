@@ -1,3 +1,10 @@
+@php
+    $payCbActif      = (bool) \App\Models\parametre::getValue('paiement-cb_actif', '1');
+    $payVirementActif = (bool) \App\Models\parametre::getValue('paiement-virement_actif', '1');
+    $payChequeActif  = (bool) \App\Models\parametre::getValue('paiement-cheque_actif', '0');
+    // Déterminer le type par défaut (premier moyen actif)
+    $payDefaultType = $payCbActif ? 'CB' : ($payVirementActif ? 'VI' : ($payChequeActif ? 'CH' : 'VI'));
+@endphp
     <!-- Modal add payments-->
     <div class="modal fade" id="payModal" tabindex="-1" role="dialog" aria-labelledby="payModalLabel" aria-hidden="true">
       <div id="modalDialogBlockPayModal" class="modal-dialog modal-lg" role="document">
@@ -10,9 +17,15 @@
             <div class="mb-3">
                 <label for="payModalType" class="form-label">Type de paiement</label>
                 <select class="form-select" id="payModalType" aria-describedby="payModalTypeHelp" onchange="selectTypePaid(this.value);">
+                    @if($payCbActif)
                     <option value="CB">Carte Bancaire</option>
-                    <!--<option value="CH">Chèque</option>-->
+                    @endif
+                    @if($payVirementActif)
                     <option value="VI">Virement</option>
+                    @endif
+                    @if($payChequeActif)
+                    <option value="CH">Chèque</option>
+                    @endif
                 </select>
                 <small id="payModalTypeHelp" class="form-text text-body-secondary">Pour les chèques et les virements, la transaction sera validé par le trésorerier.<br>Les paiement Carte Bancaire sont validés immédiatement.</small>
             </div>
@@ -47,7 +60,6 @@
     <script type="text/javascript">
       function selectTypePaid(type)
       {
-        console.log(type);
         if (type == 'CB') {
           $('.paidNoCB').fadeOut();
           $('.paidCB').fadeIn();
@@ -56,4 +68,6 @@
           $('.paidCB').fadeOut(0);
         }
       }
+      // Initialiser l'affichage selon le premier moyen actif
+      selectTypePaid('{{ $payDefaultType }}');
     </script>

@@ -1,8 +1,12 @@
 @php
-    $logoParam  = \App\Models\parametre::getValue('club-logo', '');
-    $nomCourt   = \App\Models\parametre::getValue('club-nom_court', 'CVVT');
-    $nomComplet = \App\Models\parametre::getValue('club-nom_complet', 'Club de Vol à Voile de Thionville');
-    $emailClub  = \App\Models\parametre::getValue('club-email', '');
+    $logoParam       = \App\Models\parametre::getValue('club-logo', '');
+    $nomCourt        = \App\Models\parametre::getValue('club-nom_court', 'CVVT');
+    $nomComplet      = \App\Models\parametre::getValue('club-nom_complet', 'Club de Vol à Voile de Thionville');
+    $emailClub       = \App\Models\parametre::getValue('club-email', '');
+    $iban            = \App\Models\parametre::getValue('paiement-iban', 'FR76 1333 5004 0108 9253 9002 919');
+    $cbUrl           = \App\Models\parametre::getValue('paiement-cb_url', '');
+    $cbActif         = (bool) \App\Models\parametre::getValue('paiement-cb_actif', '1');
+    $virementActif   = (bool) \App\Models\parametre::getValue('paiement-virement_actif', '1');
     $totalAmount = 0;
     foreach ($transactions as $t) {
         $totalAmount += abs(floatval(str_replace(',', '.', $t['value'])));
@@ -325,13 +329,19 @@
 </div>
 
 {{-- ── Informations de paiement ── --}}
+@if($virementActif || ($cbActif && $cbUrl))
 <div id="payment-block">
     <div class="pay-title">Pour régler cette facture</div>
+    @if($virementActif)
     <div class="pay-item">Par virement — indiquer votre nom dans le libellé</div>
-    <div class="pay-detail">IBAN : FR76 1333 5004 0108 9253 9002 919</div>
-    <div class="pay-item" style="margin-top:5px;">Par carte bancaire</div>
-    <div class="pay-detail">compte.cvvt.fr</div>
+    <div class="pay-detail">IBAN : {{ $iban }}</div>
+    @endif
+    @if($cbActif && $cbUrl)
+    <div class="pay-item" style="{{ $virementActif ? 'margin-top:5px;' : '' }}">Par carte bancaire</div>
+    <div class="pay-detail">{{ $cbUrl }}</div>
+    @endif
 </div>
+@endif
 
 @else
 

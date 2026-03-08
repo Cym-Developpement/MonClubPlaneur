@@ -46,6 +46,40 @@
                         </div>
 
                         <hr>
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">Paiements</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">IBAN du club</label>
+                            <input type="text" name="paiement-iban" class="form-control" value="{{ $params['paiement-iban'] }}" placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX">
+                            <div class="form-text">Affiché sur les factures et extraits de compte PDF.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Lien de paiement en ligne (CB)</label>
+                            <input type="text" name="paiement-cb_url" class="form-control" value="{{ $params['paiement-cb_url'] }}" placeholder="https://...">
+                            <div class="form-text">URL complète vers la page de paiement par carte bancaire (HelloAsso ou autre). Affiché sur les PDF.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label d-block">Moyens de paiement activés</label>
+                            <div class="d-flex gap-4 flex-wrap">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="paiement-cb_actif" id="paiement-cb_actif" value="1" {{ $params['paiement-cb_actif'] ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="paiement-cb_actif">Carte bancaire (CB)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="paiement-virement_actif" id="paiement-virement_actif" value="1" {{ $params['paiement-virement_actif'] ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="paiement-virement_actif">Virement bancaire</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="paiement-cheque_actif" id="paiement-cheque_actif" value="1" {{ $params['paiement-cheque_actif'] ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="paiement-cheque_actif">Chèque</label>
+                                </div>
+                            </div>
+                            <div class="form-text">Seuls les moyens activés apparaissent dans le formulaire de paiement et sur les documents PDF.</div>
+                        </div>
+
+                        <hr>
                         <h6 class="text-muted text-uppercase small fw-bold mb-3">Logo</h6>
 
                         @if($params['club-logo'])
