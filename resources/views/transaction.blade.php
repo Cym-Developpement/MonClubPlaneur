@@ -15,6 +15,11 @@
                     <a href="/accountExport?user={{ $selectedUser }}" target="_blank" class="btn btn-info">
                       <i class="fas fa-file-pdf me-1"></i>Export PDF
                     </a>
+                    @can('admin:super')
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalSolderCompte">
+                      <i class="fas fa-balance-scale me-1"></i>Solder le compte
+                    </button>
+                    @endcan
                     <div class="btn-group btn-group-sm">
                       <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-file-invoice me-1"></i>Facture
@@ -198,6 +203,36 @@
 @isset($selectedUser)
   @if($selectedUser > 0)
     @include('flights.addflight')
+
+    @can('admin:super')
+    <div class="modal fade" id="modalSolderCompte" tabindex="-1" aria-labelledby="modalSolderCompteLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="modalSolderCompteLabel">
+              <i class="fas fa-balance-scale me-2"></i>Solder le compte
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Cette action va créer une écriture de compensation pour ramener le solde de <strong>{{ $currentUserName }}</strong> à <strong>0 €</strong>.</p>
+            <p class="text-danger mb-0"><i class="fas fa-exclamation-triangle me-1"></i>Cette opération est irréversible (sauf suppression manuelle de l'écriture).</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <form method="POST" action="{{ route('solderCompte') }}">
+              @csrf
+              <input type="hidden" name="userId" value="{{ $selectedUser }}">
+              <button type="submit" class="btn btn-danger">
+                <i class="fas fa-check me-1"></i>Confirmer la remise à zéro
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    @endcan
+
   @endif
 @endisset
 

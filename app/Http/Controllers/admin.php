@@ -435,6 +435,36 @@ class admin extends Controller
         ]);
     }
 
+    public function solderCompte(Request $request)
+    {
+        $user  = User::findOrFail($request->userId);
+        $solde = $this->getSolde($user->id);
+
+        if ($solde === 0) {
+            return redirect('saisie?selectUserInTransaction=' . $user->id)
+                ->with('status', 'Le compte de ' . $user->name . ' est déjà à 0.');
+        }
+
+        $admin = auth()->user();
+
+        $tr              = new transaction();
+        $tr->idUser      = $user->id;
+        $tr->name        = 'Remise à zéro du compte';
+        $tr->observation = 'Effectué par ' . $admin->name . ' le ' . date('d/m/Y à H:i');
+        $tr->value       = -$solde;
+        $tr->quantity    = 1;
+        $tr->valid       = 1;
+        $tr->time        = time();
+        $tr->year        = date('Y');
+        $tr->solde       = 0;
+        $tr->save();
+
+        $user->updateSolde();
+
+        return redirect('saisie?selectUserInTransaction=' . $user->id)
+            ->with('status', 'Compte de ' . $user->name . ' soldé (compensation de ' . number_format($solde / 100, 2) . ' €) par ' . $admin->name . '.');
+    }
+
     public function getValidTransactions()
     {
         $transactions        = transaction::where('valid', 0)->get();
