@@ -167,7 +167,7 @@ class User extends Authenticatable
     public function getRealAmountAccountAttribute()
     {
         $this->updateSolde();
-        $lastTr = transaction::where('idUser', $this->id)->orderBy('time', 'desc')->orderBy('id', 'ASC')->first();
+        $lastTr = transaction::where('idUser', $this->id)->orderBy('time', 'desc')->orderBy('id', 'desc')->first();
         $amount = (!is_null($lastTr)) ? $lastTr->solde : 0 ;
         return intval($amount);
     }
