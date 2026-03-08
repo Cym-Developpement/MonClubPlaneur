@@ -33,7 +33,9 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @php $total = 0; @endphp
                                 @foreach($users as $user)
+                                @php $total += $user->real_amount_account; @endphp
                                 <tr>
                                     <td>{{ $user->name }}</td>
                                     <td class="text-muted">{{ $user->email }}</td>
@@ -43,6 +45,12 @@
                                 </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot class="table-dark">
+                                <tr>
+                                    <th colspan="2">Total</th>
+                                    <th class="text-end">{{ number_format($total / 100, 2) }} €</th>
+                                </tr>
+                            </tfoot>
                         </table>
 
                         @if(session('success'))
