@@ -1854,9 +1854,20 @@ class admin extends Controller
             $transactionType[] = $value;
         }
 
+        $twelveMonthsAgo = strtotime('-12 months');
+
         foreach ($users as $user) {
-            $transactionsUser = transaction::where('idUser', $user->id)->orderBy('time', 'asc')->orderBy('id', 'ASC')->get();
-            $transactions = [];
+            $transactions    = [];
+            $reportAnterieur = transaction::where('idUser', $user->id)
+                ->where('time', '<', $twelveMonthsAgo)
+                ->orderBy('time', 'desc')->orderBy('id', 'desc')
+                ->first();
+            if ($reportAnterieur) {
+                $transactions[] = ['time' => date('d/m/Y', $twelveMonthsAgo), 'value' => '', 'solde' => number_format($reportAnterieur->solde / 100, 2), 'name' => 'Report Antérieur', 'id' => null, 'observation' => ''];
+            }
+            $transactionsUser = transaction::where('idUser', $user->id)
+                ->where('time', '>=', $twelveMonthsAgo)
+                ->orderBy('time', 'asc')->orderBy('id', 'ASC')->get();
             foreach ($transactionsUser as $value) {
                 $transactions[] = ['time' => date('d/m/Y H:i', $value->time), 'value' => number_format($value->value / 100, 2), 'solde' => number_format($value->solde / 100, 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation];
             }
