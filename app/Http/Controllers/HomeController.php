@@ -130,6 +130,7 @@ class HomeController extends Controller
             }
 
             $selectedUser = $request->selectUserInTransaction;
+            User::findOrFail($selectedUser)->updateSolde();
 
             // OLD: toutes les transactions chargées d'un coup
             // $transactionsUser = transaction::where('idUser',  $request->selectUserInTransaction)

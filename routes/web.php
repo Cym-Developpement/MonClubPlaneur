@@ -61,7 +61,6 @@ Route::post('/validTransactionPost', [App\Http\Controllers\admin::class, 'ValidT
 Route::post('/deleteTransactionPost', [App\Http\Controllers\admin::class, 'DeleteTransactions'])->name('deleteTransactionPost')->middleware('can:admin');
 
 Route::post('/validNewTrDate', [App\Http\Controllers\admin::class, 'validNewTrDate'])->name('validNewTrDate')->middleware('can:admin');
-Route::get('/updateSolde', [App\Http\Controllers\admin::class, 'updateSolde'])->name('updateSolde')->middleware('can:admin');
 Route::post('/admin/solder-compte', [App\Http\Controllers\admin::class, 'solderCompte'])->name('solderCompte')->middleware('can:admin:super');
 Route::post('/validNewAdminFlight', [App\Http\Controllers\admin::class, 'validNewAdminFlight'])->name('validNewAdminFlight')->middleware('can:admin');
 Route::get('/route', [App\Http\Controllers\admin::class, 'flightList'])->name('aircraftFlights')->middleware('can:admin');
