@@ -168,6 +168,176 @@ class admin extends Controller
         return view('usersList', ['users' => $allDataUsers, 'totaux' => $totaux, 'filterLabel' => $filterLabel]);
     }
 
+    private function buildUserExportRows(array $cols, $users, array $allAttributes): array
+    {
+        $colLabels = [
+            'name'          => 'Nom',
+            'email'         => 'Email',
+            'licenceNumber' => 'Numéro de licence',
+            'sexe'          => 'Sexe',
+            'FFVP'          => 'FFVP',
+            'FFPLUM'        => 'FFPLUM',
+            'isSupervisor'  => 'Instructeur',
+            'isAdmin'       => 'Administrateur',
+            'state'         => 'Actif',
+            'solde'         => 'Solde (€)',
+            'attributes'    => 'Attributs',
+            'created_at'    => 'Date de création',
+        ];
+
+        $rows = [];
+        foreach ($users as $user) {
+            $row = [];
+            foreach ($cols as $col) {
+                switch ($col) {
+                    case 'sexe':
+                        $map = [0 => 'Non spécifié', 1 => 'Homme', 2 => 'Femme'];
+                        $row[$col] = $map[$user->sexe] ?? 'Non spécifié';
+                        break;
+                    case 'FFVP':
+                    case 'FFPLUM':
+                    case 'isSupervisor':
+                    case 'isAdmin':
+                    case 'state':
+                        $row[$col] = $user->$col ? 'Oui' : 'Non';
+                        break;
+                    case 'solde':
+                        $row[$col] = number_format($this->getSolde($user->id) / 100, 2);
+                        break;
+                    case 'attributes':
+                        $row[$col] = isset($allAttributes[$user->id]) ? implode(', ', $allAttributes[$user->id]) : '';
+                        break;
+                    case 'created_at':
+                        $row[$col] = $user->created_at ? date('d/m/Y', strtotime($user->created_at)) : '';
+                        break;
+                    default:
+                        $row[$col] = $user->$col ?? '';
+                }
+            }
+            $rows[] = $row;
+        }
+
+        $headers = array_map(fn($c) => $colLabels[$c] ?? $c, $cols);
+        return ['headers' => $headers, 'rows' => $rows];
+    }
+
+    private function resolveExportUsers(Request $request)
+    {
+        $filter = $request->input('filter', 'active');
+        $currentYear = (int) date('Y');
+
+        if (str_starts_with($filter, 'year:')) {
+            $year = (int) substr($filter, 5);
+            $userIds = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+            $users = User::whereIn('id', $userIds);
+        } elseif ($filter === 'all') {
+            $users = User::where('id', '>', 0);
+        } else {
+            $users = User::where('state', 1);
+        }
+
+        return $users->orderBy('name', 'ASC')->get();
+    }
+
+    public function exportUsersPage(Request $request)
+    {
+        $availableCols = [
+            'name'          => 'Nom',
+            'email'         => 'Email',
+            'licenceNumber' => 'Numéro de licence',
+            'sexe'          => 'Sexe',
+            'FFVP'          => 'FFVP',
+            'FFPLUM'        => 'FFPLUM',
+            'isSupervisor'  => 'Instructeur',
+            'isAdmin'       => 'Administrateur',
+            'state'         => 'Actif',
+            'solde'         => 'Solde (€)',
+            'attributes'    => 'Attributs',
+            'created_at'    => 'Date de création',
+        ];
+        $defaultCols = ['name', 'email', 'licenceNumber', 'state', 'solde'];
+
+        if ($request->isMethod('GET')) {
+            return view('admin.exportUsers', [
+                'availableCols' => $availableCols,
+                'defaultCols'   => $defaultCols,
+                'rows'          => null,
+                'headers'       => [],
+                'selectedCols'  => $defaultCols,
+                'filter'        => 'active',
+            ]);
+        }
+
+        $cols = $request->input('cols', $defaultCols);
+        $cols = array_filter($cols, fn($c) => isset($availableCols[$c]));
+        $cols = array_values($cols);
+
+        $users = $this->resolveExportUsers($request);
+        $allAttributes = [];
+        foreach (usersAttributes::all() as $attr) {
+            $allAttributes[$attr->userId][] = $attr->attributeName;
+        }
+
+        $data = $this->buildUserExportRows($cols, $users, $allAttributes);
+
+        return view('admin.exportUsers', [
+            'availableCols' => $availableCols,
+            'defaultCols'   => $defaultCols,
+            'rows'          => $data['rows'],
+            'headers'       => $data['headers'],
+            'selectedCols'  => $cols,
+            'filter'        => $request->input('filter', 'active'),
+        ]);
+    }
+
+    public function exportUsersCsvDownload(Request $request)
+    {
+        $availableCols = [
+            'name'          => 'Nom',
+            'email'         => 'Email',
+            'licenceNumber' => 'Numéro de licence',
+            'sexe'          => 'Sexe',
+            'FFVP'          => 'FFVP',
+            'FFPLUM'        => 'FFPLUM',
+            'isSupervisor'  => 'Instructeur',
+            'isAdmin'       => 'Administrateur',
+            'state'         => 'Actif',
+            'solde'         => 'Solde (€)',
+            'attributes'    => 'Attributs',
+            'created_at'    => 'Date de création',
+        ];
+        $defaultCols = ['name', 'email', 'licenceNumber', 'state', 'solde'];
+
+        $cols = $request->input('cols', $defaultCols);
+        $cols = array_filter($cols, fn($c) => isset($availableCols[$c]));
+        $cols = array_values($cols);
+        if (empty($cols)) {
+            $cols = $defaultCols;
+        }
+
+        $users = $this->resolveExportUsers($request);
+        $allAttributes = [];
+        foreach (usersAttributes::all() as $attr) {
+            $allAttributes[$attr->userId][] = $attr->attributeName;
+        }
+
+        $data = $this->buildUserExportRows($cols, $users, $allAttributes);
+        $lines = [];
+        $lines[] = implode(';', $data['headers']);
+        foreach ($data['rows'] as $row) {
+            $cells = array_map(fn($v) => '"' . str_replace('"', '""', $v) . '"', array_values($row));
+            $lines[] = implode(';', $cells);
+        }
+
+        $csv = "\xEF\xBB\xBF" . implode("\r\n", $lines);
+        $filename = 'utilisateurs_export_' . date('Y-m-d') . '.csv';
+
+        return response($csv, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
     public function usersExportCsv(Request $request)
     {
         $currentYear = (int) date('Y');

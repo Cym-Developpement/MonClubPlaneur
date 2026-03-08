@@ -28,6 +28,12 @@
 </a>
 @endcan
 
+@can('admin:export')
+<a class="dropdown-item" href="/admin/export/users">
+    <i class="fas fa-file-csv me-2"></i>Export CSV Utilisateurs
+</a>
+@endcan
+
 @can('admin:transactions')
 <a class="dropdown-item" href="/validTransactions">
     <i class="fas fa-check-circle me-2"></i>Transactions a valider &nbsp;&nbsp;

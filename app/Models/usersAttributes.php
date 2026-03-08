@@ -91,5 +91,9 @@ class usersAttributes extends Model
             'name'        => 'Vols d\'initiation',
             'description' => 'Gestion des bons de vol d\'initiation',
         ],
+        'admin:export' => [
+            'name'        => 'Export CSV',
+            'description' => 'Export CSV configurable des utilisateurs',
+        ],
     ];
 }
