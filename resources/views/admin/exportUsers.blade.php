@@ -29,15 +29,41 @@
                             <form method="POST" action="/admin/export/users">
                                 @csrf
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-bold">Filtre</label>
-                                    <select name="filter" class="form-select" style="max-width: 300px;">
-                                        <option value="active" {{ $filter === 'active' ? 'selected' : '' }}>Actifs uniquement</option>
-                                        <option value="all" {{ $filter === 'all' ? 'selected' : '' }}>Tous (actifs + inactifs)</option>
-                                        @foreach(['2022','2023','2024','2025','2026'] as $y)
-                                        <option value="year:{{ $y }}" {{ $filter === 'year:'.$y ? 'selected' : '' }}>Adhérents {{ $y }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-auto">
+                                        <label class="form-label fw-bold">Filtre</label>
+                                        <select name="filter" class="form-select">
+                                            <option value="active" {{ $filter === 'active' ? 'selected' : '' }}>Actifs uniquement</option>
+                                            <option value="all" {{ $filter === 'all' ? 'selected' : '' }}>Tous (actifs + inactifs)</option>
+                                            @foreach(['2022','2023','2024','2025','2026'] as $y)
+                                            <option value="year:{{ $y }}" {{ $filter === 'year:'.$y ? 'selected' : '' }}>Adhérents {{ $y }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-auto">
+                                        <label class="form-label fw-bold">Date du solde</label>
+                                        <input type="date" name="solde_date" class="form-control"
+                                               value="{{ $soldeDate }}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 d-flex gap-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="exclude_technique" id="exclude_technique" value="1"
+                                               {{ $excludeTechnique ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="exclude_technique">
+                                            Exclure les comptes techniques
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="exclude_zero_solde" id="exclude_zero_solde" value="1"
+                                               {{ $excludeZeroSolde ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="exclude_zero_solde">
+                                            Exclure les soldes à 0 €
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <div class="mb-4">
@@ -69,6 +95,13 @@
                             <form method="POST" action="/admin/export/users/csv" id="downloadForm">
                                 @csrf
                                 <input type="hidden" name="filter" value="{{ $filter }}">
+                                <input type="hidden" name="solde_date" value="{{ $soldeDate }}">
+                                @if($excludeTechnique)
+                                <input type="hidden" name="exclude_technique" value="1">
+                                @endif
+                                @if($excludeZeroSolde)
+                                <input type="hidden" name="exclude_zero_solde" value="1">
+                                @endif
                                 @foreach($selectedCols as $col)
                                 <input type="hidden" name="cols[]" value="{{ $col }}">
                                 @endforeach

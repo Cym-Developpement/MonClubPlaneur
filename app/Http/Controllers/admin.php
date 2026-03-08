@@ -88,10 +88,14 @@ class admin extends Controller
      * @param $user
      * @return mixed
      */
-    private function getSolde($user)
+    private function getSolde($user, ?int $atTimestamp = null)
     {
-        $solde       = 0;
-        $transaction = transaction::where('idUser', $user)->orderBy('time', 'desc')->orderBy('id', 'desc')->first();
+        $solde = 0;
+        $query = transaction::where('idUser', $user)->orderBy('time', 'desc')->orderBy('id', 'desc');
+        if ($atTimestamp !== null) {
+            $query->where('time', '<=', $atTimestamp);
+        }
+        $transaction = $query->first();
         if (isset($transaction->solde)) {
             $solde = $transaction->solde;
         }
@@ -168,7 +172,7 @@ class admin extends Controller
         return view('usersList', ['users' => $allDataUsers, 'totaux' => $totaux, 'filterLabel' => $filterLabel]);
     }
 
-    private function buildUserExportRows(array $cols, $users, array $allAttributes): array
+    private function buildUserExportRows(array $cols, $users, array $allAttributes, ?int $soldeTimestamp = null, bool $excludeTechnique = false, bool $excludeZeroSolde = false): array
     {
         $colLabels = [
             'name'          => 'Nom',
@@ -188,7 +192,9 @@ class admin extends Controller
         $rows    = [];
         $userIds = [];
         foreach ($users as $user) {
-            $userIds[] = $user->id;
+            if ($excludeTechnique && isset($allAttributes[$user->id]) && in_array('user:technique', $allAttributes[$user->id])) {
+                continue;
+            }
             $row = [];
             foreach ($cols as $col) {
                 switch ($col) {
@@ -204,7 +210,7 @@ class admin extends Controller
                         $row[$col] = $user->$col ? 'Oui' : 'Non';
                         break;
                     case 'solde':
-                        $row[$col] = number_format($this->getSolde($user->id) / 100, 2);
+                        $row[$col] = number_format($this->getSolde($user->id, $soldeTimestamp) / 100, 2);
                         break;
                     case 'attributes':
                         $row[$col] = isset($allAttributes[$user->id]) ? implode(', ', $allAttributes[$user->id]) : '';
@@ -216,7 +222,13 @@ class admin extends Controller
                         $row[$col] = $user->$col ?? '';
                 }
             }
-            $rows[] = $row;
+
+            if ($excludeZeroSolde && $this->getSolde($user->id, $soldeTimestamp) === 0) {
+                continue;
+            }
+
+            $userIds[] = $user->id;
+            $rows[]    = $row;
         }
 
         $headers = array_map(fn($c) => $colLabels[$c] ?? $c, $cols);
@@ -259,15 +271,20 @@ class admin extends Controller
         ];
         $defaultCols = ['name', 'email', 'licenceNumber', 'state', 'solde'];
 
+        $today = date('Y-m-d');
+
         if ($request->isMethod('GET')) {
             return view('admin.exportUsers', [
-                'availableCols' => $availableCols,
-                'defaultCols'   => $defaultCols,
-                'rows'          => null,
-                'headers'       => [],
-                'userIds'       => [],
-                'selectedCols'  => $defaultCols,
-                'filter'        => 'active',
+                'availableCols'     => $availableCols,
+                'defaultCols'       => $defaultCols,
+                'rows'              => null,
+                'headers'           => [],
+                'userIds'           => [],
+                'selectedCols'      => $defaultCols,
+                'filter'            => 'active',
+                'soldeDate'         => $today,
+                'excludeTechnique'  => true,
+                'excludeZeroSolde'  => false,
             ]);
         }
 
@@ -275,22 +292,30 @@ class admin extends Controller
         $cols = array_filter($cols, fn($c) => isset($availableCols[$c]));
         $cols = array_values($cols);
 
+        $soldeDate        = $request->input('solde_date', $today);
+        $soldeTimestamp   = strtotime($soldeDate . ' 23:59:59') ?: strtotime($today . ' 23:59:59');
+        $excludeTechnique = $request->boolean('exclude_technique');
+        $excludeZeroSolde = $request->boolean('exclude_zero_solde');
+
         $users = $this->resolveExportUsers($request);
         $allAttributes = [];
         foreach (usersAttributes::all() as $attr) {
             $allAttributes[$attr->userId][] = $attr->attributeName;
         }
 
-        $data = $this->buildUserExportRows($cols, $users, $allAttributes);
+        $data = $this->buildUserExportRows($cols, $users, $allAttributes, $soldeTimestamp, $excludeTechnique, $excludeZeroSolde);
 
         return view('admin.exportUsers', [
-            'availableCols' => $availableCols,
-            'defaultCols'   => $defaultCols,
-            'rows'          => $data['rows'],
-            'headers'       => $data['headers'],
-            'userIds'       => $data['userIds'],
-            'selectedCols'  => $cols,
-            'filter'        => $request->input('filter', 'active'),
+            'availableCols'     => $availableCols,
+            'defaultCols'       => $defaultCols,
+            'rows'              => $data['rows'],
+            'headers'           => $data['headers'],
+            'userIds'           => $data['userIds'],
+            'selectedCols'      => $cols,
+            'filter'            => $request->input('filter', 'active'),
+            'soldeDate'         => $soldeDate,
+            'excludeTechnique'  => $excludeTechnique,
+            'excludeZeroSolde'  => $excludeZeroSolde,
         ]);
     }
 
@@ -319,6 +344,12 @@ class admin extends Controller
             $cols = $defaultCols;
         }
 
+        $today            = date('Y-m-d');
+        $soldeDate        = $request->input('solde_date', $today);
+        $soldeTimestamp   = strtotime($soldeDate . ' 23:59:59') ?: strtotime($today . ' 23:59:59');
+        $excludeTechnique = $request->boolean('exclude_technique');
+        $excludeZeroSolde = $request->boolean('exclude_zero_solde');
+
         $users = $this->resolveExportUsers($request);
         $ids   = array_filter((array) $request->input('ids', []));
         if (!empty($ids)) {
@@ -330,7 +361,7 @@ class admin extends Controller
             $allAttributes[$attr->userId][] = $attr->attributeName;
         }
 
-        $data = $this->buildUserExportRows($cols, $users, $allAttributes);
+        $data = $this->buildUserExportRows($cols, $users, $allAttributes, $soldeTimestamp, $excludeTechnique, $excludeZeroSolde);
         $lines = [];
         $lines[] = implode(';', $data['headers']);
         foreach ($data['rows'] as $row) {
