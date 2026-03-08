@@ -279,14 +279,29 @@ class User extends Authenticatable
             $transactions = [];
             $twelveMonthsAgo = strtotime('-12 months');
 
+            $reportAnterieur = transaction::where('idUser', $user->id)
+                                            ->where('time', '<', $twelveMonthsAgo)
+                                            ->orderBy('time', 'desc')
+                                            ->orderBy('id', 'desc')
+                                            ->first();
+
+            if ($reportAnterieur) {
+                $transactions[] = [
+                    'time'        => date('d/m/Y', $twelveMonthsAgo),
+                    'value'       => '',
+                    'solde'       => number_format($reportAnterieur->solde / 100, 2),
+                    'name'        => 'Report Antérieur',
+                    'id'          => null,
+                    'observation' => '',
+                ];
+            }
+
             $transactionsUser = transaction::where('idUser', $user->id)
                                             ->where('time', '>=', $twelveMonthsAgo)
                                             ->orderBy('time', 'asc')
                                             ->orderBy('id', 'ASC')
                                             ->get();
-            //dd([$year, $transactions]);
-            //echo $user->name."<br>";
-            foreach ($transactionsUser as $key => $value) {
+            foreach ($transactionsUser as $value) {
                 $transactions[] = ['time'=> date('d/m/Y H:i', $value->time), 'value' => number_format(($value->value/100), 2), 'solde' => number_format(($value->solde/100), 2), 'name' => $value->name, 'id' => $value->id, 'observation' => $value->observation];
             }
 
