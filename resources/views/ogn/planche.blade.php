@@ -159,6 +159,19 @@
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
                                         </select>
+                                        @if($towIdx !== null)
+                                        <div class="mt-1">
+                                            <label class="small text-muted mb-0">Pilote remor.</label>
+                                            <select class="form-select form-select-sm"
+                                                    id="ognTowPilot-{{ $i }}"
+                                                    data-tow-idx="{{ $towIdx }}">
+                                                <option value="0">— Pilote —</option>
+                                                @foreach($users as $u)
+                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        @endif
                                         @endif
                                     </td>
                                     <td>
@@ -275,6 +288,20 @@ document.querySelectorAll('.ogn-pic').forEach(function(sel) {
     sel.addEventListener('change', function() {
         var pay = document.getElementById('ognUserPay-' + this.dataset.idx);
         if (pay) pay.value = this.value;
+    });
+});
+
+// ── Sync pilote remorqueur proxy ↔ PIC du remorqueur ─────────────────────
+document.querySelectorAll('[data-tow-idx]').forEach(function(proxy) {
+    var towIdx    = proxy.dataset.towIdx;
+    var towPicSel = document.querySelector('[data-ogn-idx="' + towIdx + '"] .ogn-pic');
+    if (!towPicSel) return;
+
+    proxy.addEventListener('change', function() {
+        towPicSel.value = this.value;
+    });
+    towPicSel.addEventListener('change', function() {
+        proxy.value = this.value;
     });
 });
 
