@@ -94,7 +94,7 @@
             {{-- ── Liste de toutes les factures ── --}}
             <div class="card">
                 <div class="card-header"><i class="fas fa-list me-2"></i>Toutes les factures</div>
-                <div class="table-responsive">
+                <div class="table-responsive p-2">
                     <table id="invoicesTable" class="table table-sm table-hover mb-0 align-middle">
                         <thead class="table-light">
                             <tr>
@@ -126,7 +126,8 @@
                                     → {{ date('d/m/Y', $inv->periodEnd) }}
                                 </td>
                                 <td class="small text-nowrap">{{ date('d/m/Y', $inv->emittedAt) }}</td>
-                                <td class="text-end text-nowrap fw-semibold {{ $inv->totalAmount < 0 ? 'text-danger' : 'text-success' }}">
+                                <td class="text-end text-nowrap fw-semibold {{ $inv->totalAmount < 0 ? 'text-danger' : 'text-success' }}"
+                                    data-sort="{{ $inv->totalAmount }}">
                                     {{ number_format(abs($inv->totalAmount / 100), 2, ',', ' ') }} €
                                 </td>
                                 <td class="text-center">
@@ -150,6 +151,13 @@
                             </tr>
                             @endforeach
                         </tbody>
+                        <tfoot class="table-light fw-bold">
+                            <tr>
+                                <td colspan="4" class="text-end">Total affiché</td>
+                                <td class="text-end text-nowrap" id="invoicesTotalFooter"></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -231,7 +239,20 @@ function confirmEmit() {
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
 <script>
-$('#invoicesTable').DataTable({
+function updateInvoicesTotal(table) {
+    var total = 0;
+    table.column(4, { search: 'applied' }).nodes().each(function(node) {
+        total += parseInt($(node).data('sort'), 10) || 0;
+    });
+    var abs     = Math.abs(total / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+    var display = (total < 0 ? '-\u00a0' : '') + abs + '\u00a0€';
+    $('#invoicesTotalFooter')
+        .text(display)
+        .removeClass('text-danger text-success')
+        .addClass(total < 0 ? 'text-danger' : 'text-success');
+}
+
+var invoicesTable = $('#invoicesTable').DataTable({
     order: [[0, 'desc']],
     pageLength: 25,
     language: {
@@ -247,6 +268,11 @@ $('#invoicesTable').DataTable({
         paginate: { first: "Premier", previous: "Précédent", next: "Suivant", last: "Dernier" }
     },
     columnDefs: [{ orderable: false, targets: [6] }]
+});
+
+updateInvoicesTotal(invoicesTable);
+invoicesTable.on('search.dt draw.dt', function() {
+    updateInvoicesTotal(invoicesTable);
 });
 </script>
 @endpush
