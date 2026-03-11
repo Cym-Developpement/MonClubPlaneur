@@ -45,19 +45,19 @@
                         <div class="table-responsive mb-3">
                             <table class="table table-sm table-hover align-middle" style="table-layout:fixed;">
                                 <colgroup>
-                                    <col style="width:40px;">     {{-- checkbox --}}
-                                    <col style="width:110px;">    {{-- source --}}
-                                    <col style="width:130px;">    {{-- aéronef --}}
-                                    <col style="width:85px;">     {{-- décollage --}}
-                                    <col style="width:85px;">     {{-- atterrissage --}}
-                                    <col style="width:75px;">     {{-- durée --}}
-                                    <col style="width:100px;">    {{-- ind. moteur départ --}}
-                                    <col style="width:100px;">    {{-- ind. moteur arrivée --}}
-                                    <col style="min-width:140px;"> {{-- PIC --}}
-                                    <col style="min-width:140px;"> {{-- facturable --}}
-                                    <col style="min-width:140px;"> {{-- instructeur --}}
-                                    <col style="min-width:120px;"> {{-- type lancement --}}
-                                    <col style="width:36px;">     {{-- actions --}}
+                                    <col style="width:40px;">
+                                    <col style="width:120px;">
+                                    <col style="width:130px;">
+                                    <col style="width:85px;">
+                                    <col style="width:85px;">
+                                    <col style="width:75px;">
+                                    <col style="width:100px;">
+                                    <col style="width:100px;">
+                                    <col style="min-width:140px;">
+                                    <col style="min-width:140px;">
+                                    <col style="min-width:140px;">
+                                    <col style="min-width:120px;">
+                                    <col style="width:36px;">
                                 </colgroup>
                                 <thead class="table-light">
                                     <tr>
@@ -76,111 +76,132 @@
                                         <th></th>
                                     </tr>
                                 </thead>
+
+                                {{-- ── Vols OGN ────────────────────────────── --}}
                                 <tbody>
-
-                                    {{-- ── Vols OGN ───────────────────────── --}}
-                                    @isset($flights)
-                                    @foreach($flights->flights as $flight)
-                                    @php
-                                        $i = $loop->index;
-                                        $hasAircraft = isset($flight['aircraft']);
-                                        $isMotor     = $hasAircraft && $flight['aircraft']->type == 1;
-                                        $startTsp    = $flight['flight']['start_tsp'];
-                                        $stopTsp     = $flight['flight']['stop_tsp'];
-                                        $duration    = $stopTsp > $startTsp ? gmdate('H\hi', $stopTsp - $startTsp) : '—';
-                                    @endphp
-                                    <tr class="{{ $hasAircraft ? '' : 'table-warning' }}">
-                                        <td>
-                                            @if($hasAircraft)
-                                            <div class="form-check mb-0">
-                                                <input type="checkbox" class="form-check-input ogn-check"
-                                                       name="flights[{{ $i }}][import]" value="1">
-                                            </div>
-                                            @endif
-                                        </td>
-                                        <td><span class="badge bg-info text-dark">OGN</span></td>
-                                        <td class="fw-semibold text-truncate">
-                                            @if($hasAircraft)
-                                                {{ $flight['aircraft']->name }}
-                                                <input type="hidden" name="flights[{{ $i }}][aircraftId]" value="{{ $flight['aircraft']->id }}">
-                                            @else
-                                                <span class="text-muted small">{{ $flight['device']['address'] }}</span>
-                                                <span class="badge bg-warning text-dark">?</span>
-                                            @endif
-                                            <input type="hidden" name="flights[{{ $i }}][start_tsp]" value="{{ $startTsp }}">
-                                            <input type="hidden" name="flights[{{ $i }}][stop_tsp]" value="{{ $stopTsp }}">
-                                        </td>
-                                        <td class="small text-nowrap">{{ $flight['flight']['start'] }}</td>
-                                        <td class="small text-nowrap">{{ $flight['flight']['stop'] }}</td>
-                                        <td class="small text-nowrap">{{ $duration }}</td>
-                                        <td>
-                                            @if($isMotor)
-                                            <input type="number" step="0.01" class="form-control form-control-sm"
-                                                   name="flights[{{ $i }}][motorStartTime]" value="0" placeholder="0.00">
-                                            @else
-                                            <input type="hidden" name="flights[{{ $i }}][motorStartTime]" value="0">
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($isMotor)
-                                            <input type="number" step="0.01" class="form-control form-control-sm"
-                                                   name="flights[{{ $i }}][motorEndTime]" value="0" placeholder="0.00">
-                                            @else
-                                            <input type="hidden" name="flights[{{ $i }}][motorEndTime]" value="0">
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($hasAircraft)
-                                            <select class="form-select form-select-sm ogn-pic"
-                                                    name="flights[{{ $i }}][userId]" data-idx="{{ $i }}">
-                                                <option value="0">— PIC —</option>
-                                                @foreach($users as $u)
-                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($hasAircraft)
-                                            <select class="form-select form-select-sm"
-                                                    name="flights[{{ $i }}][userPayId]" id="ognUserPay-{{ $i }}">
-                                                <option value="0">— Facturable —</option>
-                                                @foreach($users as $u)
-                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($hasAircraft)
-                                            <select class="form-select form-select-sm"
-                                                    name="flights[{{ $i }}][instructorId]">
-                                                <option value="0">— Aucun —</option>
-                                                @foreach($users as $u)
-                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($hasAircraft)
-                                            <select class="form-select form-select-sm"
-                                                    name="flights[{{ $i }}][startTypeId]">
-                                                @foreach($startTypes as $st)
-                                                <option value="{{ $st->id }}">{{ $st->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            @endif
-                                        </td>
-                                        <td></td>
-                                    </tr>
-                                    @endforeach
-                                    @endisset
-
-                                    {{-- ── Vols manuels (ajoutés par JS) ─── --}}
-                                    <tbody id="manualFlightsBody"></tbody>
-
+                                @isset($flights)
+                                @foreach($flights->flights as $flight)
+                                @php
+                                    $i        = $loop->index;
+                                    $hasAc    = isset($flight['aircraft']);
+                                    $isMotor  = $hasAc && $flight['aircraft']->type == 1;
+                                    $isTowing = !empty($flight['flight']['towing']);
+                                    $towIdx   = isset($flight['flight']['tow']) && $flight['flight']['tow'] !== null
+                                                ? (int) $flight['flight']['tow']
+                                                : null;
+                                    $startTsp = $flight['flight']['start_tsp'];
+                                    $stopTsp  = $flight['flight']['stop_tsp'];
+                                    $duration = $stopTsp > $startTsp ? gmdate('H\hi', $stopTsp - $startTsp) : '—';
+                                @endphp
+                                <tr class="{{ $hasAc ? '' : 'table-warning' }} {{ $isTowing ? 'tow-pair border-start border-3 border-warning' : ($towIdx !== null ? 'tow-pair border-start border-3 border-primary' : '') }}"
+                                    data-ogn-idx="{{ $i }}"
+                                    @if($towIdx !== null) data-tow="{{ $towIdx }}" @endif>
+                                    <td>
+                                        @if($hasAc)
+                                        <div class="form-check mb-0">
+                                            <input type="checkbox" class="form-check-input ogn-check"
+                                                   name="flights[{{ $i }}][import]" value="1"
+                                                   id="ognCheck-{{ $i }}">
+                                        </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($isTowing)
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-link me-1"></i>Remorqueur
+                                            </span>
+                                        @elseif($towIdx !== null)
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-link me-1"></i>Remorqué
+                                            </span>
+                                        @else
+                                            <span class="badge bg-info text-dark">OGN</span>
+                                        @endif
+                                    </td>
+                                    <td class="fw-semibold text-truncate">
+                                        @if($hasAc)
+                                            {{ $flight['aircraft']->name }}
+                                            <input type="hidden" name="flights[{{ $i }}][aircraftId]" value="{{ $flight['aircraft']->id }}">
+                                        @else
+                                            <span class="text-muted small">{{ $flight['device']['address'] }}</span>
+                                            <span class="badge bg-warning text-dark">?</span>
+                                        @endif
+                                        <input type="hidden" name="flights[{{ $i }}][start_tsp]" value="{{ $startTsp }}">
+                                        <input type="hidden" name="flights[{{ $i }}][stop_tsp]"  value="{{ $stopTsp }}">
+                                    </td>
+                                    <td class="small text-nowrap">{{ $flight['flight']['start'] }}</td>
+                                    <td class="small text-nowrap">{{ $flight['flight']['stop'] }}</td>
+                                    <td class="small text-nowrap">{{ $duration }}</td>
+                                    <td>
+                                        @if($isMotor)
+                                        <input type="number" step="0.01" class="form-control form-control-sm"
+                                               name="flights[{{ $i }}][motorStartTime]" value="0" placeholder="0.00"
+                                               title="Laisser à 0 = temps de vol utilisé automatiquement">
+                                        @else
+                                        <input type="hidden" name="flights[{{ $i }}][motorStartTime]" value="0">
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($isMotor)
+                                        <input type="number" step="0.01" class="form-control form-control-sm"
+                                               name="flights[{{ $i }}][motorEndTime]" value="0" placeholder="0.00"
+                                               title="Laisser à 0 = temps de vol utilisé automatiquement">
+                                        @else
+                                        <input type="hidden" name="flights[{{ $i }}][motorEndTime]" value="0">
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($hasAc)
+                                        <select class="form-select form-select-sm ogn-pic"
+                                                name="flights[{{ $i }}][userId]" data-idx="{{ $i }}">
+                                            <option value="0">— PIC —</option>
+                                            @foreach($users as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($hasAc)
+                                        <select class="form-select form-select-sm"
+                                                name="flights[{{ $i }}][userPayId]" id="ognUserPay-{{ $i }}">
+                                            <option value="0">— Facturable —</option>
+                                            @foreach($users as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($hasAc)
+                                        <select class="form-select form-select-sm"
+                                                name="flights[{{ $i }}][instructorId]">
+                                            <option value="0">— Aucun —</option>
+                                            @foreach($users as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($hasAc)
+                                        <select class="form-select form-select-sm"
+                                                name="flights[{{ $i }}][startTypeId]">
+                                            @foreach($startTypes as $st)
+                                            <option value="{{ $st->id }}">{{ $st->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @endif
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                @endforeach
+                                @endisset
                                 </tbody>
+
+                                {{-- ── Vols manuels (ajoutés par JS) ──────── --}}
+                                <tbody id="manualFlightsBody"></tbody>
+
                             </table>
                         </div>
 
@@ -208,6 +229,36 @@ var userOptions      = `<option value="0">— Aucun —</option>@foreach($users 
 var picOptions       = `<option value="0">— PIC —</option>@foreach($users as $u)<option value="{{ $u->id }}">{{ addslashes($u->name) }}</option>@endforeach`;
 var startTypeOptions = `@foreach($startTypes as $st)<option value="{{ $st->id }}">{{ addslashes($st->name) }}</option>@endforeach`;
 
+// ── Auto-sync des paires remorqueur/remorqué ─────────────────────────────
+document.querySelectorAll('[data-tow]').forEach(function(gliderRow) {
+    var gliderCb = gliderRow.querySelector('.ogn-check');
+    if (!gliderCb) return;
+
+    var towIdx = gliderRow.dataset.tow;
+    var towRow = document.querySelector('[data-ogn-idx="' + towIdx + '"]');
+    if (!towRow) return;
+    var towCb = towRow.querySelector('.ogn-check');
+    if (!towCb) return;
+
+    // Coche le planeur → coche le remorqueur
+    gliderCb.addEventListener('change', function() {
+        towCb.checked = this.checked;
+    });
+    // Décoche le remorqueur → décoche le planeur
+    towCb.addEventListener('change', function() {
+        if (!this.checked) gliderCb.checked = false;
+    });
+});
+
+// ── Auto-fill facturable depuis PIC (vols OGN) ───────────────────────────
+document.querySelectorAll('.ogn-pic').forEach(function(sel) {
+    sel.addEventListener('change', function() {
+        var pay = document.getElementById('ognUserPay-' + this.dataset.idx);
+        if (pay) pay.value = this.value;
+    });
+});
+
+// ── Vols manuels ─────────────────────────────────────────────────────────
 var manualIdx = 0;
 
 function addManualFlight() {
@@ -220,8 +271,8 @@ function addManualFlight() {
         <td><input type="time" class="form-control form-control-sm" name="manualFlights[${i}][takeOffTime]" required></td>
         <td><input type="time" class="form-control form-control-sm" name="manualFlights[${i}][landingTime]" required></td>
         <td class="text-muted small">—</td>
-        <td><input type="number" step="0.01" class="form-control form-control-sm" name="manualFlights[${i}][motorStartTime]" value="0" placeholder="0.00"></td>
-        <td><input type="number" step="0.01" class="form-control form-control-sm" name="manualFlights[${i}][motorEndTime]" value="0" placeholder="0.00"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm" name="manualFlights[${i}][motorStartTime]" value="0" placeholder="0.00" title="Laisser à 0 = temps de vol utilisé automatiquement"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm" name="manualFlights[${i}][motorEndTime]" value="0" placeholder="0.00" title="Laisser à 0 = temps de vol utilisé automatiquement"></td>
         <td><select class="form-select form-select-sm manual-pic" name="manualFlights[${i}][userId]" data-idx="${i}">${picOptions}</select></td>
         <td><select class="form-select form-select-sm" name="manualFlights[${i}][userPayId]" id="manualUserPay-${i}">${userOptions}</select></td>
         <td><select class="form-select form-select-sm" name="manualFlights[${i}][instructorId]">${userOptions}</select></td>
@@ -239,13 +290,6 @@ function removeManualFlight(i) {
     var row = document.getElementById('manualRow-' + i);
     if (row) row.remove();
 }
-
-document.querySelectorAll('.ogn-pic').forEach(function(sel) {
-    sel.addEventListener('change', function() {
-        var pay = document.getElementById('ognUserPay-' + this.dataset.idx);
-        if (pay) pay.value = this.value;
-    });
-});
 </script>
 @endpush
 
