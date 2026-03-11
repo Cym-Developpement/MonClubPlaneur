@@ -127,14 +127,41 @@
                     @if($invoices->isNotEmpty())
                     <hr>
                     <h6 class="mb-2"><i class="fas fa-file-invoice me-2"></i>Mes factures</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                      @foreach($invoices as $inv)
-                        <a href="{{ route('invoicePdf', $inv->id) }}" target="_blank"
-                           class="btn btn-sm {{ $inv->type === 'avoir' ? 'btn-outline-success' : 'btn-outline-secondary' }}">
-                          <i class="fas fa-file-pdf me-1"></i>{{ $inv->invoiceNumber }}
-                          <small class="ms-1 text-muted">{{ date('d/m/Y', $inv->emittedAt) }}</small>
-                        </a>
-                      @endforeach
+                    <div class="table-responsive">
+                      <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Numéro</th>
+                            <th>Période</th>
+                            <th>Émis le</th>
+                            <th class="text-end">Montant</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @foreach($invoices as $inv)
+                          <tr>
+                            <td class="fw-semibold {{ $inv->type === 'avoir' ? 'text-success' : '' }}">
+                              {{ $inv->invoiceNumber }}
+                            </td>
+                            <td class="small text-nowrap">
+                              {{ $inv->periodStart > 0 ? date('d/m/Y', $inv->periodStart) : 'Origine' }}
+                              → {{ date('d/m/Y', $inv->periodEnd) }}
+                            </td>
+                            <td class="small text-nowrap">{{ date('d/m/Y', $inv->emittedAt) }}</td>
+                            <td class="text-end text-nowrap fw-semibold {{ $inv->totalAmount < 0 ? 'text-danger' : 'text-success' }}">
+                              {{ number_format(abs($inv->totalAmount / 100), 2, ',', ' ') }} €
+                            </td>
+                            <td class="text-end">
+                              <a href="{{ route('invoicePdf', $inv->id) }}" target="_blank"
+                                 class="btn btn-sm btn-outline-secondary py-0 px-2" title="Télécharger">
+                                <i class="fas fa-file-pdf"></i>
+                              </a>
+                            </td>
+                          </tr>
+                          @endforeach
+                        </tbody>
+                      </table>
                     </div>
                     @endif
 
