@@ -118,7 +118,7 @@
                                     </td>
                                     <td class="fw-semibold text-truncate">
                                         @if($hasAc)
-                                            {{ $flight['aircraft']->name }}
+                                            <i class="fas fa-check-circle text-success me-1"></i>{{ $flight['aircraft']->name }}
                                             <input type="hidden" name="flights[{{ $i }}][aircraftId]" value="{{ $flight['aircraft']->id }}">
                                         @else
                                             @can('admin:super')
