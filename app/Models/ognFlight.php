@@ -77,7 +77,7 @@ class ognFlight extends Model
     public function getAircraft(array $device): ?aircraft
     {
         if (!empty($device['registration'])) {
-            $normalize = fn($s) => strtoupper(str_replace(['-', ' '], '', trim($s)));
+            $normalize = fn($s) => str_replace('0', 'O', strtoupper(str_replace(['-', ' '], '', trim($s))));
             $reg = $normalize($device['registration']);
             $ac  = aircraft::all()->first(
                 fn($a) => $normalize($a->register) === $reg
