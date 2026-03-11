@@ -97,7 +97,12 @@ class HomeController extends Controller
 
         $attributes = usersAttributes::where('userId', Auth::user()->id)->get();
 
-        return view('home', ['userAttributes' => $attributes, 'transactions' => $transactions, 'availableYears' => $availableYears, 'solde' => number_format(($this->getSolde(Auth::user()->id)/100), 2), 'userData' => $userData, 'alertsList' => $alerts, 'allUsers' => $allUsers]);
+        $invoices = \App\Models\Invoice::where('idUser', Auth::user()->id)
+            ->whereNotNull('pdfPath')
+            ->orderBy('sequence', 'desc')
+            ->get();
+
+        return view('home', ['userAttributes' => $attributes, 'transactions' => $transactions, 'availableYears' => $availableYears, 'solde' => number_format(($this->getSolde(Auth::user()->id)/100), 2), 'userData' => $userData, 'alertsList' => $alerts, 'allUsers' => $allUsers, 'invoices' => $invoices]);
     }
 
     /**

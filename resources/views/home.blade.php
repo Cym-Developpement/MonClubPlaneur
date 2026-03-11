@@ -95,17 +95,17 @@
                     <div class="d-flex justify-content-center mb-3">
                       <div class="btn-group">
                         @can('debug')
-                        <a class="btn btn-success btn-sm" href="addFlight">
+                        <a class="btn btn-outline-success btn-sm" href="addFlight">
                           <i class="fas fa-plane me-1"></i>Enregistrer un vol
                         </a>
                         @endcan
-                        <a class="btn btn-sm btn-info" href="{{ route('transfer') }}">
+                        <a class="btn btn-sm btn-outline-info" href="{{ route('transfer') }}">
                           <i class="fas fa-exchange-alt me-1"></i>Transfert pilote
                         </a>
-                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#remboursementModal">
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#remboursementModal">
                           <i class="fas fa-shopping-cart me-1"></i>Achat club
                         </button>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#payModal">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#payModal">
                           <i class="fas fa-wallet me-1"></i>Approvisionner mon compte
                         </button>
                       </div>
@@ -123,9 +123,20 @@
                         Le solde de votre compte est négatif. merci d'approvisionner votre compte.
                       </div>
                     @endif
-                    
-                    
-                    <!--<button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#helloAssoModal">Approvisionner mon compte par carte bancaire</button>-->
+
+                    @if($invoices->isNotEmpty())
+                    <hr>
+                    <h6 class="mb-2"><i class="fas fa-file-invoice me-2"></i>Mes factures</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                      @foreach($invoices as $inv)
+                        <a href="{{ route('invoicePdf', $inv->id) }}" target="_blank"
+                           class="btn btn-sm {{ $inv->type === 'avoir' ? 'btn-outline-success' : 'btn-outline-secondary' }}">
+                          <i class="fas fa-file-pdf me-1"></i>{{ $inv->invoiceNumber }}
+                          <small class="ms-1 text-muted">{{ date('d/m/Y', $inv->emittedAt) }}</small>
+                        </a>
+                      @endforeach
+                    </div>
+                    @endif
 
                 </div>
             </div>
