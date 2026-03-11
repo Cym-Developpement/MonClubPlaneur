@@ -22,13 +22,22 @@
                     @endcan
                     <div class="btn-group btn-group-sm">
                       <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-file-invoice me-1"></i>Facture
+                        <i class="fas fa-file-invoice me-1"></i>Factures
                       </button>
                       <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') }}">Année {{ date('Y') }}</a></li>
-                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 1 }}">Année {{ date('Y') - 1 }}</a></li>
-                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 2 }}">Année {{ date('Y') - 2 }}</a></li>
-                        <li><a class="dropdown-item" href="/invoiceExport?user={{ $selectedUser }}&year={{ date('Y') - 3 }}">Année {{ date('Y') - 3 }}</a></li>
+                        @forelse($invoices as $inv)
+                          @if($inv->pdfPath)
+                          <li>
+                            <a class="dropdown-item" href="{{ route('invoicePdf', $inv->id) }}" target="_blank">
+                              <i class="fas fa-file-pdf me-1 {{ $inv->type === 'avoir' ? 'text-success' : 'text-secondary' }}"></i>
+                              {{ $inv->invoiceNumber }}
+                              <small class="text-muted ms-1">{{ date('d/m/Y', $inv->emittedAt) }}</small>
+                            </a>
+                          </li>
+                          @endif
+                        @empty
+                          <li><span class="dropdown-item text-muted">Aucune facture</span></li>
+                        @endforelse
                       </ul>
                     </div>
                   </div>

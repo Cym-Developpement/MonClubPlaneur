@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Gesasso;
+use App\Helpers\AuditLog;
 use App\Mail\sendAccount;
 use App\Models\aircraft;
 use App\Models\flight;
@@ -1362,6 +1363,7 @@ class admin extends Controller
         ]);
         $pdf->save('../storage/app/userAcountState/' . $filename);
         Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/' . $filename, $user->realAmountAccount, $user->email));
+        AuditLog::log('relevé de compte envoyé à ' . $user->name . ' (' . $user->email . ')');
 
         return redirect('/usersList')->with('success', 'Extrait de compte envoyé à ' . $user->name . '.');
     }
@@ -1500,6 +1502,7 @@ class admin extends Controller
 
             //Mail::to($selectedUser->email)->send(new sendAccount($selectedUser->name, 'userAcountState/'.$filename));
             Mail::to('yann@cymdev.com')->send(new sendAccount($selectedUser->name, 'userAcountState/' . $filename, $selectedUser->realAmountAccount, $selectedUser->email));
+            AuditLog::log('relevé de compte (lot) envoyé pour ' . $selectedUser->name);
         }
         return 'OK!';
     }
@@ -2121,6 +2124,8 @@ class admin extends Controller
             strtotime($request->periodEnd . ' 23:59:59')
         );
 
+        AuditLog::log('facture ' . $invoice->invoiceNumber . ' émise pour ' . $user->name);
+
         return redirect('saisie?selectUserInTransaction=' . $request->idUser)
             ->with('status', 'Facture ' . $invoice->invoiceNumber . ' émise.');
     }
@@ -2144,6 +2149,10 @@ class admin extends Controller
         }
 
         $n = count($created);
+        if ($n > 0) {
+            AuditLog::log('émission en lot : ' . $n . ' facture(s) — ' . implode(', ', array_column($created, 'invoice')));
+        }
+
         return redirect()->route('admin.invoices')
             ->with('status', $n > 0
                 ? $n . ' facture(s) émise(s) : ' . implode(', ', array_column($created, 'invoice')) . '.'
@@ -2206,6 +2215,8 @@ class admin extends Controller
             $user->last_invoice_date = $previous?->periodEnd;
             $user->save();
         });
+
+        AuditLog::log('avoir émis, facture ' . $invoice->invoiceNumber . ' annulée pour ' . $user->name);
 
         return redirect('saisie?selectUserInTransaction=' . $user->id)
             ->with('status', 'Avoir émis, facture ' . $invoice->invoiceNumber . ' annulée.');

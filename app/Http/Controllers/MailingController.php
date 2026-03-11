@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\AuditLog;
 use App\Mail\BulkMailing;
 use App\Models\MailingLog;
 use App\Models\parametre;
@@ -65,6 +66,8 @@ class MailingController extends Controller
             'recipient_count' => $users->count(),
         ]);
 
+        AuditLog::log('emailing groupé envoyé à ' . $users->count() . ' destinataire(s) — sujet : ' . $request->input('subject'));
+
         return redirect('/admin/mailing')->with('success', 'Email envoyé à ' . $users->count() . ' destinataire(s).');
     }
 
@@ -100,6 +103,8 @@ class MailingController extends Controller
             'recipient_count' => 1,
             'test_email'      => $request->input('test_email'),
         ]);
+
+        AuditLog::log('test emailing envoyé à ' . $request->input('test_email') . ' — sujet : ' . $request->input('subject'));
 
         return redirect('/admin/mailing')->with('success', 'Email de test envoyé à ' . $request->input('test_email') . '.');
     }
