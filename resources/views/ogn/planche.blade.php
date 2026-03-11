@@ -216,6 +216,26 @@
                         </div>
                     </form>
 
+                    @can('admin:super')
+                    @isset($flights)
+                    <div class="accordion mt-3" id="ognRawAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed py-2 small text-muted" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#ognRawBody">
+                                    <i class="fas fa-code me-2"></i>Réponse brute OGN
+                                </button>
+                            </h2>
+                            <div id="ognRawBody" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    <pre class="mb-0 p-3 small bg-light" style="max-height:400px;overflow:auto;">{{ json_encode($flights->data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endisset
+                    @endcan
+
                 </div>
             </div>
         </div>
