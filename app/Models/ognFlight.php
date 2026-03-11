@@ -77,7 +77,10 @@ class ognFlight extends Model
     public function getAircraft(array $device): ?aircraft
     {
         if (!empty($device['registration'])) {
-            $ac = aircraft::where('register', $device['registration'])->first();
+            $reg = str_replace('-', '', $device['registration']);
+            $ac  = aircraft::all()->first(
+                fn($a) => str_replace('-', '', $a->register) === $reg
+            );
             if ($ac) return $ac;
         }
 
