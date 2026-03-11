@@ -2136,7 +2136,12 @@ class admin extends Controller
             $created[] = ['userId' => $userId, 'invoice' => $invoice->invoiceNumber];
         }
 
-        return response()->json(['created' => count($created), 'invoices' => $created]);
+        $n = count($created);
+        return redirect()->route('admin.invoices')
+            ->with('status', $n > 0
+                ? $n . ' facture(s) émise(s) : ' . implode(', ', array_column($created, 'invoice')) . '.'
+                : 'Aucune transaction non facturée trouvée pour cette période.'
+            );
     }
 
     public function cancelInvoice(Request $request)
@@ -2320,6 +2325,50 @@ class admin extends Controller
 
     public function invoicesPage()
     {
-        return view('admin.invoices');
+        $invoices = Invoice::with(['user', 'avoir', 'relatedInvoice'])
+            ->orderBy('sequence', 'desc')
+            ->paginate(50);
+
+        return view('admin.invoices', compact('invoices'));
+    }
+
+    public function invoicePreviewAll(Request $request)
+    {
+        $periodEnd = strtotime($request->periodEnd . ' 23:59:59');
+
+        $userIds = transaction::where('value', '<', 0)
+            ->where('time', '<=', $periodEnd)
+            ->whereNull('invoiceId')
+            ->distinct()
+            ->pluck('idUser');
+
+        $preview = [];
+        foreach ($userIds as $userId) {
+            $user = User::find($userId);
+            if (!$user) continue;
+
+            $periodStart  = $user->last_invoice_date ?? 0;
+            $transactions = transaction::where('idUser', $userId)
+                ->where('value', '<', 0)
+                ->where('time', '>', $periodStart)
+                ->where('time', '<=', $periodEnd)
+                ->whereNull('invoiceId')
+                ->get();
+
+            if ($transactions->isEmpty()) continue;
+
+            $preview[] = [
+                'userId'      => $userId,
+                'userName'    => $user->name,
+                'periodStart' => $periodStart > 0 ? date('d/m/Y', $periodStart) : 'Origine',
+                'periodEnd'   => date('d/m/Y', $periodEnd),
+                'count'       => $transactions->count(),
+                'total'       => $transactions->sum('value'),
+            ];
+        }
+
+        usort($preview, fn($a, $b) => strcmp($a['userName'], $b['userName']));
+
+        return response()->json($preview);
     }
 }

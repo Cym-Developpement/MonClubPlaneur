@@ -69,6 +69,7 @@ Route::get('/controlData', [App\Http\Controllers\admin::class, 'updateAndControl
 Route::get('/accountExport', [App\Http\Controllers\admin::class, 'accountExport'])->name('accountExport')->middleware('can:admin');
 Route::get('/invoiceExport', [App\Http\Controllers\admin::class, 'invoiceExport'])->name('invoiceExport')->middleware('can:admin');
 Route::get('/admin/invoices', [App\Http\Controllers\admin::class, 'invoicesPage'])->name('admin.invoices')->middleware('can:admin:invoices');
+Route::get('/admin/invoices/preview', [App\Http\Controllers\admin::class, 'invoicePreviewAll'])->name('admin.invoices.preview')->middleware('can:admin:invoices');
 Route::get('/invoicePreview', [App\Http\Controllers\admin::class, 'invoicePreview'])->name('invoicePreview')->middleware('can:admin:invoices');
 Route::post('/invoiceLock', [App\Http\Controllers\admin::class, 'lockInvoice'])->name('invoiceLock')->middleware('can:admin:invoices');
 Route::post('/invoiceLockAll', [App\Http\Controllers\admin::class, 'lockInvoiceAll'])->name('invoiceLockAll')->middleware('can:admin:invoices');
