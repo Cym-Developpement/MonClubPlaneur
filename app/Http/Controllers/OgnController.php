@@ -20,27 +20,16 @@ class OgnController extends Controller
 
     public function planches(Request $request)
     {
-        if (isset($request->DATE)) {
-            ognFlight::getDataFromApi('lfct', $request->DATE);
-            $flights = ognFlight::where('date', $request->DATE)->first();
-            $date = $request->DATE;
-        } else {
-            ognFlight::getDataFromApi('lfct', date('Y-m-d'));
-            $flights = ognFlight::where('imported', 0)->orderBy('date', 'asc')->first();
-            if (is_null($flights)) {
-                $date = date('Y-m-d');
-            } else {
-                $date = $flights->date;
-            }
-        }
-        $next     = date('Y-m-d', strtotime($date) + 87400);
-        $previous = date('Y-m-d', strtotime($date) - 85400);
+        $date = $request->DATE ?? date('Y-m-d');
+
+        ognFlight::getDataFromApi('lfct', $date);
+        $flights = ognFlight::where('date', $date)->first();
 
         $users      = User::where('state', 1)->orderBy('name')->get();
         $aircrafts  = aircraft::where('actif', 1)->orderBy('name')->get();
         $startTypes = sailplaneStartPrice::all();
 
-        return view('ogn.planche', compact('flights', 'date', 'next', 'previous', 'users', 'aircrafts', 'startTypes'));
+        return view('ogn.planche', compact('flights', 'date', 'users', 'aircrafts', 'startTypes'));
     }
 
     public function save(Request $request, $DATE)
@@ -60,14 +49,16 @@ class OgnController extends Controller
             $totalTime = (int) round(($stopTsp - $startTsp) / 60);
 
             $f = $this->buildFlight(
-                aircraftId:   $ac->id,
-                userId:       (int) $data['userId'],
-                userPayId:    (int) $data['userPayId'],
-                instructorId: (int) ($data['instructorId'] ?? 0),
-                startTypeId:  (int) $data['startTypeId'],
-                startTsp:     $startTsp,
-                stopTsp:      $stopTsp,
-                totalTime:    $totalTime,
+                aircraftId:      $ac->id,
+                userId:          (int) $data['userId'],
+                userPayId:       (int) $data['userPayId'],
+                instructorId:    (int) ($data['instructorId'] ?? 0),
+                startTypeId:     (int) $data['startTypeId'],
+                startTsp:        $startTsp,
+                stopTsp:         $stopTsp,
+                totalTime:       $totalTime,
+                motorStartTime:  (float) ($data['motorStartTime'] ?? 0),
+                motorEndTime:    (float) ($data['motorEndTime'] ?? 0),
             );
 
             $this->saveFlight($f);
@@ -87,14 +78,16 @@ class OgnController extends Controller
             $totalTime = (int) round(($stopTsp - $startTsp) / 60);
 
             $f = $this->buildFlight(
-                aircraftId:   $ac->id,
-                userId:       (int) $data['userId'],
-                userPayId:    (int) $data['userPayId'],
-                instructorId: (int) ($data['instructorId'] ?? 0),
-                startTypeId:  (int) $data['startTypeId'],
-                startTsp:     $startTsp,
-                stopTsp:      $stopTsp,
-                totalTime:    $totalTime,
+                aircraftId:      $ac->id,
+                userId:          (int) $data['userId'],
+                userPayId:       (int) $data['userPayId'],
+                instructorId:    (int) ($data['instructorId'] ?? 0),
+                startTypeId:     (int) $data['startTypeId'],
+                startTsp:        $startTsp,
+                stopTsp:         $stopTsp,
+                totalTime:       $totalTime,
+                motorStartTime:  (float) ($data['motorStartTime'] ?? 0),
+                motorEndTime:    (float) ($data['motorEndTime'] ?? 0),
             );
 
             $this->saveFlight($f);
@@ -106,7 +99,7 @@ class OgnController extends Controller
             $ognRecord->save();
         }
 
-        return redirect('/planchesOgn/' . $DATE)
+        return redirect('/planchesOgn?DATE=' . $DATE)
             ->with('status', $saved . ' vol(s) enregistré(s).');
     }
 
@@ -129,20 +122,22 @@ class OgnController extends Controller
         int $startTsp,
         int $stopTsp,
         int $totalTime,
+        float $motorStartTime = 0.0,
+        float $motorEndTime   = 0.0,
     ): flight {
         $f = new flight();
-        $f->idUser          = $userId;
-        $f->userPayId       = $userPayId;
-        $f->idInstructor    = $instructorId;
-        $f->aircraftId      = $aircraftId;
-        $f->totalTime       = $totalTime;
-        $f->takeOffTime     = date('d/m/Y H:i', $startTsp);
-        $f->landingTime     = date('d/m/Y H:i', $stopTsp);
-        $f->flightTimestamp = $startTsp;
-        $f->landing         = 1;
-        $f->startType       = $startTypeId;
-        $f->motorStartTime  = 0;
-        $f->motorEndTime    = 0;
+        $f->idUser           = $userId;
+        $f->userPayId        = $userPayId;
+        $f->idInstructor     = $instructorId;
+        $f->aircraftId       = $aircraftId;
+        $f->totalTime        = $totalTime;
+        $f->takeOffTime      = date('d/m/Y H:i', $startTsp);
+        $f->landingTime      = date('d/m/Y H:i', $stopTsp);
+        $f->flightTimestamp  = $startTsp;
+        $f->landing          = 1;
+        $f->startType        = $startTypeId;
+        $f->motorStartTime   = $motorStartTime;
+        $f->motorEndTime     = $motorEndTime;
         $f->airportStartCode = 'lfct';
         $f->airportEndCode   = 'lfct';
         $f->pilotState       = '';
