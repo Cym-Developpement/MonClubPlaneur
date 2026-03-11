@@ -244,12 +244,13 @@ function updateInvoicesTotal(table) {
     table.column(4, { search: 'applied' }).nodes().each(function(node) {
         total += parseInt($(node).data('sort'), 10) || 0;
     });
-    var abs     = Math.abs(total / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
-    var display = (total < 0 ? '-\u00a0' : '') + abs + '\u00a0€';
+    var net     = -total; // totalAmount est négatif pour les factures, positif pour les avoirs
+    var abs     = Math.abs(net / 100).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+    var display = (net < 0 ? '-\u00a0' : '') + abs + '\u00a0€';
     $('#invoicesTotalFooter')
         .text(display)
         .removeClass('text-danger text-success')
-        .addClass(total < 0 ? 'text-danger' : 'text-success');
+        .addClass(net < 0 ? 'text-danger' : 'text-success');
 }
 
 var invoicesTable = $('#invoicesTable').DataTable({
