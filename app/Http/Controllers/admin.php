@@ -5,6 +5,7 @@ use App\Gesasso;
 use App\Mail\sendAccount;
 use App\Models\aircraft;
 use App\Models\flight;
+use App\Models\Invoice;
 use App\Models\parametre;
 use App\Models\refund;
 use App\Models\sailplaneStartPrice;
@@ -15,6 +16,7 @@ use App\Models\usersAttributes;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -692,6 +694,14 @@ class admin extends Controller
     {
         $transaction = transaction::find($request->id);
         $user        = User::find($transaction->idUser);
+
+        if ($transaction->invoiceId) {
+            $invoice = Invoice::find($transaction->invoiceId);
+            if ($invoice && !$invoice->isCancelled()) {
+                return back()->with('error', 'Transaction liée à une facture définitive, suppression impossible.');
+            }
+        }
+
         if (! is_null($transaction->refundId) && $transaction->refundId != 0) {
             $refund = refund::find($transaction->refundId);
             Storage::delete($refund->file);
@@ -707,8 +717,17 @@ class admin extends Controller
      */
     public function validNewTrDate(Request $request)
     {
-        $newTime           = strtotime(str_replace('/', '-', $request->date));
-        $transaction       = transaction::find($request->id);
+        $newTime     = strtotime(str_replace('/', '-', $request->date));
+        $transaction = transaction::find($request->id);
+
+        if ($transaction->invoiceId) {
+            $invoice = Invoice::find($transaction->invoiceId);
+            if ($invoice && !$invoice->isCancelled()) {
+                return redirect('saisie?selectUserInTransaction=' . $transaction->idUser)
+                    ->with('error', 'Transaction liée à une facture définitive, modification impossible.');
+            }
+        }
+
         $transaction->year = date('Y', $newTime);
         $transaction->time = $newTime;
         $userId            = $transaction->idUser;
@@ -2051,5 +2070,251 @@ class admin extends Controller
             }
         }
         return view('admin.importGesasso', ['resultImport' => $resultImport]);
+    }
+
+    // ─────────────────────────────────────────────
+    //  FACTURATION
+    // ─────────────────────────────────────────────
+
+    public function invoicePreview(Request $request)
+    {
+        $user        = User::findOrFail($request->idUser);
+        $periodStart = $user->last_invoice_date ?? 0;
+        $periodEnd   = mktime(23, 59, 59, ...array_reverse(explode('/', $request->periodEnd)));
+
+        $transactions = transaction::where('idUser', $user->id)
+            ->where('value', '<', 0)
+            ->where('time', '>', $periodStart)
+            ->where('time', '<=', $periodEnd)
+            ->orderBy('time', 'asc')
+            ->get();
+
+        $draftNumber = str_replace(
+            ['{ID}', 'YYYY', 'MM'],
+            ['PROVISOIRE', date('Y'), date('m')],
+            parametre::getValue('invoice-format', 'FYYYYMM-{ID}')
+        );
+
+        $pdf = Pdf::loadView('exportPdfInvoiceLocked', $this->buildInvoiceViewData(
+            invoiceType: 'brouillon',
+            invoiceNumber: $draftNumber,
+            user: $user,
+            transactions: $transactions,
+            periodStart: $periodStart,
+            periodEnd: $periodEnd,
+            totalAmount: $transactions->sum('value'),
+            emittedAt: time(),
+        ));
+
+        return $pdf->stream($draftNumber . '.pdf');
+    }
+
+    public function lockInvoice(Request $request)
+    {
+        $invoice = $this->emitInvoiceForUser(
+            (int) $request->idUser,
+            mktime(23, 59, 59, ...array_reverse(explode('/', $request->periodEnd)))
+        );
+
+        return redirect('saisie?selectUserInTransaction=' . $request->idUser)
+            ->with('status', 'Facture ' . $invoice->invoiceNumber . ' émise.');
+    }
+
+    public function lockInvoiceAll(Request $request)
+    {
+        $periodEnd = mktime(23, 59, 59, ...array_reverse(explode('/', $request->periodEnd)));
+
+        $userIds = transaction::where('value', '<', 0)
+            ->where('time', '<=', $periodEnd)
+            ->whereNull('invoiceId')
+            ->distinct()
+            ->pluck('idUser');
+
+        $created = [];
+        foreach ($userIds as $userId) {
+            $invoice   = $this->emitInvoiceForUser((int) $userId, $periodEnd);
+            $created[] = ['userId' => $userId, 'invoice' => $invoice->invoiceNumber];
+        }
+
+        return response()->json(['created' => count($created), 'invoices' => $created]);
+    }
+
+    public function cancelInvoice(Request $request)
+    {
+        $invoice = Invoice::findOrFail($request->invoiceId);
+        $user    = User::findOrFail($invoice->idUser);
+
+        $lastInvoice = Invoice::where('idUser', $user->id)
+            ->where('type', 'facture')
+            ->whereDoesntHave('avoir')
+            ->orderBy('sequence', 'desc')
+            ->first();
+
+        if (!$lastInvoice || $lastInvoice->id !== $invoice->id) {
+            return back()->with('error', 'Seule la dernière facture non annulée peut être annulée.');
+        }
+
+        $transactions = transaction::where('invoiceId', $invoice->id)->get();
+
+        DB::transaction(function () use ($invoice, $user, $transactions) {
+            $param = parametre::where('nom', 'invoice-sequence')->lockForUpdate()->first();
+            if (!$param) {
+                $param       = new parametre();
+                $param->nom  = 'invoice-sequence';
+                $param->type = 'integer';
+                $param->value = '0';
+                $param->save();
+            }
+            $seq          = (int) $param->value + 1;
+            $param->value = (string) $seq;
+            $param->save();
+
+            $avoir = new Invoice();
+            $avoir->idUser           = $user->id;
+            $avoir->type             = 'avoir';
+            $avoir->sequence         = $seq;
+            $avoir->invoiceNumber    = Invoice::buildNumber($seq, 'avoir');
+            $avoir->relatedInvoiceId = $invoice->id;
+            $avoir->periodStart      = $invoice->periodStart;
+            $avoir->periodEnd        = $invoice->periodEnd;
+            $avoir->totalAmount      = -$invoice->totalAmount;
+            $avoir->emittedAt        = time();
+            $avoir->save();
+
+            $this->generateAndSaveInvoicePdf($avoir, $user, $transactions, $invoice->invoiceNumber);
+
+            transaction::where('invoiceId', $invoice->id)->update(['invoiceId' => null]);
+
+            $previous = Invoice::where('idUser', $user->id)
+                ->where('type', 'facture')
+                ->whereDoesntHave('avoir')
+                ->orderBy('sequence', 'desc')
+                ->first();
+
+            $user->last_invoice_date = $previous?->periodEnd;
+            $user->save();
+        });
+
+        return redirect('saisie?selectUserInTransaction=' . $user->id)
+            ->with('status', 'Avoir émis, facture ' . $invoice->invoiceNumber . ' annulée.');
+    }
+
+    public function invoicePdf(int $id)
+    {
+        $invoice = Invoice::findOrFail($id);
+        $path    = storage_path('app/' . $invoice->pdfPath);
+
+        if (!$invoice->pdfPath || !file_exists($path)) {
+            abort(404, 'PDF non disponible.');
+        }
+
+        return response()->file($path, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $invoice->invoiceNumber . '.pdf"',
+        ]);
+    }
+
+    private function emitInvoiceForUser(int $userId, int $periodEnd): Invoice
+    {
+        return DB::transaction(function () use ($userId, $periodEnd) {
+            $user        = User::findOrFail($userId);
+            $periodStart = $user->last_invoice_date ?? 0;
+
+            $transactions = transaction::where('idUser', $userId)
+                ->where('value', '<', 0)
+                ->where('time', '>', $periodStart)
+                ->where('time', '<=', $periodEnd)
+                ->whereNull('invoiceId')
+                ->orderBy('time', 'asc')
+                ->get();
+
+            $param = parametre::where('nom', 'invoice-sequence')->lockForUpdate()->first();
+            if (!$param) {
+                $param       = new parametre();
+                $param->nom  = 'invoice-sequence';
+                $param->type = 'integer';
+                $param->value = '0';
+                $param->save();
+            }
+            $seq          = (int) $param->value + 1;
+            $param->value = (string) $seq;
+            $param->save();
+
+            $invoice                = new Invoice();
+            $invoice->idUser        = $userId;
+            $invoice->type          = 'facture';
+            $invoice->sequence      = $seq;
+            $invoice->invoiceNumber = Invoice::buildNumber($seq, 'facture');
+            $invoice->periodStart   = $periodStart;
+            $invoice->periodEnd     = $periodEnd;
+            $invoice->totalAmount   = $transactions->sum('value');
+            $invoice->emittedAt     = time();
+            $invoice->save();
+
+            foreach ($transactions as $tx) {
+                $tx->invoiceId = $invoice->id;
+                $tx->save();
+            }
+
+            $user->last_invoice_date = $periodEnd;
+            $user->save();
+
+            $this->generateAndSaveInvoicePdf($invoice, $user, $transactions);
+
+            return $invoice;
+        });
+    }
+
+    private function generateAndSaveInvoicePdf(Invoice $invoice, User $user, $transactions, ?string $relatedInvoiceNumber = null): void
+    {
+        $relPath = 'invoices/' . $invoice->invoiceNumber . '.pdf';
+
+        if (!Storage::disk('local')->exists('invoices')) {
+            Storage::disk('local')->makeDirectory('invoices');
+        }
+
+        $pdf = Pdf::loadView('exportPdfInvoiceLocked', $this->buildInvoiceViewData(
+            invoiceType: $invoice->type,
+            invoiceNumber: $invoice->invoiceNumber,
+            user: $user,
+            transactions: $transactions,
+            periodStart: $invoice->periodStart,
+            periodEnd: $invoice->periodEnd,
+            totalAmount: $invoice->totalAmount,
+            emittedAt: $invoice->emittedAt,
+            relatedInvoiceNumber: $relatedInvoiceNumber,
+        ));
+
+        $content = $pdf->output();
+        Storage::disk('local')->put($relPath, $content);
+
+        $invoice->pdfPath = $relPath;
+        $invoice->pdfHash = hash('sha256', $content);
+        $invoice->save();
+    }
+
+    private function buildInvoiceViewData(
+        string $invoiceType,
+        string $invoiceNumber,
+        User $user,
+        $transactions,
+        int $periodStart,
+        int $periodEnd,
+        int $totalAmount,
+        int $emittedAt,
+        ?string $relatedInvoiceNumber = null,
+    ): array {
+        $transactionLines = collect($transactions)->map(fn($tx) => [
+            'time'        => date('d/m/Y', $tx->time),
+            'name'        => $tx->name,
+            'observation' => $tx->observation ?? '',
+            'value'       => number_format(abs($tx->value / 100), 2, ',', ' '),
+        ])->values()->toArray();
+
+        return compact(
+            'invoiceType', 'invoiceNumber', 'user',
+            'transactionLines', 'periodStart', 'periodEnd',
+            'totalAmount', 'emittedAt', 'relatedInvoiceNumber'
+        );
     }
 }

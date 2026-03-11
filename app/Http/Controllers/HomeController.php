@@ -284,11 +284,22 @@ class HomeController extends Controller
     {
         if (isset($request->deleteLastUserTransaction)) {
             $lastTransaction = transaction::where('idUser', $request->deleteLastUserTransaction)
-               ->orderBy('time', 'desc')
-               ->limit(1)
-               ->delete();
+                ->orderBy('time', 'desc')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($lastTransaction) {
+                if ($lastTransaction->invoiceId) {
+                    $invoice = \App\Models\Invoice::find($lastTransaction->invoiceId);
+                    if ($invoice && !$invoice->isCancelled()) {
+                        return redirect('saisie?selectUserInTransaction=' . $request->deleteLastUserTransaction)
+                            ->with('error', 'Transaction liée à une facture définitive, suppression impossible.');
+                    }
+                }
+                $lastTransaction->delete();
+            }
         }
-        
+
         return redirect('saisie?selectUserInTransaction='.$request->deleteLastUserTransaction);
     }
 

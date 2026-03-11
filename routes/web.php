@@ -68,6 +68,11 @@ Route::get('/vol', [App\Http\Controllers\admin::class, 'flightList'])->name('pil
 Route::get('/controlData', [App\Http\Controllers\admin::class, 'updateAndControlData'])->name('updateAndControlData')->middleware('can:admin');
 Route::get('/accountExport', [App\Http\Controllers\admin::class, 'accountExport'])->name('accountExport')->middleware('can:admin');
 Route::get('/invoiceExport', [App\Http\Controllers\admin::class, 'invoiceExport'])->name('invoiceExport')->middleware('can:admin');
+Route::get('/invoicePreview', [App\Http\Controllers\admin::class, 'invoicePreview'])->name('invoicePreview')->middleware('can:admin');
+Route::post('/invoiceLock', [App\Http\Controllers\admin::class, 'lockInvoice'])->name('invoiceLock')->middleware('can:admin');
+Route::post('/invoiceLockAll', [App\Http\Controllers\admin::class, 'lockInvoiceAll'])->name('invoiceLockAll')->middleware('can:admin');
+Route::post('/invoiceCancel', [App\Http\Controllers\admin::class, 'cancelInvoice'])->name('invoiceCancel')->middleware('can:admin');
+Route::get('/invoicePdf/{id}', [App\Http\Controllers\admin::class, 'invoicePdf'])->name('invoicePdf')->middleware('can:admin');
 Route::get('/sendAccountState', [App\Http\Controllers\admin::class, 'sendAccountState'])->name('sendAccountState')->middleware('can:admin');
 Route::get('/instruction', [App\Http\Controllers\admin::class, 'instruction'])->name('instruction')->middleware('can:admin');
 Route::get('/addInstructeur-{id}', [App\Http\Controllers\admin::class, 'addInstructeur'])->name('addInstructeur')->middleware('can:admin');
