@@ -2334,7 +2334,7 @@ class admin extends Controller
     {
         $invoices = Invoice::with(['user', 'avoir', 'relatedInvoice'])
             ->orderBy('sequence', 'desc')
-            ->paginate(50);
+            ->get();
 
         return view('admin.invoices', compact('invoices'));
     }

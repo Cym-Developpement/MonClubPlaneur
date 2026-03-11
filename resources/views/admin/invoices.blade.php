@@ -94,77 +94,64 @@
             {{-- ── Liste de toutes les factures ── --}}
             <div class="card">
                 <div class="card-header"><i class="fas fa-list me-2"></i>Toutes les factures</div>
-
-                @if($invoices->isEmpty())
-                    <div class="card-body">
-                        <p class="text-muted mb-0">Aucune facture émise pour l'instant.</p>
-                    </div>
-                @else
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover mb-0 align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Numéro</th>
-                                    <th>Membre</th>
-                                    <th>Période</th>
-                                    <th>Émis le</th>
-                                    <th class="text-end">Montant</th>
-                                    <th class="text-center">Type</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($invoices as $inv)
-                                @php
-                                    $isCancelled = $inv->type === 'facture' && $inv->avoir !== null;
-                                    $isAvoir     = $inv->type === 'avoir';
-                                @endphp
-                                <tr class="{{ $isCancelled ? 'text-muted' : '' }}">
-                                    <td class="fw-semibold {{ $isAvoir ? 'text-success' : '' }}">
-                                        {{ $inv->invoiceNumber }}
-                                        @if($isCancelled)
-                                            <small class="text-danger">(annulée)</small>
+                <div class="table-responsive">
+                    <table id="invoicesTable" class="table table-sm table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Numéro</th>
+                                <th>Membre</th>
+                                <th>Période</th>
+                                <th>Émis le</th>
+                                <th class="text-end">Montant</th>
+                                <th class="text-center">Type</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($invoices as $inv)
+                            @php
+                                $isCancelled = $inv->type === 'facture' && $inv->avoir !== null;
+                                $isAvoir     = $inv->type === 'avoir';
+                            @endphp
+                            <tr class="{{ $isCancelled ? 'text-muted' : '' }}">
+                                <td class="fw-semibold {{ $isAvoir ? 'text-success' : '' }}">
+                                    {{ $inv->invoiceNumber }}
+                                    @if($isCancelled)
+                                        <small class="text-danger">(annulée)</small>
+                                    @endif
+                                </td>
+                                <td>{{ $inv->user?->name ?? '—' }}</td>
+                                <td class="small text-nowrap">
+                                    {{ $inv->periodStart > 0 ? date('d/m/Y', $inv->periodStart) : 'Origine' }}
+                                    → {{ date('d/m/Y', $inv->periodEnd) }}
+                                </td>
+                                <td class="small text-nowrap">{{ date('d/m/Y', $inv->emittedAt) }}</td>
+                                <td class="text-end text-nowrap fw-semibold {{ $inv->totalAmount < 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ number_format(abs($inv->totalAmount / 100), 2, ',', ' ') }} €
+                                </td>
+                                <td class="text-center">
+                                    @if($isAvoir)
+                                        <span class="badge bg-success">Avoir</span>
+                                        @if($inv->relatedInvoice)
+                                            <br><small class="text-muted">← {{ $inv->relatedInvoice->invoiceNumber }}</small>
                                         @endif
-                                    </td>
-                                    <td>{{ $inv->user?->name ?? '—' }}</td>
-                                    <td class="small text-nowrap">
-                                        {{ $inv->periodStart > 0 ? date('d/m/Y', $inv->periodStart) : 'Origine' }}
-                                        → {{ date('d/m/Y', $inv->periodEnd) }}
-                                    </td>
-                                    <td class="small text-nowrap">{{ date('d/m/Y', $inv->emittedAt) }}</td>
-                                    <td class="text-end text-nowrap fw-semibold {{ $inv->totalAmount < 0 ? 'text-danger' : 'text-success' }}">
-                                        {{ number_format(abs($inv->totalAmount / 100), 2, ',', ' ') }} €
-                                    </td>
-                                    <td class="text-center">
-                                        @if($isAvoir)
-                                            <span class="badge bg-success">Avoir</span>
-                                            @if($inv->relatedInvoice)
-                                                <br><small class="text-muted">← {{ $inv->relatedInvoice->invoiceNumber }}</small>
-                                            @endif
-                                        @else
-                                            <span class="badge bg-primary">Facture</span>
-                                        @endif
-                                    </td>
-                                    <td class="text-end">
-                                        @if($inv->pdfPath)
-                                            <a href="{{ route('invoicePdf', $inv->id) }}" target="_blank"
-                                               class="btn btn-sm btn-outline-secondary py-0 px-2" title="Consulter le PDF">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </a>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    @if($invoices->hasPages())
-                    <div class="card-footer">
-                        {{ $invoices->links() }}
-                    </div>
-                    @endif
-                @endif
+                                    @else
+                                        <span class="badge bg-primary">Facture</span>
+                                    @endif
+                                </td>
+                                <td class="text-end">
+                                    @if($inv->pdfPath)
+                                        <a href="{{ route('invoicePdf', $inv->id) }}" target="_blank"
+                                           class="btn btn-sm btn-outline-secondary py-0 px-2" title="Consulter le PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -238,3 +225,28 @@ function confirmEmit() {
 }
 </script>
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.2.2/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$('#invoicesTable').DataTable({
+    order: [[0, 'desc']],
+    pageLength: 25,
+    language: {
+        processing:     "Traitement en cours...",
+        search:         "Rechercher&nbsp;:",
+        lengthMenu:     "Afficher _MENU_ éléments",
+        info:           "Affichage de _START_ à _END_ sur _TOTAL_ éléments",
+        infoEmpty:      "Affichage de 0 à 0 sur 0 élément",
+        infoFiltered:   "(filtré à partir de _MAX_ éléments au total)",
+        loadingRecords: "Chargement en cours...",
+        zeroRecords:    "Aucune facture trouvée",
+        emptyTable:     "Aucune facture émise pour l'instant.",
+        paginate: { first: "Premier", previous: "Précédent", next: "Suivant", last: "Dernier" }
+    },
+    columnDefs: [{ orderable: false, targets: [6] }]
+});
+</script>
+@endpush
