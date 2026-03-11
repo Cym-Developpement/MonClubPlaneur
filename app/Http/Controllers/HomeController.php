@@ -85,6 +85,7 @@ class HomeController extends Controller
                 'valid'       => $value->valid,
                 'observation' => $value->observation,
                 'year'        => date('Y', $value->time),
+                'invoiceId'   => $value->invoiceId,
             ];
         }
         $availableYears = $this->getAvailableYears(Auth::user()->id, $startOfYear);
@@ -163,6 +164,7 @@ class HomeController extends Controller
                     'observation' => $value->observation,
                     'valid'       => $value->valid,
                     'year'        => date('Y', $value->time),
+                    'invoiceId'   => $value->invoiceId,
                 ];
             }
             $availableYears = $this->getAvailableYears($request->selectUserInTransaction, $startOfYear);
@@ -265,6 +267,7 @@ class HomeController extends Controller
                 'observation' => $value->observation,
                 'valid'       => $value->valid,
                 'year'        => date('Y', $value->time),
+                'invoiceId'   => $value->invoiceId,
             ];
         }
 

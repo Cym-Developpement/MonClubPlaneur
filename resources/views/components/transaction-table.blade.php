@@ -83,6 +83,7 @@
         <td class="text-end @if($transaction['solde'] < 0) table-danger @endif">{{ $transaction['solde'] }}€</td>
         @can('admin:transactions')
         <td class="text-center">
+          @if($userId > 0 && empty($transaction['invoiceId']))
           <form method="POST" action="{{ route('deleteTransactionPost') }}"
                 onsubmit="return confirm('Supprimer la transaction {{ $transaction['id'] }} ?');">
             {{ csrf_field() }}
@@ -91,6 +92,7 @@
               <i class="fas fa-trash"></i>
             </button>
           </form>
+          @endif
         </td>
         @endcan
       </tr>
