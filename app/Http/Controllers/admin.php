@@ -2111,6 +2111,11 @@ class admin extends Controller
 
     public function lockInvoice(Request $request)
     {
+        $user = User::findOrFail((int) $request->idUser);
+        if ($user->isAttr('user:technique') || $user->state != 1) {
+            return back()->with('error', 'Impossible d\'émettre une facture pour ce compte (compte technique ou inactif).');
+        }
+
         $invoice = $this->emitInvoiceForUser(
             (int) $request->idUser,
             strtotime($request->periodEnd . ' 23:59:59')
@@ -2132,6 +2137,8 @@ class admin extends Controller
 
         $created = [];
         foreach ($userIds as $userId) {
+            $user = User::find($userId);
+            if (!$user || $user->isAttr('user:technique') || $user->state != 1) continue;
             $invoice   = $this->emitInvoiceForUser((int) $userId, $periodEnd);
             $created[] = ['userId' => $userId, 'invoice' => $invoice->invoiceNumber];
         }
@@ -2178,7 +2185,7 @@ class admin extends Controller
             $avoir->idUser           = $user->id;
             $avoir->type             = 'avoir';
             $avoir->sequence         = $seq;
-            $avoir->invoiceNumber    = Invoice::buildNumber($seq, 'avoir');
+            $avoir->invoiceNumber    = Invoice::buildNumber($seq, 'avoir', $invoice->periodEnd);
             $avoir->relatedInvoiceId = $invoice->id;
             $avoir->periodStart      = $invoice->periodStart;
             $avoir->periodEnd        = $invoice->periodEnd;
@@ -2249,7 +2256,7 @@ class admin extends Controller
             $invoice->idUser        = $userId;
             $invoice->type          = 'facture';
             $invoice->sequence      = $seq;
-            $invoice->invoiceNumber = Invoice::buildNumber($seq, 'facture');
+            $invoice->invoiceNumber = Invoice::buildNumber($seq, 'facture', $periodEnd);
             $invoice->periodStart   = $periodStart;
             $invoice->periodEnd     = $periodEnd;
             $invoice->totalAmount   = $transactions->sum('value');
@@ -2345,7 +2352,7 @@ class admin extends Controller
         $preview = [];
         foreach ($userIds as $userId) {
             $user = User::find($userId);
-            if (!$user) continue;
+            if (!$user || $user->isAttr('user:technique') || $user->state != 1) continue;
 
             $periodStart  = $user->last_invoice_date ?? 0;
             $transactions = transaction::where('idUser', $userId)

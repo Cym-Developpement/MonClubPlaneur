@@ -38,15 +38,17 @@ class Invoice extends Model
         return $this->avoir()->exists();
     }
 
-    public static function buildNumber(int $seq, string $type = 'facture'): string
+    public static function buildNumber(int $seq, string $type = 'facture', ?int $periodEnd = null): string
     {
         $format = $type === 'avoir'
             ? parametre::getValue('invoice-format-avoir', 'AVYYYYMM-{ID}')
             : parametre::getValue('invoice-format', 'FYYYYMM-{ID}');
 
+        $ts = $periodEnd ?? time();
+
         return str_replace(
             ['YYYY', 'MM', '{ID}'],
-            [date('Y'), date('m'), str_pad($seq, 4, '0', STR_PAD_LEFT)],
+            [date('Y', $ts), date('m', $ts), str_pad($seq, 4, '0', STR_PAD_LEFT)],
             $format
         );
     }
