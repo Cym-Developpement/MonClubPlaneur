@@ -68,14 +68,20 @@ class ognFlight extends Model
     }
 
     /**
-     * Récupère l'aéronef correspondant à une adresse OGN
+     * Récupère l'aéronef correspondant à un device OGN.
+     * Cherche d'abord par immatriculation, puis par adresse OGN.
      *
-     * @param string $address Adresse OGN de l'aéronef
+     * @param array $device Données du device OGN
      * @return aircraft|null L'aéronef correspondant ou null si non trouvé
      */
-    public function getAircraft($address)
+    public function getAircraft(array $device): ?aircraft
     {
-        return aircraft::where('ognAddress', $address)->first();
+        if (!empty($device['registration'])) {
+            $ac = aircraft::where('register', $device['registration'])->first();
+            if ($ac) return $ac;
+        }
+
+        return aircraft::where('ognAddress', $device['address'])->first();
     }
 
     /**
@@ -88,7 +94,12 @@ class ognFlight extends Model
         $flights = [];
 
         foreach ($this->data['flights'] as $flight) {
-            $flights[] = ['flight' => $flight, 'aircraft' => $this->getAircraft($this->data['devices'][$flight['device']]), 'device' => $this->data['devices'][$flight['device']]];
+            $device  = $this->data['devices'][$flight['device']];
+            $flights[] = [
+                'flight'   => $flight,
+                'aircraft' => $this->getAircraft($device),
+                'device'   => $device,
+            ];
         }
 
         return $flights;
