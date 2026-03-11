@@ -121,11 +121,17 @@
                                             {{ $flight['aircraft']->name }}
                                             <input type="hidden" name="flights[{{ $i }}][aircraftId]" value="{{ $flight['aircraft']->id }}">
                                         @else
+                                            @can('admin:super')
+                                            <div class="text-danger small mb-1" title="Adresse OGN: {{ $flight['device']['address'] }}">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>{{ $flight['device']['registration'] ?? $flight['device']['address'] }}
+                                            </div>
+                                            @else
                                             <div class="text-muted small mb-1">{{ $flight['device']['registration'] ?? $flight['device']['address'] }}</div>
+                                            @endcan
                                             <select class="form-select form-select-sm" name="flights[{{ $i }}][aircraftId]">
                                                 <option value="0">— Aéronef —</option>
                                                 @foreach($aircrafts as $ac)
-                                                <option value="{{ $ac->id }}">{{ $ac->name }}</option>
+                                                <option value="{{ $ac->id }}" title="{{ $ac->register }}">{{ $ac->name }}</option>
                                                 @endforeach
                                             </select>
                                         @endif
