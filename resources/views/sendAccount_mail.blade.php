@@ -48,6 +48,11 @@
                                            style="display:inline-block;background-color:#1a3a6b;color:#ffffff;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 28px;border-radius:4px;">
                                             Payer {{ number_format(abs($balanceCts) / 100, 2, ',', ' ') }} €
                                         </a>
+                                        <p style="margin:16px 0 0;font-size:12px;color:#856404;line-height:1.5;">
+                                            Si vous avez déjà effectué votre règlement, veuillez ne pas tenir compte de ce message.
+                                            En cas d'erreur dans votre solde, contactez-nous à
+                                            <a href="mailto:{{ $emailClub }}" style="color:#1a3a6b;font-weight:bold;">{{ $emailClub }}</a>.
+                                        </p>
                                     </td>
                                 </tr>
                             </table>
