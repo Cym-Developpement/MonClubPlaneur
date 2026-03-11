@@ -152,9 +152,12 @@
                                     </td>
                                     <td>
                                         @if($hasAc)
+                                        @if($isTowing)
+                                        <div class="small text-muted mb-1"><i class="fas fa-user-tie me-1"></i>Pilote remor.</div>
+                                        @endif
                                         <select class="form-select form-select-sm ogn-pic"
                                                 name="flights[{{ $i }}][userId]" data-idx="{{ $i }}">
-                                            <option value="0">{{ $isTowing ? '— Pilote remor. —' : '— PIC —' }}</option>
+                                            <option value="0">— Pilote —</option>
                                             @foreach($users as $u)
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
