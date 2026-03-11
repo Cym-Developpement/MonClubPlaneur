@@ -99,5 +99,9 @@ class usersAttributes extends Model
             'name'        => 'Emailing groupé',
             'description' => 'Envoi d\'emails groupés aux membres',
         ],
+        'admin:ogn' => [
+            'name'        => 'Planches OGN',
+            'description' => 'Import et saisie des vols depuis les données OGN',
+        ],
     ];
 }

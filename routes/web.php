@@ -148,9 +148,10 @@ Route::post('/update', [App\Http\Controllers\GitWebhookController::class, 'updat
 Route::post('/stripe', [App\Http\Controllers\StripeController::class, 'completed']);
 
 //OGN
-Route::get('/ognImport/{DATE}', [App\Http\Controllers\OgnController::class, 'import'])->middleware('can:admin');
-Route::get('/planchesOgn/{DATE?}', [App\Http\Controllers\OgnController::class, 'planches'])->middleware('can:admin');
-Route::get('/planchesOgn/ignore/{ID}', [App\Http\Controllers\OgnController::class, 'ignore'])->middleware('can:admin');
+Route::get('/ognImport/{DATE}', [App\Http\Controllers\OgnController::class, 'import'])->middleware('can:admin:ogn');
+Route::get('/planchesOgn/{DATE?}', [App\Http\Controllers\OgnController::class, 'planches'])->middleware('can:admin:ogn');
+Route::post('/planchesOgn/{DATE}', [App\Http\Controllers\OgnController::class, 'save'])->middleware('can:admin:ogn');
+Route::get('/planchesOgn/ignore/{ID}', [App\Http\Controllers\OgnController::class, 'ignore'])->middleware('can:admin:ogn');
 
 //GESASSO
 

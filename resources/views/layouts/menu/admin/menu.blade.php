@@ -15,11 +15,14 @@
 <a class="dropdown-item" href="/importGesasso">
     <i class="fas fa-file-import me-2"></i>Import GESASSO
 </a>
-<a class="dropdown-item" href="/planchesOgn">
-    <i class="fas fa-clipboard-list me-2"></i>Planches à saisir ({{ App\Models\ognFlight::getNbNotImported() }})
-</a>
 <a class="dropdown-item" href="/saisiePeriodique">
     <i class="fas fa-calendar-alt me-2"></i>Saisie Périodique
+</a>
+@endcan
+
+@can('admin:ogn')
+<a class="dropdown-item" href="/planchesOgn">
+    <i class="fas fa-clipboard-list me-2"></i>Planches OGN ({{ App\Models\ognFlight::getNbNotImported() }})
 </a>
 @endcan
 
