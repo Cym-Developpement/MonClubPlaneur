@@ -7,6 +7,11 @@
 <a class="dropdown-item" href="/saisie">
     <i class="fas fa-pencil-alt me-2"></i>Saisie
 </a>
+@can('admin:invoices')
+<a class="dropdown-item" href="{{ route('admin.invoices') }}">
+    <i class="fas fa-file-invoice me-2"></i>Facturation en lot
+</a>
+@endcan
 <a class="dropdown-item" href="/importGesasso">
     <i class="fas fa-file-import me-2"></i>Import GESASSO
 </a>

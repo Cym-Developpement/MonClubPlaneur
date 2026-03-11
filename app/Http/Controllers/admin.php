@@ -2080,7 +2080,7 @@ class admin extends Controller
     {
         $user        = User::findOrFail($request->idUser);
         $periodStart = $user->last_invoice_date ?? 0;
-        $periodEnd   = mktime(23, 59, 59, ...array_reverse(explode('/', $request->periodEnd)));
+        $periodEnd = strtotime($request->periodEnd . ' 23:59:59');
 
         $transactions = transaction::where('idUser', $user->id)
             ->where('value', '<', 0)
@@ -2113,7 +2113,7 @@ class admin extends Controller
     {
         $invoice = $this->emitInvoiceForUser(
             (int) $request->idUser,
-            mktime(23, 59, 59, ...array_reverse(explode('/', $request->periodEnd)))
+            strtotime($request->periodEnd . ' 23:59:59')
         );
 
         return redirect('saisie?selectUserInTransaction=' . $request->idUser)
@@ -2122,7 +2122,7 @@ class admin extends Controller
 
     public function lockInvoiceAll(Request $request)
     {
-        $periodEnd = mktime(23, 59, 59, ...array_reverse(explode('/', $request->periodEnd)));
+        $periodEnd = strtotime($request->periodEnd . ' 23:59:59');
 
         $userIds = transaction::where('value', '<', 0)
             ->where('time', '<=', $periodEnd)
@@ -2316,5 +2316,10 @@ class admin extends Controller
             'transactionLines', 'periodStart', 'periodEnd',
             'totalAmount', 'emittedAt', 'relatedInvoiceNumber'
         );
+    }
+
+    public function invoicesPage()
+    {
+        return view('admin.invoices');
     }
 }

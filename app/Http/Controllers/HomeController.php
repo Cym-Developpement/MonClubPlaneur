@@ -174,7 +174,17 @@ class HomeController extends Controller
 
         $currentUserName = $selectedUser ? (User::find($selectedUser)?->name ?? '') : '';
 
-        return view('transaction', ['users' => $users, 'transactions' => $transactions, 'availableYears' => $availableYears, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice, 'currentUserName' => $currentUserName]);
+        $invoices        = collect();
+        $lastInvoiceDate = null;
+        if ($selectedUser > 0) {
+            $invoices = \App\Models\Invoice::where('idUser', $selectedUser)
+                ->with(['avoir', 'relatedInvoice'])
+                ->orderBy('sequence', 'desc')
+                ->get();
+            $lastInvoiceDate = User::find($selectedUser)?->last_invoice_date;
+        }
+
+        return view('transaction', ['users' => $users, 'transactions' => $transactions, 'availableYears' => $availableYears, 'selectedUser' => $selectedUser, 'transactionType' => $transactionType, 'aircrafts' => $aircraft, 'sailplaneStartPrices' => $sailplaneStartPrice, 'currentUserName' => $currentUserName, 'invoices' => $invoices, 'lastInvoiceDate' => $lastInvoiceDate]);
     }
 
     private function getSolde($user)

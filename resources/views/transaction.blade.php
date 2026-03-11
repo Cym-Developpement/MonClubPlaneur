@@ -41,6 +41,11 @@
                             {{ session('status') }}
                         </div>
                     @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger" role="alert">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <form method="GET">
                       <div class="input-group">
                         <select  onchange="$('#userBoard').fadeOut();" class="form-select" id="selectUserInTransaction" name="selectUserInTransaction" aria-label="Liste des utilisateurs">
@@ -146,6 +151,118 @@
 
 
                       @if($selectedUser > 0)
+                        @can('admin:invoices')
+                        <hr>
+                        <h5><i class="fas fa-file-invoice me-2"></i>Facturation</h5>
+
+                        {{-- Brouillon --}}
+                        <div class="card mb-3">
+                          <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                            <span>Brouillon de facture</span>
+                          </div>
+                          <div class="card-body py-2">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                              <span class="text-muted small">
+                                Période : du
+                                <strong>{{ $lastInvoiceDate ? date('d/m/Y', $lastInvoiceDate) : 'origine' }}</strong>
+                                au
+                              </span>
+                              <input type="date" id="invoicePeriodEnd" class="form-control form-control-sm"
+                                     style="width:auto;" value="{{ date('Y-m-d') }}">
+                              <a id="btnPreviewInvoice"
+                                 href="/invoicePreview?idUser={{ $selectedUser }}&periodEnd={{ date('Y-m-d') }}"
+                                 target="_blank" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-eye me-1"></i>Prévisualiser
+                              </a>
+                              <form id="formLockInvoice" method="POST" action="{{ route('invoiceLock') }}"
+                                    class="d-inline"
+                                    onsubmit="return confirm('Émettre une facture définitive pour {{ addslashes($currentUserName) }} ?');">
+                                @csrf
+                                <input type="hidden" name="idUser" value="{{ $selectedUser }}">
+                                <input type="hidden" name="periodEnd" id="lockPeriodEnd" value="{{ date('Y-m-d') }}">
+                                <button type="submit" class="btn btn-sm btn-warning">
+                                  <i class="fas fa-lock me-1"></i>Émettre
+                                </button>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+
+                        {{-- Factures émises --}}
+                        @if($invoices->count() > 0)
+                        @php
+                          $cancellableId = null;
+                          foreach ($invoices as $inv) {
+                            if ($inv->type === 'facture' && !$inv->avoir) {
+                              $cancellableId = $inv->id;
+                              break;
+                            }
+                          }
+                        @endphp
+                        <div class="card mb-3">
+                          <div class="card-header py-2">Factures émises</div>
+                          <div class="table-responsive">
+                            <table class="table table-sm mb-0 align-middle">
+                              <thead class="table-light">
+                                <tr>
+                                  <th>Numéro</th>
+                                  <th>Période</th>
+                                  <th>Émis le</th>
+                                  <th class="text-end">Montant</th>
+                                  <th></th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                @foreach($invoices as $inv)
+                                @php
+                                  $isCancelled = $inv->type === 'facture' && $inv->avoir !== null;
+                                  $isAvoir     = $inv->type === 'avoir';
+                                @endphp
+                                <tr class="{{ $isCancelled ? 'text-muted' : '' }}">
+                                  <td>
+                                    <span class="fw-semibold {{ $isAvoir ? 'text-success' : '' }}">{{ $inv->invoiceNumber }}</span>
+                                    @if($isCancelled)
+                                      <small class="text-danger ms-1">(annulée)</small>
+                                    @endif
+                                    @if($isAvoir && $inv->relatedInvoice)
+                                      <small class="text-muted ms-1">← {{ $inv->relatedInvoice->invoiceNumber }}</small>
+                                    @endif
+                                  </td>
+                                  <td class="small text-nowrap">
+                                    {{ $inv->periodStart > 0 ? date('d/m/Y', $inv->periodStart) : 'origine' }}
+                                    → {{ date('d/m/Y', $inv->periodEnd) }}
+                                  </td>
+                                  <td class="small text-nowrap">{{ date('d/m/Y', $inv->emittedAt) }}</td>
+                                  <td class="text-end text-nowrap fw-semibold {{ $inv->totalAmount < 0 ? 'text-danger' : 'text-success' }}">
+                                    {{ number_format(abs($inv->totalAmount / 100), 2, ',', ' ') }} €
+                                  </td>
+                                  <td class="text-end text-nowrap">
+                                    @if($inv->pdfPath)
+                                    <a href="{{ route('invoicePdf', $inv->id) }}" target="_blank"
+                                       class="btn btn-sm btn-outline-secondary py-0 px-2" title="Télécharger le PDF">
+                                      <i class="fas fa-download"></i>
+                                    </a>
+                                    @endif
+                                    @if($inv->id === $cancellableId)
+                                    <form method="POST" action="{{ route('invoiceCancel') }}" class="d-inline"
+                                          onsubmit="return confirm('Annuler {{ $inv->invoiceNumber }} et émettre un avoir ?');">
+                                      @csrf
+                                      <input type="hidden" name="invoiceId" value="{{ $inv->id }}">
+                                      <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Annuler">
+                                        <i class="fas fa-times"></i>
+                                      </button>
+                                    </form>
+                                    @endif
+                                  </td>
+                                </tr>
+                                @endforeach
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        @endif
+                        @endcan
+
                         <hr>
                         <h3>Saisie Rapide</h3>
                         <br>
@@ -237,6 +354,13 @@
     $("#valueTransaction").val((amount/100));
     $("#selectTransactionTypeEnc").val(type);
   }
+
+  $('#invoicePeriodEnd').on('change', function() {
+    var d = $(this).val();
+    var userId = {{ $selectedUser ?? 0 }};
+    $('#btnPreviewInvoice').attr('href', '/invoicePreview?idUser=' + userId + '&periodEnd=' + d);
+    $('#lockPeriodEnd').val(d);
+  });
 </script>
 @endsection
 
