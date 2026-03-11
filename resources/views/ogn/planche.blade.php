@@ -97,13 +97,11 @@
                                     data-ogn-idx="{{ $i }}"
                                     @if($towIdx !== null) data-tow="{{ $towIdx }}" @endif>
                                     <td>
-                                        @if($hasAc)
                                         <div class="form-check mb-0">
                                             <input type="checkbox" class="form-check-input ogn-check"
                                                    name="flights[{{ $i }}][import]" value="1"
                                                    id="ognCheck-{{ $i }}">
                                         </div>
-                                        @endif
                                     </td>
                                     <td>
                                         @if($isTowing)
@@ -123,8 +121,13 @@
                                             {{ $flight['aircraft']->name }}
                                             <input type="hidden" name="flights[{{ $i }}][aircraftId]" value="{{ $flight['aircraft']->id }}">
                                         @else
-                                            <span class="text-muted small">{{ $flight['device']['address'] }}</span>
-                                            <span class="badge bg-warning text-dark">?</span>
+                                            <div class="text-muted small mb-1">{{ $flight['device']['registration'] ?? $flight['device']['address'] }}</div>
+                                            <select class="form-select form-select-sm" name="flights[{{ $i }}][aircraftId]">
+                                                <option value="0">— Aéronef —</option>
+                                                @foreach($aircrafts as $ac)
+                                                <option value="{{ $ac->id }}">{{ $ac->name }}</option>
+                                                @endforeach
+                                            </select>
                                         @endif
                                         <input type="hidden" name="flights[{{ $i }}][start_tsp]" value="{{ $startTsp }}">
                                         <input type="hidden" name="flights[{{ $i }}][stop_tsp]"  value="{{ $stopTsp }}">
@@ -151,7 +154,6 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($hasAc)
                                         @if($isTowing)
                                         <div class="small text-muted mb-1"><i class="fas fa-user-tie me-1"></i>Pilote remor.</div>
                                         @endif
@@ -162,10 +164,8 @@
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
                                         </select>
-                                        @endif
                                     </td>
                                     <td>
-                                        @if($hasAc)
                                         <select class="form-select form-select-sm"
                                                 name="flights[{{ $i }}][userPayId]" id="ognUserPay-{{ $i }}">
                                             <option value="0">— Facturable —</option>
@@ -173,10 +173,8 @@
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
                                         </select>
-                                        @endif
                                     </td>
                                     <td>
-                                        @if($hasAc)
                                         <select class="form-select form-select-sm"
                                                 name="flights[{{ $i }}][instructorId]">
                                             <option value="0">— Aucun —</option>
@@ -184,17 +182,14 @@
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
                                         </select>
-                                        @endif
                                     </td>
                                     <td>
-                                        @if($hasAc)
                                         <select class="form-select form-select-sm"
                                                 name="flights[{{ $i }}][startTypeId]">
                                             @foreach($startTypes as $st)
                                             <option value="{{ $st->id }}">{{ $st->name }}</option>
                                             @endforeach
                                         </select>
-                                        @endif
                                     </td>
                                     <td></td>
                                 </tr>
