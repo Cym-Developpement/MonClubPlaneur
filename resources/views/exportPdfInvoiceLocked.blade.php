@@ -1,3 +1,4 @@
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 @php
     $logoParam   = \App\Models\parametre::getValue('club-logo', '');
     $nomCourt    = \App\Models\parametre::getValue('club-nom_court', 'Club');
