@@ -154,9 +154,6 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if($isTowing)
-                                        <div class="small text-muted mb-1"><i class="fas fa-user-tie me-1"></i>Pilote remor.</div>
-                                        @endif
                                         <select class="form-select form-select-sm ogn-pic"
                                                 name="flights[{{ $i }}][userId]" data-idx="{{ $i }}">
                                             <option value="0">— Pilote —</option>
@@ -166,6 +163,7 @@
                                         </select>
                                     </td>
                                     <td>
+                                        @if(!$isTowing)
                                         <select class="form-select form-select-sm"
                                                 name="flights[{{ $i }}][userPayId]" id="ognUserPay-{{ $i }}">
                                             <option value="0">— Facturable —</option>
@@ -173,8 +171,12 @@
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
                                         </select>
+                                        @else
+                                        <input type="hidden" name="flights[{{ $i }}][userPayId]" value="0">
+                                        @endif
                                     </td>
                                     <td>
+                                        @if(!$isTowing)
                                         <select class="form-select form-select-sm"
                                                 name="flights[{{ $i }}][instructorId]">
                                             <option value="0">— Aucun —</option>
@@ -182,14 +184,21 @@
                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
                                             @endforeach
                                         </select>
+                                        @else
+                                        <input type="hidden" name="flights[{{ $i }}][instructorId]" value="0">
+                                        @endif
                                     </td>
                                     <td>
+                                        @if(!$isTowing)
                                         <select class="form-select form-select-sm"
                                                 name="flights[{{ $i }}][startTypeId]">
                                             @foreach($startTypes as $st)
                                             <option value="{{ $st->id }}">{{ $st->name }}</option>
                                             @endforeach
                                         </select>
+                                        @else
+                                        <input type="hidden" name="flights[{{ $i }}][startTypeId]" value="0">
+                                        @endif
                                     </td>
                                     <td></td>
                                 </tr>
