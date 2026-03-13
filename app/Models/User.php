@@ -339,6 +339,7 @@ class User extends Authenticatable
             $pdf->save('../storage/app/userAcountState/'.$filename);
 
             Mail::to($user->email)->send(new sendAccount($user->name, 'userAcountState/'.$filename, $user->real_amount_account, $user->email));
+            \App\Helpers\AuditLog::log('relevé de compte envoyé à ' . $user->name . ' (' . $user->email . ')');
         }
 
 
