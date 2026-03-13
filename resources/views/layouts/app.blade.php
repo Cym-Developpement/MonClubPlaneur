@@ -9,6 +9,13 @@
 
     <title>{{ \App\Models\parametre::getValue('club-nom_complet', config('app.name', 'Laravel')) }}</title>
 
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#3490dc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
 
@@ -33,6 +40,11 @@
         background-image: url('/img/back.jpg');
         background-repeat: no-repeat;
         background-attachment: fixed;
+      }
+      @media (max-width: 768px) {
+        body {
+          background-image: none;
+        }
       }
 
     </style>
@@ -467,5 +479,10 @@
     .help-content a { color: #1a3a6b; }
     </style>
 
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+    }
+    </script>
 </body>
 </html>

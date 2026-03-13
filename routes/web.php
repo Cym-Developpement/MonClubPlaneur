@@ -15,6 +15,33 @@ Route::get('/cron', function () {
     Artisan::call('sendErrors');
 });
 
+// PWA Manifest dynamique
+Route::get('/manifest.json', function () {
+    $name      = \App\Models\parametre::getValue('club-nom_complet', config('app.name', 'MonClubPlaneur'));
+    $shortName = \App\Models\parametre::getValue('club-nom_court', 'Club');
+
+    return response()->json([
+        'name'             => $name,
+        'short_name'       => $shortName,
+        'start_url'        => '/home',
+        'display'          => 'standalone',
+        'theme_color'      => '#3490dc',
+        'background_color' => '#f8fafc',
+        'icons'            => [
+            [
+                'src'   => '/icons/icon-192x192.png',
+                'sizes' => '192x192',
+                'type'  => 'image/png',
+            ],
+            [
+                'src'   => '/icons/icon-512x512.png',
+                'sizes' => '512x512',
+                'type'  => 'image/png',
+            ],
+        ],
+    ])->header('Content-Type', 'application/manifest+json');
+})->name('manifest');
+
 Auth::routes();
 
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

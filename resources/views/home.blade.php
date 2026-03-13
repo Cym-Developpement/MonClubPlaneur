@@ -92,7 +92,8 @@
                       </table>
                     </div> --}}
 
-                    <div class="d-flex justify-content-center mb-3">
+                    {{-- Boutons d'action : grille 2 colonnes sur mobile, inline sur desktop --}}
+                    <div class="d-none d-md-flex justify-content-center mb-3">
                       <div class="btn-group">
                         @can('debug')
                         <a class="btn btn-outline-success btn-sm" href="addFlight">
@@ -108,6 +109,32 @@
                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#payModal">
                           <i class="fas fa-wallet me-1"></i>Approvisionner mon compte
                         </button>
+                      </div>
+                    </div>
+                    <div class="d-md-none mb-3">
+                      <div class="row g-2 row-cols-2">
+                        @can('debug')
+                        <div class="col">
+                          <a class="btn btn-outline-success w-100 py-3" href="addFlight" style="min-height:44px;">
+                            <i class="fas fa-plane d-block mb-1"></i><small>Enregistrer un vol</small>
+                          </a>
+                        </div>
+                        @endcan
+                        <div class="col">
+                          <a class="btn btn-outline-info w-100 py-3" href="{{ route('transfer') }}" style="min-height:44px;">
+                            <i class="fas fa-exchange-alt d-block mb-1"></i><small>Transfert pilote</small>
+                          </a>
+                        </div>
+                        <div class="col">
+                          <button class="btn btn-outline-secondary w-100 py-3" data-bs-toggle="modal" data-bs-target="#remboursementModal" style="min-height:44px;">
+                            <i class="fas fa-shopping-cart d-block mb-1"></i><small>Achat club</small>
+                          </button>
+                        </div>
+                        <div class="col">
+                          <button class="btn btn-outline-primary w-100 py-3" data-bs-toggle="modal" data-bs-target="#payModal" style="min-height:44px;">
+                            <i class="fas fa-wallet d-block mb-1"></i><small>Approvisionner</small>
+                          </button>
+                        </div>
                       </div>
                     </div>
 

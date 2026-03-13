@@ -14,7 +14,7 @@
   <table class="table table-hover align-middle {{ $striped ? 'table-striped' : '' }}">
     <thead class="table-light">
       <tr>
-        <th scope="col">Date</th>
+        <th scope="col" class="d-none d-md-table-cell">Date</th>
         <th scope="col">Description</th>
         <th scope="col" class="text-end">Montant</th>
         <th scope="col" class="text-end">Solde</th>
@@ -28,7 +28,7 @@
       {{-- Ligne de solde final (home uniquement, quand $solde est fourni) --}}
       @if($solde !== false)
       <tr class="fw-bold border-top border-2">
-        <td class="text-muted">{{ date('d/m/Y') }}</td>
+        <td class="text-muted d-none d-md-table-cell">{{ date('d/m/Y') }}</td>
         <td>Solde actuel
           @if($hasPending)
           <br><span class="badge bg-danger">En attente de validation.</span>
@@ -47,7 +47,7 @@
       {{-- Transactions de l'année courante --}}
       @foreach ($transactions as $transaction)
       <tr class="@if($transaction['valid'] == 0) table-warning @endif year-{{ $transaction['year'] }}">
-        <td class="text-muted small">
+        <td class="text-muted small d-none d-md-table-cell">
           @can('admin:transactions')
           <div id="currentTrDateBlock-{{ $transaction['id'] }}">
             <button class="btn btn-link p-0 text-muted small"
@@ -104,7 +104,8 @@
           style="cursor: pointer;"
           data-year="{{ $ay['year'] }}" data-user="{{ $userId }}" data-loaded="0"
           onclick="toggleYear({{ $ay['year'] }}, {{ $userId }})">
-        <td colspan="2" class="fw-semibold">
+        <td class="d-none d-md-table-cell"></td>
+        <td class="fw-semibold">
           <i class="fas fa-chevron-right me-2 small year-chevron"></i>{{ $ay['year'] }}
         </td>
         <td></td>
