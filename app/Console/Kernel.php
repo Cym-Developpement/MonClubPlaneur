@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Models\parametre;
 
 class Kernel extends ConsoleKernel
 {
@@ -24,8 +25,18 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
+        $schedule->call(function () {
+            try {
+                $actif = parametre::getValue('cron-alerte_compte_debiteur_actif', false);
+                $jour  = parametre::getValue('cron-alerte_compte_debiteur_jour', 1);
+
+                if ($actif && (int) date('j') === (int) $jour) {
+                    \Artisan::call('sendAccountAlert', ['--force' => true]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Cron alerte compte débiteur : ' . $e->getMessage());
+            }
+        })->dailyAt('08:00');
     }
 
     /**

@@ -12,7 +12,7 @@ class sendAccountAlert extends Command
      *
      * @var string
      */
-    protected $signature = 'sendAccountAlert';
+    protected $signature = 'sendAccountAlert {--force : Envoyer sans demander de confirmation}';
 
     /**
      * The console command description.
@@ -38,13 +38,25 @@ class sendAccountAlert extends Command
      */
     public function handle()
     {
-        $users = User::all();
-        foreach ($users as $user) {
-            $amount = $user->real_amount_account;
-            if ($amount < 0) {
-                $this->error($user->name.' : '.$amount);
-            }
+        $users = User::all()->filter(fn($u) => $u->real_amount_account < 0 && $u->state == 1 && !$u->isAttr('user:technique'));
+
+        if ($users->isEmpty()) {
+            $this->info('Aucun utilisateur avec un compte débiteur.');
+            return 0;
         }
+
+        $this->info($users->count() . ' utilisateur(s) avec un compte débiteur :');
+        foreach ($users as $user) {
+            $this->line('  - ' . $user->name . ' : ' . number_format($user->real_amount_account / 100, 2) . ' €');
+        }
+
+        if (!$this->option('force') && !$this->confirm('Envoyer les emails ?')) {
+            $this->info('Annulé.');
+            return 0;
+        }
+
+        User::sendAccountAlertNotification();
+        $this->info('Emails envoyés à ' . $users->count() . ' utilisateur(s).');
         return 0;
     }
 }

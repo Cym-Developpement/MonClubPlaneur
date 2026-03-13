@@ -106,6 +106,19 @@
                 </div>
             </div>
 
+            <div class="card mt-4">
+                <div class="card-header"><i class="fas fa-clock me-2"></i>Tâches planifiées (Cron)</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">Pour activer le planificateur Laravel, ajoutez cette ligne dans le crontab du serveur :</p>
+                    <div class="input-group mb-0">
+                        <code class="form-control font-monospace bg-light" style="font-size:0.8rem;" id="crontabLine">* * * * * cd {{ base_path() }} && php artisan schedule:run >> /dev/null 2>&1</code>
+                        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="navigator.clipboard.writeText(document.getElementById('crontabLine').textContent).then(()=>{this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fas fa-copy\'></i>',1500)})">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             @if(!$autresParams->isEmpty())
             <div class="card mt-4">
                 <div class="card-header"><i class="fas fa-sliders-h me-2"></i>Autres paramètres</div>
