@@ -77,7 +77,7 @@ class AppServiceProvider extends ServiceProvider
                 $subject = $message->getSubject();
                 $body = $message->getHtmlBody() ?? $message->getTextBody() ?? '';
 
-                Log::channel('stack')->info('[EMAIL MODE TEST] Email intercepté', [
+                Log::channel('audit')->info('[EMAIL MODE TEST] Email intercepté', [
                     'to'      => $to,
                     'subject' => $subject,
                     'body'    => $body,
