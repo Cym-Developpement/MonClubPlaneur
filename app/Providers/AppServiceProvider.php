@@ -5,6 +5,10 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Mail\Events\MessageSending;
+use App\Models\parametre;
 use App\Models\refundCategory;
 use App\Models\User;
 use App\Models\transaction;
@@ -60,6 +64,31 @@ class AppServiceProvider extends ServiceProvider
         View::share('gitCommitDate',    $gitDate);
 
         
+        Event::listen(MessageSending::class, function (MessageSending $event) {
+            try {
+                $testMode = parametre::getValue('mail-mode_test', false);
+            } catch (\Exception $e) {
+                return true;
+            }
+
+            if ($testMode) {
+                $message = $event->message;
+                $to = implode(', ', array_map(fn ($a) => $a->getAddress(), $message->getTo()));
+                $subject = $message->getSubject();
+                $body = $message->getHtmlBody() ?? $message->getTextBody() ?? '';
+
+                Log::channel('stack')->info('[EMAIL MODE TEST] Email intercepté', [
+                    'to'      => $to,
+                    'subject' => $subject,
+                    'body'    => $body,
+                ]);
+
+                return false;
+            }
+
+            return true;
+        });
+
         \Response::macro('csv', function ($content, $name) {
 
             $headers = [
