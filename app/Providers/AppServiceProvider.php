@@ -76,12 +76,9 @@ class AppServiceProvider extends ServiceProvider
                 $to = implode(', ', array_map(fn ($a) => $a->getAddress(), $message->getTo()));
                 $subject = $message->getSubject();
                 $body = $message->getHtmlBody() ?? $message->getTextBody() ?? '';
+                $body = preg_replace('/\s+/', ' ', trim($body));
 
-                Log::channel('audit')->info('[EMAIL MODE TEST] Email intercepté', [
-                    'to'      => $to,
-                    'subject' => $subject,
-                    'body'    => $body,
-                ]);
+                Log::channel('audit')->info('[EMAIL MODE TEST] Email intercepté | to: ' . $to . ' | subject: ' . $subject . ' | body: ' . $body);
 
                 return false;
             }

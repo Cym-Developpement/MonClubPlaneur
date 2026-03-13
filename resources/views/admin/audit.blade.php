@@ -87,13 +87,15 @@
                                 </thead>
                                 <tbody>
                                     @foreach($lines as $entry)
-                                    <tr @if(isset($entry['level']) && in_array($entry['level'], ['error','critical','alert','emergency'])) class="table-danger" @elseif(isset($entry['level']) && $entry['level'] === 'warning') class="table-warning" @endif>
+                                    @php $fullMsg = e($entry['message']); $truncated = mb_strlen($entry['message']) > 256; @endphp
+                                    <tr @if(isset($entry['level']) && in_array($entry['level'], ['error','critical','alert','emergency'])) class="table-danger" @elseif(isset($entry['level']) && $entry['level'] === 'warning') class="table-warning" @endif
+                                        style="cursor:pointer;" title="Cliquer pour copier" data-full-message="{{ $fullMsg }}" onclick="navigator.clipboard.writeText(this.dataset.fullMessage).then(()=>{let t=this;t.classList.add('table-success');setTimeout(()=>t.classList.remove('table-success'),600)})">
                                         <td class="text-muted small text-nowrap">{{ $entry['time'] }}</td>
                                         <td class="small">
                                             @if($search !== '')
-                                                {!! preg_replace('/(' . preg_quote(e($search), '/') . ')/i', '<mark>$1</mark>', e($entry['message'])) !!}
+                                                {!! preg_replace('/(' . preg_quote(e($search), '/') . ')/i', '<mark>$1</mark>', e(mb_substr($entry['message'], 0, 256))) !!}{{ $truncated ? '…' : '' }}
                                             @else
-                                                {{ $entry['message'] }}
+                                                {{ mb_substr($entry['message'], 0, 256) }}{{ $truncated ? '…' : '' }}
                                             @endif
                                         </td>
                                     </tr>
