@@ -21,6 +21,7 @@ class ParametreController extends Controller
         'club-tresorier',
         'club-email',
         'club-logo',
+        'pwa-utiliser_logo_club',
         'backup-purge_auto',
         'paiement-iban',
         'paiement-cb_actif',
@@ -35,6 +36,7 @@ class ParametreController extends Controller
             $params[$key] = parametre::getValue($key, '');
         }
         $params['club-logo']                 = parametre::getValue('club-logo', '');
+        $params['pwa-utiliser_logo_club']    = (bool) parametre::getValue('pwa-utiliser_logo_club', false);
         $params['backup-purge_auto']         = parametre::getValue('backup-purge_auto', 10);
         $params['paiement-iban']             = parametre::getValue('paiement-iban', 'FR76 1333 5004 0108 9253 9002 919');
         $params['paiement-cb_actif']         = (bool) parametre::getValue('paiement-cb_actif', '1');
@@ -63,6 +65,20 @@ class ParametreController extends Controller
             $mime    = $file->getMimeType();
             $base64  = base64_encode(file_get_contents($file->getRealPath()));
             $this->saveParam('club-logo', 'data:' . $mime . ';base64,' . $base64);
+        }
+
+        $pwaToggle = $request->has('pwa-utiliser_logo_club');
+        $this->saveBoolParam('pwa-utiliser_logo_club', $pwaToggle);
+
+        if ($pwaToggle) {
+            $logoDataUri = parametre::getValue('club-logo', '');
+
+            if ($logoDataUri && str_starts_with($logoDataUri, 'data:')) {
+                $raw = base64_decode(explode(',', $logoDataUri, 2)[1] ?? '');
+                if ($raw) {
+                    $this->generatePwaIcons($raw);
+                }
+            }
         }
 
         $this->saveIntParam('backup-purge_auto', $request->input('backup-purge_auto', 10));
@@ -116,5 +132,35 @@ class ParametreController extends Controller
         $p->type  = 'boolean';
         $p->value = $value ? '1' : '0';
         $p->save();
+    }
+
+    private function generatePwaIcons(string $imageData): void
+    {
+        $source = @imagecreatefromstring($imageData);
+        if (! $source) {
+            return;
+        }
+
+        $icons = [
+            public_path('icons/icon-512x512.png')     => 512,
+            public_path('icons/icon-192x192.png')     => 192,
+            public_path('icons/apple-touch-icon.png') => 180,
+            public_path('favicon-32x32.png')          => 32,
+            public_path('favicon-16x16.png')          => 16,
+        ];
+
+        // Activer la transparence pour les PNG
+        imagesavealpha($source, true);
+
+        foreach ($icons as $path => $size) {
+            $resized = imagescale($source, $size, $size, IMG_BICUBIC);
+            if ($resized) {
+                imagesavealpha($resized, true);
+                imagepng($resized, $path);
+                imagedestroy($resized);
+            }
+        }
+
+        imagedestroy($source);
     }
 }

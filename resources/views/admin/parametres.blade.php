@@ -83,10 +83,18 @@
                             </div>
                         @endif
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label class="form-label">Importer un logo (PNG, JPG, SVG)</label>
                             <input type="file" name="club-logo" class="form-control" accept="image/*">
                             <div class="form-text">Le logo sera converti en base64 et stocké en base de données.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="pwa-utiliser_logo_club" id="pwa-utiliser_logo_club" value="1" {{ $params['pwa-utiliser_logo_club'] ? 'checked' : '' }}>
+                                <label class="form-check-label" for="pwa-utiliser_logo_club">Utiliser le logo du club comme icône de l'application (PWA)</label>
+                            </div>
+                            <div class="form-text">Les icônes PWA (favicon, écran d'accueil) seront régénérées à chaque sauvegarde lorsque cette option est active.</div>
                         </div>
 
                         <hr>
