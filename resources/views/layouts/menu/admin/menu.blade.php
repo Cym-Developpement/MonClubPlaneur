@@ -107,9 +107,6 @@
 <a class="dropdown-item" href="/admin/parametres">
     <i class="fas fa-cog me-2"></i>Paramètres du club
 </a>
-<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalAdmins" onclick="loadAdmins();">
-    <i class="fas fa-user-shield me-2"></i>Gérer les administrateurs
-</a>
 @endcan
 
 <hr>
