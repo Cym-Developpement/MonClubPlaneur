@@ -20,6 +20,10 @@ Route::get('/manifest.json', function () {
     $name      = \App\Models\parametre::getValue('club-nom_complet', config('app.name', 'MonClubPlaneur'));
     $shortName = \App\Models\parametre::getValue('club-nom_court', 'Club');
 
+    $v = file_exists(public_path('icons/icon-192x192.png'))
+        ? '?v=' . filemtime(public_path('icons/icon-192x192.png'))
+        : '';
+
     return response()->json([
         'name'             => $name,
         'short_name'       => $shortName,
@@ -29,14 +33,16 @@ Route::get('/manifest.json', function () {
         'background_color' => '#f8fafc',
         'icons'            => [
             [
-                'src'   => '/icons/icon-192x192.png',
-                'sizes' => '192x192',
-                'type'  => 'image/png',
+                'src'     => '/icons/icon-192x192.png' . $v,
+                'sizes'   => '192x192',
+                'type'    => 'image/png',
+                'purpose' => 'any',
             ],
             [
-                'src'   => '/icons/icon-512x512.png',
-                'sizes' => '512x512',
-                'type'  => 'image/png',
+                'src'     => '/icons/icon-512x512.png' . $v,
+                'sizes'   => '512x512',
+                'type'    => 'image/png',
+                'purpose' => 'any',
             ],
         ],
     ])->header('Content-Type', 'application/manifest+json');
