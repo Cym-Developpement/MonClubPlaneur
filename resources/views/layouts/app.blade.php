@@ -382,6 +382,159 @@
       </div>
     @endcan
 
+    @can('admin:super')
+    <!-- Modal Gestion des Administrateurs -->
+    <div class="modal fade" id="modalAdmins" tabindex="-1" aria-labelledby="modalAdminsLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalAdminsLabel"><i class="fas fa-user-shield me-2"></i>Gestion des administrateurs</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+          </div>
+          <div class="modal-body">
+            <div id="adminsMessage" style="display:none;" class="alert mb-3"></div>
+            <div class="table-responsive">
+              <table class="table table-sm table-hover" id="adminsTable">
+                <thead>
+                  <tr>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th style="width:180px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminsTableBody">
+                  <tr><td colspan="3" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Chargement...</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td><input type="text" class="form-control form-control-sm" id="newAdminName" placeholder="Nom"></td>
+                    <td><input type="email" class="form-control form-control-sm" id="newAdminEmail" placeholder="Email"></td>
+                    <td><button class="btn btn-sm btn-success" onclick="addAdmin()"><i class="fas fa-plus me-1"></i>Ajouter</button></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+    var currentUserId = {{ auth()->check() ? auth()->id() : 'null' }};
+    var csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    function showAdminsMsg(text, isError) {
+        var el = document.getElementById('adminsMessage');
+        el.className = 'alert mb-3 ' + (isError ? 'alert-danger' : 'alert-success');
+        el.textContent = text;
+        el.style.display = 'block';
+        setTimeout(function() { el.style.display = 'none'; }, 4000);
+    }
+
+    function loadAdmins() {
+        var tbody = document.getElementById('adminsTableBody');
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Chargement...</td></tr>';
+        fetch('/admin/admins', { headers: { 'Accept': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(admins) {
+                tbody.innerHTML = '';
+                admins.forEach(function(admin) {
+                    tbody.appendChild(buildAdminRow(admin));
+                });
+                if (admins.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Aucun administrateur.</td></tr>';
+                }
+            })
+            .catch(function() {
+                showAdminsMsg('Erreur lors du chargement des administrateurs.', true);
+            });
+    }
+
+    function buildAdminRow(admin) {
+        var tr = document.createElement('tr');
+        tr.dataset.id = admin.id;
+        var isSelf = admin.id === currentUserId;
+        tr.innerHTML =
+            '<td>' + escHtml(admin.name) + '</td>' +
+            '<td>' + escHtml(admin.email) + '</td>' +
+            '<td>' +
+                '<button class="btn btn-sm btn-outline-primary me-1" onclick="editAdminRow(' + admin.id + ', this)" title="Modifier"><i class="fas fa-pen"></i></button>' +
+                (isSelf ? '' : '<button class="btn btn-sm btn-outline-danger" onclick="deleteAdmin(' + admin.id + ', this)" title="Supprimer"><i class="fas fa-trash"></i></button>') +
+            '</td>';
+        return tr;
+    }
+
+    function editAdminRow(id, btn) {
+        var tr = btn.closest('tr');
+        var cells = tr.querySelectorAll('td');
+        var name = cells[0].textContent.trim();
+        var email = cells[1].textContent.trim();
+        cells[0].innerHTML = '<input type="text" class="form-control form-control-sm" value="' + escAttr(name) + '" id="editName' + id + '">';
+        cells[1].innerHTML = '<input type="email" class="form-control form-control-sm" value="' + escAttr(email) + '" id="editEmail' + id + '">';
+        cells[2].innerHTML =
+            '<button class="btn btn-sm btn-primary me-1" onclick="saveEditAdmin(' + id + ')"><i class="fas fa-check"></i></button>' +
+            '<button class="btn btn-sm btn-secondary" onclick="loadAdmins()"><i class="fas fa-times"></i></button>';
+    }
+
+    function saveEditAdmin(id) {
+        var name = document.getElementById('editName' + id).value.trim();
+        var email = document.getElementById('editEmail' + id).value.trim();
+        if (!name || !email) { showAdminsMsg('Veuillez remplir tous les champs.', true); return; }
+        fetch('/admin/admins/' + id, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            body: JSON.stringify({ name: name, email: email })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(res) {
+            if (res.ok) { showAdminsMsg(res.data.message, false); loadAdmins(); }
+            else { showAdminsMsg(res.data.error || 'Erreur.', true); }
+        })
+        .catch(function() { showAdminsMsg('Erreur réseau.', true); });
+    }
+
+    function addAdmin() {
+        var name = document.getElementById('newAdminName').value.trim();
+        var email = document.getElementById('newAdminEmail').value.trim();
+        if (!name || !email) { showAdminsMsg('Veuillez remplir le nom et l\'email.', true); return; }
+        fetch('/admin/admins', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            body: JSON.stringify({ name: name, email: email })
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(res) {
+            if (res.ok) {
+                showAdminsMsg(res.data.message, false);
+                document.getElementById('newAdminName').value = '';
+                document.getElementById('newAdminEmail').value = '';
+                loadAdmins();
+            } else {
+                var msg = res.data.error || (res.data.errors ? Object.values(res.data.errors).flat().join(' ') : 'Erreur.');
+                showAdminsMsg(msg, true);
+            }
+        })
+        .catch(function() { showAdminsMsg('Erreur réseau.', true); });
+    }
+
+    function deleteAdmin(id, btn) {
+        if (!confirm('Êtes-vous sûr de vouloir retirer les droits administrateur de cet utilisateur ?')) return;
+        fetch('/admin/admins/' + id, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+        })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+        .then(function(res) {
+            if (res.ok) { showAdminsMsg(res.data.message, false); loadAdmins(); }
+            else { showAdminsMsg(res.data.error || 'Erreur.', true); }
+        })
+        .catch(function() { showAdminsMsg('Erreur réseau.', true); });
+    }
+
+    function escHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escAttr(s) { return s.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    </script>
+    @endcan
+
     <!-- Modal HelloAsso-->
     <div class="modal fade" id="helloAssoModal" tabindex="-1" role="dialog" aria-labelledby="helloAssoModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">

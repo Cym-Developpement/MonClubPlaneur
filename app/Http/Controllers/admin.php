@@ -2389,4 +2389,66 @@ class admin extends Controller
 
         return response()->json($preview);
     }
+
+    /**
+     * Liste des administrateurs (JSON).
+     */
+    public function getAdmins()
+    {
+        $admins = User::where('isAdmin', 1)->select('id', 'name', 'email')->orderBy('name')->get();
+        return response()->json($admins);
+    }
+
+    /**
+     * Crée ou met à jour un administrateur.
+     */
+    public function saveAdmin(Request $request, $id = null)
+    {
+        $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+        ]);
+
+        if ($id) {
+            $user = User::findOrFail($id);
+            if ($user->isAdmin != 1) {
+                return response()->json(['error' => 'Cet utilisateur n\'est pas administrateur.'], 403);
+            }
+            $user->name  = $request->name;
+            $user->email = $request->email;
+            $user->save();
+            return response()->json(['message' => 'Administrateur mis à jour.']);
+        }
+
+        // Création
+        $user = new User();
+        $user->name     = $request->name;
+        $user->email    = $request->email;
+        $user->password = Hash::make(\Illuminate\Support\Str::random(32));
+        $user->isAdmin  = 1;
+        $user->state    = 1;
+        $user->save();
+
+        return response()->json(['message' => 'Administrateur créé. Il pourra se connecter en utilisant "Mot de passe oublié".']);
+    }
+
+    /**
+     * Supprime un administrateur (interdit de se supprimer soi-même).
+     */
+    public function deleteAdmin($id)
+    {
+        if ((int) $id === (int) auth()->id()) {
+            return response()->json(['error' => 'Vous ne pouvez pas supprimer votre propre compte.'], 403);
+        }
+
+        $user = User::findOrFail($id);
+        if ($user->isAdmin != 1) {
+            return response()->json(['error' => 'Cet utilisateur n\'est pas administrateur.'], 403);
+        }
+
+        $user->isAdmin = 0;
+        $user->save();
+
+        return response()->json(['message' => 'Administrateur supprimé.']);
+    }
 }
