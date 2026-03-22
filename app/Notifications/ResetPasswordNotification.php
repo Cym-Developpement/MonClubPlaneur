@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\parametre;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -14,11 +15,20 @@ class ResetPasswordNotification extends ResetPassword
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
 
+        $nomCourt   = parametre::getValue('club-nom_court', '');
+        $nomComplet = parametre::getValue('club-nom_complet', '');
+        $logo       = parametre::getValue('club-logo', '');
+        $expire     = config('auth.passwords.users.expire', 60);
+
         return (new MailMessage)
             ->subject('Réinitialisation de votre mot de passe')
-            ->line('Vous recevez cet e-mail car nous avons reçu une demande de réinitialisation du mot de passe de votre compte.')
-            ->action('Réinitialiser le mot de passe', $url)
-            ->line('Ce lien de réinitialisation expirera dans ' . config('auth.passwords.users.expire', 60) . ' minutes.')
-            ->line('Si vous n\'avez pas demandé de réinitialisation de mot de passe, aucune action n\'est requise.');
+            ->view('emails.reset_password', [
+                'url'         => $url,
+                'userName'    => $notifiable->name,
+                'nomCourt'    => $nomCourt,
+                'nomComplet'  => $nomComplet,
+                'logo'        => $logo,
+                'expire'      => $expire,
+            ]);
     }
 }
