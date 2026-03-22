@@ -6,6 +6,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
+use App\Notifications\ResetPasswordNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\transaction;
 use App\Models\flight;
@@ -417,6 +418,11 @@ class User extends Authenticatable
             $attribute->attributeName = $perm;
             $attribute->save();
         }
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function resetAdminAccess()
