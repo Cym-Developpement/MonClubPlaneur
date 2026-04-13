@@ -109,6 +109,8 @@ Route::post('/invoiceLock', [App\Http\Controllers\admin::class, 'lockInvoice'])-
 Route::post('/invoiceLockAll', [App\Http\Controllers\admin::class, 'lockInvoiceAll'])->name('invoiceLockAll')->middleware('can:admin:invoices');
 Route::post('/invoiceCancel', [App\Http\Controllers\admin::class, 'cancelInvoice'])->name('invoiceCancel')->middleware('can:admin:invoices');
 Route::get('/invoicePdf/{id}', [App\Http\Controllers\admin::class, 'invoicePdf'])->name('invoicePdf')->middleware('can:admin:invoices');
+Route::post('/admin/invoices/send-test', [App\Http\Controllers\admin::class, 'sendInvoicesTest'])->name('admin.invoices.sendTest')->middleware('can:admin:invoices');
+Route::post('/admin/invoices/send', [App\Http\Controllers\admin::class, 'sendInvoices'])->name('admin.invoices.send')->middleware('can:admin:invoices');
 Route::get('/sendAccountState', [App\Http\Controllers\admin::class, 'sendAccountState'])->name('sendAccountState')->middleware('can:admin');
 Route::get('/instruction', [App\Http\Controllers\admin::class, 'instruction'])->name('instruction')->middleware('can:admin');
 Route::get('/addInstructeur-{id}', [App\Http\Controllers\admin::class, 'addInstructeur'])->name('addInstructeur')->middleware('can:admin');

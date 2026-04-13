@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Gesasso;
 use App\Helpers\AuditLog;
 use App\Mail\sendAccount;
+use App\Mail\SendInvoice;
 use App\Models\aircraft;
 use App\Models\flight;
 use App\Models\Invoice;
@@ -2482,11 +2483,72 @@ class admin extends Controller
                 'periodEnd'   => date('d/m/Y', $periodEnd),
                 'count'       => $transactions->count(),
                 'total'       => $transactions->sum('value'),
+                'transactions' => $transactions->map(fn($t) => [
+                    'date'  => date('d/m/Y', $t->time),
+                    'name'  => $t->name,
+                    'value' => $t->value,
+                ])->values()->all(),
             ];
         }
 
         usort($preview, fn($a, $b) => strcmp($a['userName'], $b['userName']));
 
         return response()->json($preview);
+    }
+
+    private function getLatestInvoices()
+    {
+        $latestIds = Invoice::where('type', 'facture')
+            ->whereDoesntHave('avoir')
+            ->whereNotNull('pdfPath')
+            ->groupBy('idUser')
+            ->selectRaw('MAX(id) as id')
+            ->pluck('id');
+
+        return Invoice::with('user')->whereIn('id', $latestIds)->get();
+    }
+
+    public function sendInvoicesTest()
+    {
+        $invoices = $this->getLatestInvoices();
+        $adminEmail = auth()->user()->email;
+        $count = 0;
+
+        foreach ($invoices as $invoice) {
+            if (!$invoice->user || !$invoice->pdfPath) continue;
+            Mail::to($adminEmail)->send(new SendInvoice(
+                $invoice->user->name,
+                $invoice->invoiceNumber,
+                $invoice->pdfPath
+            ));
+            $count++;
+        }
+
+        return back()->with('status', "{$count} facture(s) envoyée(s) en test à {$adminEmail}.");
+    }
+
+    public function sendInvoices()
+    {
+        $invoices = $this->getLatestInvoices();
+        $count = 0;
+        $errors = 0;
+
+        foreach ($invoices as $invoice) {
+            if (!$invoice->user || !$invoice->pdfPath || !$invoice->user->email) {
+                $errors++;
+                continue;
+            }
+            Mail::to($invoice->user->email)->send(new SendInvoice(
+                $invoice->user->name,
+                $invoice->invoiceNumber,
+                $invoice->pdfPath
+            ));
+            $count++;
+        }
+
+        $msg = "{$count} facture(s) envoyée(s) aux membres.";
+        if ($errors > 0) $msg .= " {$errors} ignorée(s) (email ou PDF manquant).";
+
+        return back()->with('status', $msg);
     }
 }

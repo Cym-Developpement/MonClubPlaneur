@@ -53,6 +53,7 @@
                                     <table class="table table-sm table-bordered align-middle">
                                         <thead class="table-light">
                                             <tr>
+                                                <th style="width:30px;"></th>
                                                 <th>Membre</th>
                                                 <th>Début de période</th>
                                                 <th class="text-center">Nb transactions</th>
@@ -62,7 +63,7 @@
                                         <tbody id="previewTableBody"></tbody>
                                         <tfoot class="table-light fw-bold">
                                             <tr>
-                                                <td colspan="3" class="text-end">Total</td>
+                                                <td colspan="4" class="text-end">Total</td>
                                                 <td class="text-end text-danger" id="previewGrandTotal"></td>
                                             </tr>
                                         </tfoot>
@@ -88,6 +89,32 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            {{-- ── Envoi par email ── --}}
+            <div class="card mb-4">
+                <div class="card-header"><i class="fas fa-envelope me-2"></i>Envoyer les dernières factures par email</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Envoie par email la dernière facture non annulée de chaque membre (avec le PDF en pièce jointe).
+                    </p>
+                    <div class="d-flex gap-2">
+                        <form method="POST" action="{{ route('admin.invoices.sendTest') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-primary"
+                                    onclick="return confirm('Envoyer toutes les dernières factures à votre adresse email (test)\u00a0?')">
+                                <i class="fas fa-vial me-1"></i>Envoi test (à mon email)
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.invoices.send') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-warning"
+                                    onclick="return confirm('Envoyer les dernières factures à chaque membre\u00a0? Cette action enverra un email à tous les membres concernés.')">
+                                <i class="fas fa-paper-plane me-1"></i>Envoyer aux membres
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -199,15 +226,27 @@ function loadPreview() {
             var tbody = document.getElementById('previewTableBody');
             tbody.innerHTML = '';
             var grandTotal = 0;
-            rows.forEach(function(row) {
+            rows.forEach(function(row, idx) {
                 grandTotal += row.total;
                 var amount = Math.abs(row.total / 100).toFixed(2).replace('.', ',') + '\u00a0€';
-                tbody.innerHTML += '<tr>'
+                var detailHtml = '';
+                if (row.transactions && row.transactions.length) {
+                    detailHtml = '<table class="table table-sm table-borderless mb-0 small">'
+                        + '<thead><tr><th>Date</th><th>Libellé</th><th class="text-end">Montant</th></tr></thead><tbody>';
+                    row.transactions.forEach(function(t) {
+                        var tAmount = Math.abs(t.value / 100).toFixed(2).replace('.', ',') + '\u00a0€';
+                        detailHtml += '<tr><td class="text-nowrap">' + t.date + '</td><td>' + t.name + '</td><td class="text-end text-danger">' + tAmount + '</td></tr>';
+                    });
+                    detailHtml += '</tbody></table>';
+                }
+                tbody.innerHTML += '<tr style="cursor:pointer;" onclick="toggleDetail(' + idx + ')">'
+                    + '<td class="text-center"><i class="fas fa-chevron-right" id="chevron' + idx + '" style="transition:transform .2s;"></i></td>'
                     + '<td>' + row.userName + '</td>'
                     + '<td class="small">' + row.periodStart + '</td>'
                     + '<td class="text-center">' + row.count + '</td>'
                     + '<td class="text-end text-danger fw-semibold">' + amount + '</td>'
-                    + '</tr>';
+                    + '</tr>'
+                    + '<tr id="detail' + idx + '" style="display:none;"><td></td><td colspan="4" class="bg-light p-2">' + detailHtml + '</td></tr>';
             });
             var gt = Math.abs(grandTotal / 100).toFixed(2).replace('.', ',') + '\u00a0€';
             document.getElementById('previewGrandTotal').textContent = gt;
@@ -221,6 +260,18 @@ function loadPreview() {
             document.getElementById('btnPreviewAll').disabled = false;
         }
     });
+}
+
+function toggleDetail(idx) {
+    var row = document.getElementById('detail' + idx);
+    var chevron = document.getElementById('chevron' + idx);
+    if (row.style.display === 'none') {
+        row.style.display = '';
+        chevron.style.transform = 'rotate(90deg)';
+    } else {
+        row.style.display = 'none';
+        chevron.style.transform = '';
+    }
 }
 
 function resetPreview() {
