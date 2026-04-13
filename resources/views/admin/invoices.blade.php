@@ -98,23 +98,67 @@
                 <div class="card-body">
                     <p class="text-muted small mb-3">
                         Envoie par email la dernière facture non annulée de chaque membre (avec le PDF en pièce jointe).
+                        Cochez les factures à envoyer.
                     </p>
-                    <div class="d-flex gap-2">
-                        <form method="POST" action="{{ route('admin.invoices.sendTest') }}">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-primary"
-                                    onclick="return confirm('Envoyer toutes les dernières factures à votre adresse email (test)\u00a0?')">
+
+                    @if($latestInvoices->isEmpty())
+                        <div class="alert alert-info mb-0">Aucune facture à envoyer.</div>
+                    @else
+                    <form id="sendInvoicesForm" method="POST">
+                        @csrf
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm table-hover mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width:40px">
+                                            <input type="checkbox" id="checkAll" checked
+                                                   onchange="document.querySelectorAll('.invoice-check').forEach(c => c.checked = this.checked); updateSendButtons();">
+                                        </th>
+                                        <th>Membre</th>
+                                        <th>N° Facture</th>
+                                        <th class="text-end">Montant</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($latestInvoices->sortBy(fn($i) => $i->user->name ?? '') as $inv)
+                                    <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" class="invoice-check" name="invoiceIds[]"
+                                                   value="{{ $inv->id }}" checked onchange="updateSendButtons()">
+                                        </td>
+                                        <td>{{ $inv->user->name ?? '—' }}</td>
+                                        <td>{{ $inv->invoiceNumber }}</td>
+                                        <td class="text-end">{{ number_format(abs($inv->totalAmount / 100), 2, ',', ' ') }} €</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" id="btnSendTest" class="btn btn-outline-primary"
+                                    formaction="{{ route('admin.invoices.sendTest') }}"
+                                    onclick="return confirm('Envoyer les factures cochées à votre adresse email (test)\u00a0?')">
                                 <i class="fas fa-vial me-1"></i>Envoi test (à mon email)
                             </button>
-                        </form>
-                        <form method="POST" action="{{ route('admin.invoices.send') }}">
-                            @csrf
-                            <button type="submit" class="btn btn-warning"
-                                    onclick="return confirm('Envoyer les dernières factures à chaque membre\u00a0? Cette action enverra un email à tous les membres concernés.')">
+                            <button type="submit" id="btnSendReal" class="btn btn-warning"
+                                    formaction="{{ route('admin.invoices.send') }}"
+                                    onclick="return confirm('Envoyer les factures cochées à chaque membre\u00a0? Cette action enverra un email aux membres concernés.')">
                                 <i class="fas fa-paper-plane me-1"></i>Envoyer aux membres
                             </button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
+
+                    <script>
+                        function updateSendButtons() {
+                            const anyChecked = document.querySelectorAll('.invoice-check:checked').length > 0;
+                            document.getElementById('btnSendTest').disabled = !anyChecked;
+                            document.getElementById('btnSendReal').disabled = !anyChecked;
+                            const allChecked = document.querySelectorAll('.invoice-check:checked').length === document.querySelectorAll('.invoice-check').length;
+                            document.getElementById('checkAll').checked = allChecked;
+                        }
+                    </script>
+                    @endif
                 </div>
             </div>
 

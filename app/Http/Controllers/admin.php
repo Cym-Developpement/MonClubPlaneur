@@ -2448,7 +2448,9 @@ class admin extends Controller
             ->orderBy('sequence', 'desc')
             ->get();
 
-        return view('admin.invoices', compact('invoices'));
+        $latestInvoices = $this->getLatestInvoices();
+
+        return view('admin.invoices', compact('invoices', 'latestInvoices'));
     }
 
     public function invoicePreviewAll(Request $request)
@@ -2508,9 +2510,10 @@ class admin extends Controller
         return Invoice::with('user')->whereIn('id', $latestIds)->get();
     }
 
-    public function sendInvoicesTest()
+    public function sendInvoicesTest(Request $request)
     {
-        $invoices = $this->getLatestInvoices();
+        $invoiceIds = $request->input('invoiceIds', []);
+        $invoices = Invoice::with('user')->whereIn('id', $invoiceIds)->get();
         $adminEmail = auth()->user()->email;
         $count = 0;
 
@@ -2527,9 +2530,10 @@ class admin extends Controller
         return back()->with('status', "{$count} facture(s) envoyée(s) en test à {$adminEmail}.");
     }
 
-    public function sendInvoices()
+    public function sendInvoices(Request $request)
     {
-        $invoices = $this->getLatestInvoices();
+        $invoiceIds = $request->input('invoiceIds', []);
+        $invoices = Invoice::with('user')->whereIn('id', $invoiceIds)->get();
         $count = 0;
         $errors = 0;
 
