@@ -90,6 +90,7 @@ Route::post('/todolist/{id}/in-progress', [App\Http\Controllers\TodolistControll
 Route::post('/todolist/{id}/pending', [App\Http\Controllers\TodolistController::class, 'pending'])->name('todolist.pending');
 
 Route::get('/validTransactions', [App\Http\Controllers\admin::class, 'getValidTransactions'])->name('validTransactions')->middleware('can:admin');
+Route::get('/admin/encaissements', [App\Http\Controllers\admin::class, 'encaissementsPage'])->name('admin.encaissements')->middleware('can:admin:transactions');
 Route::post('/validTransactionPost', [App\Http\Controllers\admin::class, 'ValidTransactions'])->name('validTransactionPost')->middleware('can:admin');
 Route::post('/deleteTransactionPost', [App\Http\Controllers\admin::class, 'DeleteTransactions'])->name('deleteTransactionPost')->middleware('can:admin');
 
@@ -161,6 +162,11 @@ Route::post('/wikipassword', [App\Http\Controllers\WikiController::class, 'passw
 Route::get('/admin/parametres', [App\Http\Controllers\ParametreController::class, 'index'])->name('admin.parametres')->middleware('can:admin:super');
 Route::post('/admin/parametres', [App\Http\Controllers\ParametreController::class, 'update'])->name('admin.parametres.update')->middleware('can:admin:super');
 Route::post('/admin/parametres/autres', [App\Http\Controllers\ParametreController::class, 'updateAutres'])->name('admin.parametres.autres')->middleware('can:admin:super');
+
+// GESTION DES ADMINISTRATEURS
+Route::get('/admin/admins', [App\Http\Controllers\admin::class, 'getAdmins'])->name('admins.index')->middleware('can:admin:super');
+Route::post('/admin/admins/{id?}', [App\Http\Controllers\admin::class, 'saveAdmin'])->name('admins.save')->middleware('can:admin:super');
+Route::delete('/admin/admins/{id}', [App\Http\Controllers\admin::class, 'deleteAdmin'])->name('admins.delete')->middleware('can:admin:super');
 
 // AUDIT
 Route::get('/audit', [App\Http\Controllers\AuditController::class, 'index'])->name('audit.index')->middleware('can:admin:audit');

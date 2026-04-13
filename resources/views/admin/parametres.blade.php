@@ -69,6 +69,10 @@
                                     <input class="form-check-input" type="checkbox" name="paiement-cheque_actif" id="paiement-cheque_actif" value="1" {{ $params['paiement-cheque_actif'] ? 'checked' : '' }}>
                                     <label class="form-check-label" for="paiement-cheque_actif">Chèque</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="paiement-especes_actif" id="paiement-especes_actif" value="1" {{ $params['paiement-especes_actif'] ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="paiement-especes_actif">Espèces</label>
+                                </div>
                             </div>
                             <div class="form-text">Seuls les moyens activés apparaissent dans le formulaire de paiement et sur les documents PDF.</div>
                         </div>

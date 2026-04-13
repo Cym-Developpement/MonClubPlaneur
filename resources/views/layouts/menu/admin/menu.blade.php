@@ -47,6 +47,9 @@
     <i class="fas fa-check-circle me-2"></i>Transactions a valider &nbsp;&nbsp;
     @if(App\Models\transaction::getNotValidNumber() > 0)<span class="badge badge-primary">{{ App\Models\transaction::getNotValidNumber() }}</span>@endif
 </a>
+<a class="dropdown-item" href="/admin/encaissements">
+    <i class="fas fa-coins me-2"></i>Encaissements
+</a>
 @endcan
 
 @can('admin:flights')

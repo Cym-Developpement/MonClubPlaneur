@@ -162,6 +162,8 @@
                                             <option value="all" {{ ($trType ?? 'all') === 'all' ? 'selected' : '' }}>Tous les types</option>
                                             <option value="helloasso" {{ ($trType ?? '') === 'helloasso' ? 'selected' : '' }}>HelloAsso uniquement</option>
                                             <option value="virement" {{ ($trType ?? '') === 'virement' ? 'selected' : '' }}>Virements uniquement</option>
+                                            <option value="cheque" {{ ($trType ?? '') === 'cheque' ? 'selected' : '' }}>Chèques uniquement</option>
+                                            <option value="especes" {{ ($trType ?? '') === 'especes' ? 'selected' : '' }}>Espèces uniquement</option>
                                         </select>
                                     </div>
                                     <div class="col-auto">

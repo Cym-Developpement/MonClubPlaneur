@@ -380,6 +380,9 @@ class HomeController extends Controller
             case 'VI':
                 $type = 'Virement';
                 break;
+            case 'ES':
+                $type = 'Espèces';
+                break;
         }
         $transaction = new transaction();
         $transaction->idUser = Auth::user()->id;

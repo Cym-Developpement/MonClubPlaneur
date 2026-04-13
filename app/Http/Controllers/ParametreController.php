@@ -27,6 +27,7 @@ class ParametreController extends Controller
         'paiement-cb_actif',
         'paiement-virement_actif',
         'paiement-cheque_actif',
+        'paiement-especes_actif',
     ];
 
     public function index()
@@ -42,6 +43,7 @@ class ParametreController extends Controller
         $params['paiement-cb_actif']         = (bool) parametre::getValue('paiement-cb_actif', '1');
         $params['paiement-virement_actif']   = (bool) parametre::getValue('paiement-virement_actif', '1');
         $params['paiement-cheque_actif']     = (bool) parametre::getValue('paiement-cheque_actif', '0');
+        $params['paiement-especes_actif']    = (bool) parametre::getValue('paiement-especes_actif', '0');
 
         $autresParams = parametre::whereNotIn('nom', $this->managedKeys)
             ->orderBy('nom')
@@ -87,6 +89,7 @@ class ParametreController extends Controller
         $this->saveBoolParam('paiement-cb_actif',        $request->has('paiement-cb_actif'));
         $this->saveBoolParam('paiement-virement_actif',  $request->has('paiement-virement_actif'));
         $this->saveBoolParam('paiement-cheque_actif',    $request->has('paiement-cheque_actif'));
+        $this->saveBoolParam('paiement-especes_actif',   $request->has('paiement-especes_actif'));
 
         return redirect('/admin/parametres')->with('success', 'Paramètres enregistrés.');
     }

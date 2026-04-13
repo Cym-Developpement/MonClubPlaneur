@@ -2,8 +2,9 @@
     $payCbActif      = (bool) \App\Models\parametre::getValue('paiement-cb_actif', '1');
     $payVirementActif = (bool) \App\Models\parametre::getValue('paiement-virement_actif', '1');
     $payChequeActif  = (bool) \App\Models\parametre::getValue('paiement-cheque_actif', '0');
+    $payEspecesActif = (bool) \App\Models\parametre::getValue('paiement-especes_actif', '0');
     // Déterminer le type par défaut (premier moyen actif)
-    $payDefaultType = $payCbActif ? 'CB' : ($payVirementActif ? 'VI' : ($payChequeActif ? 'CH' : 'VI'));
+    $payDefaultType = $payCbActif ? 'CB' : ($payVirementActif ? 'VI' : ($payChequeActif ? 'CH' : ($payEspecesActif ? 'ES' : 'VI')));
 @endphp
     <!-- Modal add payments-->
     <div class="modal fade" id="payModal" tabindex="-1" role="dialog" aria-labelledby="payModalLabel" aria-hidden="true">
@@ -25,6 +26,9 @@
                     @endif
                     @if($payChequeActif)
                     <option value="CH">Chèque</option>
+                    @endif
+                    @if($payEspecesActif)
+                    <option value="ES">Espèces</option>
                     @endif
                 </select>
                 <small id="payModalTypeHelp" class="form-text text-body-secondary">Pour les chèques et les virements, la transaction sera validé par le trésorerier.<br>Les paiement Carte Bancaire sont validés immédiatement.</small>

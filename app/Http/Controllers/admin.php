@@ -256,6 +256,100 @@ class admin extends Controller
         return $users->orderBy('name', 'ASC')->get();
     }
 
+    public function encaissementsPage(Request $request)
+    {
+        $query = transaction::where('value', '>', 0);
+
+        // Filtre par type de paiement
+        $type = $request->input('type', 'all');
+        switch ($type) {
+            case 'cb':
+                $query->where(function ($q) {
+                    $q->where('name', 'like', '%HelloAsso%')
+                      ->orWhere('name', 'like', 'CB %')
+                      ->orWhere('name', 'like', '%CB %');
+                });
+                break;
+            case 'cheque':
+                $query->where('name', 'like', '%Chèque%');
+                break;
+            case 'virement':
+                $query->where('name', 'like', '%Virement%');
+                break;
+            case 'especes':
+                $query->where('name', 'like', '%Espèces%');
+                break;
+        }
+
+        // Filtre par dates
+        $dateFrom = $request->input('date_from');
+        $dateTo   = $request->input('date_to');
+        if ($dateFrom) {
+            $query->where('time', '>=', strtotime($dateFrom . ' 00:00:00'));
+        }
+        if ($dateTo) {
+            $query->where('time', '<=', strtotime($dateTo . ' 23:59:59'));
+        }
+
+        // Filtre par statut
+        $statut = $request->input('statut', 'all');
+        if ($statut === 'valide') {
+            $query->where('valid', 1);
+        } elseif ($statut === 'attente') {
+            $query->where('valid', 0);
+        }
+
+        $transactions = $query->orderBy('time', 'desc')->orderBy('id', 'desc')->paginate(50);
+
+        // Total des montants filtrés (en centimes)
+        $totalQuery = transaction::where('value', '>', 0);
+        // Reproduire les mêmes filtres pour le total
+        switch ($type) {
+            case 'cb':
+                $totalQuery->where(function ($q) {
+                    $q->where('name', 'like', '%HelloAsso%')
+                      ->orWhere('name', 'like', 'CB %')
+                      ->orWhere('name', 'like', '%CB %');
+                });
+                break;
+            case 'cheque':
+                $totalQuery->where('name', 'like', '%Chèque%');
+                break;
+            case 'virement':
+                $totalQuery->where('name', 'like', '%Virement%');
+                break;
+            case 'especes':
+                $totalQuery->where('name', 'like', '%Espèces%');
+                break;
+        }
+        if ($dateFrom) {
+            $totalQuery->where('time', '>=', strtotime($dateFrom . ' 00:00:00'));
+        }
+        if ($dateTo) {
+            $totalQuery->where('time', '<=', strtotime($dateTo . ' 23:59:59'));
+        }
+        if ($statut === 'valide') {
+            $totalQuery->where('valid', 1);
+        } elseif ($statut === 'attente') {
+            $totalQuery->where('valid', 0);
+        }
+        $totalCents = $totalQuery->sum('value');
+
+        // Charger les noms des utilisateurs
+        $userIds = $transactions->pluck('idUser')->unique();
+        $users = User::whereIn('id', $userIds)->pluck('name', 'id');
+
+        return view('admin.encaissements', [
+            'transactions' => $transactions,
+            'users'        => $users,
+            'type'         => $type,
+            'dateFrom'     => $dateFrom ?? date('Y-01-01'),
+            'dateTo'       => $dateTo ?? date('Y-m-d'),
+            'statut'       => $statut,
+            'totalCents'   => $totalCents,
+        ]);
+    }
+
     private function resolveExportTransactions(Request $request)
     {
         $query    = transaction::query();
@@ -273,6 +367,12 @@ class admin extends Controller
                 break;
             case 'virement':
                 $query->where('name', 'like', '%Virement%');
+                break;
+            case 'cheque':
+                $query->where('name', 'like', '%Chèque%');
+                break;
+            case 'especes':
+                $query->where('name', 'like', '%Espèces%');
                 break;
         }
         return $query->orderBy('time', 'desc')->orderBy('id', 'desc')->get();
