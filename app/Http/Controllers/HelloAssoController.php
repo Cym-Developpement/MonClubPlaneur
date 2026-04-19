@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\transaction;
 use App\Models\VolInitiation;
 use App\Models\parametre;
+use App\Models\HelloAssoPendingPayment;
 
 class HelloAssoController extends Controller
 {
@@ -171,8 +172,16 @@ class HelloAssoController extends Controller
         
         // Vérifier le paiement via l'API HelloAsso
         if ($paymentId && $orderId) {
+            // Anti-doublon : vérifier si ce paiement a déjà été crédité ou est en attente
+            if ($this->isPaymentAlreadyProcessed($paymentId)) {
+                Log::info('Paiement HelloAsso déjà traité, ignoré (doublon)', [
+                    'payment_id' => $paymentId,
+                ]);
+                return;
+            }
+
             $verifiedPayment = $this->helloAssoService->verifyPayment($paymentId, $orderId);
-            
+
             if ($verifiedPayment) {
                 Log::info('Paiement HelloAsso vérifié et validé', [
                     'payment_id' => $paymentId,
@@ -181,15 +190,29 @@ class HelloAssoController extends Controller
                     'verified_state' => $verifiedPayment['state'] ?? 'N/A',
                     'verified_installment' => $verifiedPayment['installmentNumber'] ?? 'N/A'
                 ]);
-                
+
                 // Traiter le paiement vérifié
                 $this->processVerifiedPayment($verifiedPayment, $payerEmail);
-                
+
             } else {
-                Log::error('Échec de la vérification du paiement HelloAsso', [
+                // Fallback : stocker le paiement pour retry ultérieur
+                Log::warning('Échec de la vérification API HelloAsso, paiement mis en attente pour retry', [
                     'payment_id' => $paymentId,
                     'order_id' => $orderId
                 ]);
+
+                HelloAssoPendingPayment::updateOrCreate(
+                    ['payment_id' => $paymentId],
+                    [
+                        'order_id' => $orderId,
+                        'amount' => is_numeric($amount) ? (int) $amount : 0,
+                        'payer_email' => $payerEmail,
+                        'payer_name' => trim($payerName),
+                        'installment_number' => is_numeric($installmentNumber) ? (int) $installmentNumber : 1,
+                        'webhook_data' => $data,
+                        'status' => 'pending',
+                    ]
+                );
             }
         } else {
             Log::error('Données de paiement HelloAsso incomplètes', [
@@ -236,13 +259,26 @@ class HelloAssoController extends Controller
             
             $user = User::where('email', $payerEmail)->first();
             if ($user) {
+                // Anti-doublon avant crédit
+                if ($this->isPaymentAlreadyProcessed($paymentId)) {
+                    Log::info('Paiement HelloAsso déjà crédité, transaction ignorée (doublon)', [
+                        'payment_id' => $paymentId,
+                    ]);
+                    return;
+                }
+
                 // Créer une description différenciée selon le type de paiement
-                $description = $installmentNumber == 1 
+                $description = $installmentNumber == 1
                     ? 'CB Paiement initial - HelloAsso'
                     : "CB Échéance {$installmentNumber} - HelloAsso";
                 $observation = 'paiement : '.$paymentId.' / Commande : '.$orderId;
                 transaction::add($user->id, $amount, $description, $observation);
                 
+                // Marquer le pending payment comme traité si existant
+                HelloAssoPendingPayment::where('payment_id', $paymentId)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'processed', 'processed_at' => now()]);
+
                 Log::info('Paiement traité avec succès', [
                     'user_id' => $user->id,
                     'payment_type' => $paymentType,
@@ -266,6 +302,24 @@ class HelloAssoController extends Controller
                 'payer_email' => $payerEmail
             ]);
         }
+    }
+
+    /**
+     * Vérifie si un paiement HelloAsso a déjà été traité (anti-doublon)
+     */
+    private function isPaymentAlreadyProcessed(string $paymentId): bool
+    {
+        // Vérifier dans les transactions existantes
+        if (transaction::where('observation', 'LIKE', '%paiement : ' . $paymentId . '%')->exists()) {
+            return true;
+        }
+
+        // Vérifier dans les pending payments déjà traités
+        if (HelloAssoPendingPayment::where('payment_id', $paymentId)->where('status', 'processed')->exists()) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
