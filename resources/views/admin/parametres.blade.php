@@ -122,14 +122,55 @@
                 <div class="card-header"><i class="fas fa-clock me-2"></i>Tâches planifiées (Cron)</div>
                 <div class="card-body">
                     <p class="text-muted small mb-2">Pour activer le planificateur Laravel, ajoutez cette ligne dans le crontab du serveur :</p>
-                    <div class="input-group mb-0">
+                    <div class="input-group mb-3">
                         <code class="form-control font-monospace bg-light" style="font-size:0.8rem;" id="crontabLine">* * * * * cd {{ base_path() }} && php artisan schedule:run >> /dev/null 2>&1</code>
                         <button class="btn btn-outline-secondary btn-sm" type="button" onclick="navigator.clipboard.writeText(document.getElementById('crontabLine').textContent).then(()=>{this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fas fa-copy\'></i>',1500)})">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnRunCron" onclick="runCron()">
+                        <i class="fas fa-play me-1"></i>Exécuter maintenant
+                    </button>
+
+                    <div id="cronResult" class="mt-3 d-none">
+                        <pre class="bg-dark text-light p-3 rounded mb-0" style="font-size:0.8rem; max-height:300px; overflow-y:auto; white-space:pre-wrap;" id="cronOutput"></pre>
+                    </div>
                 </div>
             </div>
+
+            <script>
+            function runCron() {
+                const btn = document.getElementById('btnRunCron');
+                const resultDiv = document.getElementById('cronResult');
+                const outputPre = document.getElementById('cronOutput');
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Exécution en cours…';
+                resultDiv.classList.add('d-none');
+
+                fetch('{{ route("admin.parametres.cron") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(r => r.json())
+                .then(data => {
+                    outputPre.textContent = data.output || '(aucune sortie)';
+                    resultDiv.classList.remove('d-none');
+                })
+                .catch(err => {
+                    outputPre.textContent = 'Erreur : ' + err.message;
+                    resultDiv.classList.remove('d-none');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-play me-1"></i>Exécuter maintenant';
+                });
+            }
+            </script>
 
             @if(!$autresParams->isEmpty())
             <div class="card mt-4">

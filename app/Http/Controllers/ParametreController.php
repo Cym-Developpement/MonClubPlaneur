@@ -137,6 +137,17 @@ class ParametreController extends Controller
         $p->save();
     }
 
+    public function runCron(): \Illuminate\Http\JsonResponse
+    {
+        $exitCode = \Artisan::call('schedule:run');
+        $output   = \Artisan::output();
+
+        return response()->json([
+            'exit_code' => $exitCode,
+            'output'    => trim($output),
+        ]);
+    }
+
     private function generatePwaIcons(string $imageData): void
     {
         $source = @imagecreatefromstring($imageData);
