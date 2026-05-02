@@ -3,11 +3,14 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Mail\HelloAssoPaymentFailedMail;
 use App\Models\HelloAssoPendingPayment;
+use App\Models\parametre;
 use App\Models\transaction;
 use App\Models\User;
 use App\Services\HelloAssoService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class RetryHelloAssoPayments extends Command
 {
@@ -120,6 +123,7 @@ class RetryHelloAssoPayments extends Command
                 'payer_email' => $pending->payer_email,
             ]);
             $this->error("Payment {$pending->payment_id} FAILED after 5 attempts.");
+            $this->notifyAdmin($pending);
         } else {
             $pending->save();
             Log::warning('HelloAsso retry: échec tentative ' . $pending->attempts, [
@@ -179,5 +183,32 @@ class RetryHelloAssoPayments extends Command
             'amount' => $amount,
         ]);
         $this->info("Payment {$paymentId} credited to user {$user->id} ({$amount} cts).");
+    }
+
+    private function notifyAdmin(HelloAssoPendingPayment $pending): void
+    {
+        $adminEmail = parametre::getValue('club-email', '');
+        if (! $adminEmail) {
+            Log::warning('HelloAsso retry: notif admin non envoyée (club-email vide)', [
+                'payment_id' => $pending->payment_id,
+            ]);
+            return;
+        }
+
+        try {
+            Mail::to($adminEmail)->send(new HelloAssoPaymentFailedMail($pending));
+            Log::info('HelloAsso retry: notif admin envoyée', [
+                'payment_id' => $pending->payment_id,
+                'to'         => $adminEmail,
+            ]);
+            $this->info("  → Notification envoyée à {$adminEmail}");
+        } catch (\Throwable $e) {
+            Log::error('HelloAsso retry: échec envoi notif admin', [
+                'payment_id' => $pending->payment_id,
+                'to'         => $adminEmail,
+                'error'      => $e->getMessage(),
+            ]);
+            $this->warn("  → Échec envoi notification : {$e->getMessage()}");
+        }
     }
 }
