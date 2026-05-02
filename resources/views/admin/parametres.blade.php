@@ -15,6 +15,18 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+                    @if(session('info'))
+                        <div class="alert alert-info alert-dismissible fade show">
+                            <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
 
                     <form method="post" action="/admin/parametres" enctype="multipart/form-data">
                         @csrf
@@ -191,6 +203,71 @@
                 });
             }
             </script>
+
+            @if($helloAssoPending->isNotEmpty())
+            <div class="card mt-4">
+                <div class="card-header">
+                    <i class="fas fa-credit-card me-2"></i>Paiements HelloAsso en attente
+                    <span class="badge bg-warning text-dark ms-2">{{ $helloAssoPending->count() }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Payeur</th>
+                                    <th>Montant</th>
+                                    <th>Reçu le</th>
+                                    <th>Statut</th>
+                                    <th>Tentatives</th>
+                                    <th>Dernière erreur</th>
+                                    <th class="text-end pe-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($helloAssoPending as $p)
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold">{{ $p->payer_name ?: '—' }}</div>
+                                        <small class="text-muted">{{ $p->payer_email }}</small><br>
+                                        <small class="text-muted">paiement {{ $p->payment_id }} / commande {{ $p->order_id }}</small>
+                                    </td>
+                                    <td><strong>{{ number_format($p->amount / 100, 2, ',', ' ') }} €</strong></td>
+                                    <td><small>{{ $p->created_at?->format('d/m/Y H:i') }}</small></td>
+                                    <td>
+                                        @if($p->status === 'failed')
+                                            <span class="badge bg-danger">Échec</span>
+                                        @else
+                                            <span class="badge bg-warning text-dark">En attente</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $p->attempts }}/5</td>
+                                    <td><small class="text-muted">{{ $p->error_message ?: '—' }}</small></td>
+                                    <td class="text-end pe-3" style="white-space:nowrap;">
+                                        <form method="post" action="{{ route('admin.parametres.helloasso.validate', $p->id) }}" style="display:inline;"
+                                              onsubmit="return confirm('Créditer {{ number_format($p->amount / 100, 2, ',', ' ') }} € à {{ $p->payer_email }} ?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success btn-sm" title="Créditer manuellement">
+                                                <i class="fas fa-check me-1"></i>Créditer
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{{ route('admin.parametres.helloasso.delete', $p->id) }}" style="display:inline;"
+                                              onsubmit="return confirm('Supprimer ce paiement de la file ? Aucun crédit ne sera fait.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             @if(!$autresParams->isEmpty())
             <div class="card mt-4">

@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HelloAssoPendingPayment;
 use App\Models\parametre;
+use App\Models\transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ParametreController extends Controller
@@ -59,7 +63,11 @@ class ParametreController extends Controller
             $this->cronEvents()
         );
 
-        return view('admin.parametres', compact('params', 'autresParams', 'cronEvents'));
+        $helloAssoPending = HelloAssoPendingPayment::whereIn('status', ['pending', 'failed'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('admin.parametres', compact('params', 'autresParams', 'cronEvents', 'helloAssoPending'));
     }
 
     private function cronEvents(): array
@@ -214,6 +222,74 @@ class ParametreController extends Controller
             'exit_code' => $exitCode,
             'output'    => implode("\n", $outputs),
         ]);
+    }
+
+    public function validateHelloAssoPayment(int $id): \Illuminate\Http\RedirectResponse
+    {
+        $pending = HelloAssoPendingPayment::find($id);
+        if (! $pending) {
+            return redirect('/admin/parametres')->with('error', 'Paiement HelloAsso introuvable.');
+        }
+
+        if ($pending->status === 'processed') {
+            return redirect('/admin/parametres')->with('info', 'Paiement déjà traité.');
+        }
+
+        if (transaction::where('observation', 'LIKE', '%paiement : ' . $pending->payment_id . '%')->exists()) {
+            $pending->status = 'processed';
+            $pending->processed_at = now();
+            $pending->save();
+            return redirect('/admin/parametres')->with('info', 'Paiement déjà crédité, marqué comme traité.');
+        }
+
+        $user = User::where('email', $pending->payer_email)->first();
+        if (! $user) {
+            return redirect('/admin/parametres')->with('error', "Utilisateur introuvable : {$pending->payer_email}");
+        }
+
+        $description = ((int) $pending->installment_number) === 1
+            ? 'CB Paiement initial - HelloAsso (validation manuelle)'
+            : "CB Échéance {$pending->installment_number} - HelloAsso (validation manuelle)";
+        $observation = 'paiement : ' . $pending->payment_id . ' / Commande : ' . $pending->order_id;
+
+        transaction::add($user->id, $pending->amount, $description, $observation);
+
+        $pending->status        = 'processed';
+        $pending->processed_at  = now();
+        $pending->error_message = null;
+        $pending->save();
+
+        Log::info('HelloAsso: paiement validé manuellement depuis /admin/parametres', [
+            'pending_id' => $pending->id,
+            'payment_id' => $pending->payment_id,
+            'user_id'    => $user->id,
+            'amount'     => $pending->amount,
+            'admin'      => auth()->id(),
+        ]);
+
+        $montant = number_format($pending->amount / 100, 2, ',', ' ');
+        return redirect('/admin/parametres')->with('success', "Paiement {$pending->payment_id} crédité ({$montant} €) à {$user->email}.");
+    }
+
+    public function deleteHelloAssoPayment(int $id): \Illuminate\Http\RedirectResponse
+    {
+        $pending = HelloAssoPendingPayment::find($id);
+        if (! $pending) {
+            return redirect('/admin/parametres')->with('error', 'Paiement HelloAsso introuvable.');
+        }
+
+        Log::warning('HelloAsso: paiement supprimé manuellement depuis /admin/parametres', [
+            'pending_id'  => $pending->id,
+            'payment_id'  => $pending->payment_id,
+            'order_id'    => $pending->order_id,
+            'amount'      => $pending->amount,
+            'payer_email' => $pending->payer_email,
+            'admin'       => auth()->id(),
+        ]);
+
+        $pending->delete();
+
+        return redirect('/admin/parametres')->with('success', 'Paiement supprimé.');
     }
 
     private function generatePwaIcons(string $imageData): void
