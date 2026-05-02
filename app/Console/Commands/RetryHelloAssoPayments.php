@@ -18,16 +18,41 @@ class RetryHelloAssoPayments extends Command
     {
         $helloAssoService = app(HelloAssoService::class);
 
+        $countsByStatus = HelloAssoPendingPayment::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        Log::info('HelloAsso retry: démarrage', [
+            'counts_by_status' => $countsByStatus,
+        ]);
+        $this->info('Statuts en base : ' . json_encode($countsByStatus, JSON_UNESCAPED_UNICODE));
+
+        $excluded = HelloAssoPendingPayment::where('status', 'pending')
+            ->where('attempts', '>=', 5)
+            ->get(['id', 'payment_id', 'order_id', 'attempts', 'created_at', 'last_attempt_at', 'error_message']);
+
+        if ($excluded->isNotEmpty()) {
+            Log::warning('HelloAsso retry: paiements pending exclus (attempts >= 5)', [
+                'count' => $excluded->count(),
+                'items' => $excluded->toArray(),
+            ]);
+            $this->warn("{$excluded->count()} paiement(s) pending ignoré(s) car attempts >= 5.");
+            foreach ($excluded as $p) {
+                $this->warn("  - #{$p->id} payment={$p->payment_id} order={$p->order_id} attempts={$p->attempts} created={$p->created_at}");
+            }
+        }
+
         $pendingPayments = HelloAssoPendingPayment::where('status', 'pending')
             ->where('attempts', '<', 5)
             ->get();
 
         if ($pendingPayments->isEmpty()) {
-            $this->info('No pending payments to retry.');
+            $this->info('Aucun paiement à retraiter.');
             return 0;
         }
 
-        $this->info("Found {$pendingPayments->count()} pending payment(s) to retry.");
+        $this->info("{$pendingPayments->count()} paiement(s) à retraiter.");
 
         foreach ($pendingPayments as $pending) {
             $this->processRetry($pending, $helloAssoService);
@@ -38,6 +63,19 @@ class RetryHelloAssoPayments extends Command
 
     private function processRetry(HelloAssoPendingPayment $pending, HelloAssoService $helloAssoService): void
     {
+        Log::info('HelloAsso retry: traitement paiement', [
+            'id'              => $pending->id,
+            'payment_id'      => $pending->payment_id,
+            'order_id'        => $pending->order_id,
+            'amount'          => $pending->amount,
+            'payer_email'     => $pending->payer_email,
+            'attempts'        => $pending->attempts,
+            'created_at'      => (string) $pending->created_at,
+            'last_attempt_at' => (string) $pending->last_attempt_at,
+            'error_message'   => $pending->error_message,
+        ]);
+        $this->line("→ Traitement #{$pending->id} payment={$pending->payment_id} (tentatives actuelles : {$pending->attempts})");
+
         $pending->attempts++;
         $pending->last_attempt_at = now();
 
@@ -54,7 +92,15 @@ class RetryHelloAssoPayments extends Command
         }
 
         // Try API verification
+        $this->line("  Appel API HelloAsso verifyPayment({$pending->payment_id}, {$pending->order_id})…");
         $verifiedPayment = $helloAssoService->verifyPayment($pending->payment_id, $pending->order_id);
+
+        Log::info('HelloAsso retry: réponse verifyPayment', [
+            'payment_id' => $pending->payment_id,
+            'success'    => $verifiedPayment !== null,
+            'state'      => $verifiedPayment['state'] ?? null,
+            'order_id_returned' => $verifiedPayment['order']['id'] ?? null,
+        ]);
 
         if ($verifiedPayment) {
             $this->creditPayment($pending, $verifiedPayment);
