@@ -139,12 +139,28 @@ class ParametreController extends Controller
 
     public function runCron(): \Illuminate\Http\JsonResponse
     {
-        $exitCode = \Artisan::call('schedule:run');
-        $output   = \Artisan::output();
+        $schedule = app(\Illuminate\Console\Scheduling\Schedule::class);
+        $outputs  = [];
+        $exitCode = 0;
+
+        foreach ($schedule->events() as $event) {
+            $description = $event->description ?: $event->command ?: 'Closure';
+            try {
+                $event->run(app());
+                $outputs[] = "✓ {$description}";
+            } catch (\Throwable $e) {
+                $exitCode  = 1;
+                $outputs[] = "✗ {$description} : {$e->getMessage()}";
+            }
+        }
+
+        if (empty($outputs)) {
+            $outputs[] = 'Aucune tâche planifiée définie.';
+        }
 
         return response()->json([
             'exit_code' => $exitCode,
-            'output'    => trim($output),
+            'output'    => implode("\n", $outputs),
         ]);
     }
 
