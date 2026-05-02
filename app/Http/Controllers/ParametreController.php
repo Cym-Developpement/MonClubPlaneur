@@ -178,12 +178,31 @@ class ParametreController extends Controller
         $exitCode = 0;
 
         foreach ($events as $entry) {
+            $event    = $entry['event'];
+            $tempFile = null;
+
             try {
-                $entry['event']->run(app());
+                if (! ($event instanceof \Illuminate\Console\Scheduling\CallbackEvent)) {
+                    $tempFile = tempnam(sys_get_temp_dir(), 'cron-output-');
+                    $event->sendOutputTo($tempFile);
+                }
+
+                $event->run(app());
                 $outputs[] = "✓ {$entry['label']}";
+
+                if ($tempFile && is_file($tempFile)) {
+                    $captured = trim(file_get_contents($tempFile));
+                    if ($captured !== '') {
+                        $outputs[] = $captured;
+                    }
+                }
             } catch (\Throwable $e) {
                 $exitCode  = 1;
                 $outputs[] = "✗ {$entry['label']} : {$e->getMessage()}";
+            } finally {
+                if ($tempFile && is_file($tempFile)) {
+                    @unlink($tempFile);
+                }
             }
         }
 
