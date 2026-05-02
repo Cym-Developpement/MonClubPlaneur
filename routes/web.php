@@ -164,7 +164,7 @@ Route::post('/wikipassword', [App\Http\Controllers\WikiController::class, 'passw
 Route::get('/admin/parametres', [App\Http\Controllers\ParametreController::class, 'index'])->name('admin.parametres')->middleware('can:admin:super');
 Route::post('/admin/parametres', [App\Http\Controllers\ParametreController::class, 'update'])->name('admin.parametres.update')->middleware('can:admin:super');
 Route::post('/admin/parametres/autres', [App\Http\Controllers\ParametreController::class, 'updateAutres'])->name('admin.parametres.autres')->middleware('can:admin:super');
-Route::post('/admin/parametres/cron', [App\Http\Controllers\ParametreController::class, 'runCron'])->name('admin.parametres.cron')->middleware('can:admin:super');
+Route::post('/admin/parametres/cron/{key?}', [App\Http\Controllers\ParametreController::class, 'runCron'])->name('admin.parametres.cron')->middleware('can:admin:super');
 
 // GESTION DES ADMINISTRATEURS
 Route::get('/admin/admins', [App\Http\Controllers\admin::class, 'getAdmins'])->name('admins.index')->middleware('can:admin:super');

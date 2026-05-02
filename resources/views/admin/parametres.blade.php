@@ -129,8 +129,25 @@
                         </button>
                     </div>
 
-                    <button type="button" class="btn btn-outline-primary btn-sm" id="btnRunCron" onclick="runCron()">
-                        <i class="fas fa-play me-1"></i>Exécuter maintenant
+                    @if(!empty($cronEvents))
+                    <ul class="list-group mb-3">
+                        @foreach($cronEvents as $event)
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div>{{ $event['label'] }}</div>
+                                <code class="text-muted small">{{ $event['expression'] }}</code>
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm cron-task-btn"
+                                    data-key="{{ $event['key'] }}" onclick="runCron('{{ $event['key'] }}', this)">
+                                <i class="fas fa-play me-1"></i>Exécuter
+                            </button>
+                        </li>
+                        @endforeach
+                    </ul>
+                    @endif
+
+                    <button type="button" class="btn btn-primary btn-sm" id="btnRunCron" onclick="runCron(null, this)">
+                        <i class="fas fa-play me-1"></i>Exécuter toutes les tâches
                     </button>
 
                     <div id="cronResult" class="mt-3 d-none">
@@ -140,16 +157,19 @@
             </div>
 
             <script>
-            function runCron() {
-                const btn = document.getElementById('btnRunCron');
+            function runCron(key, btn) {
                 const resultDiv = document.getElementById('cronResult');
                 const outputPre = document.getElementById('cronOutput');
+                const originalHtml = btn.innerHTML;
 
                 btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Exécution en cours…';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Exécution…';
                 resultDiv.classList.add('d-none');
 
-                fetch('{{ route("admin.parametres.cron") }}', {
+                const baseUrl = '{{ route("admin.parametres.cron") }}';
+                const url = key ? baseUrl + '/' + encodeURIComponent(key) : baseUrl;
+
+                fetch(url, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -167,7 +187,7 @@
                 })
                 .finally(() => {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-play me-1"></i>Exécuter maintenant';
+                    btn.innerHTML = originalHtml;
                 });
             }
             </script>

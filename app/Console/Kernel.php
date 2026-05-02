@@ -36,9 +36,11 @@ class Kernel extends ConsoleKernel
             } catch (\Exception $e) {
                 \Log::error('Cron alerte compte débiteur : ' . $e->getMessage());
             }
-        })->dailyAt('08:00');
+        })->dailyAt('08:00')->name('Alerte mensuelle comptes débiteurs');
 
-        $schedule->command('helloasso:retry-payments')->everyFiveMinutes();
+        $schedule->command('helloasso:retry-payments')
+            ->everyFiveMinutes()
+            ->description('Retry des paiements HelloAsso en attente');
     }
 
     /**

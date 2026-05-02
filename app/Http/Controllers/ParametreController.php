@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\parametre;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ParametreController extends Controller
 {
@@ -53,7 +54,29 @@ class ParametreController extends Controller
                 return count($parts) > 1 ? trim($parts[0]) : 'Divers';
             });
 
-        return view('admin.parametres', compact('params', 'autresParams'));
+        $cronEvents = array_map(
+            fn ($e) => ['key' => $e['key'], 'label' => $e['label'], 'expression' => $e['expression']],
+            $this->cronEvents()
+        );
+
+        return view('admin.parametres', compact('params', 'autresParams', 'cronEvents'));
+    }
+
+    private function cronEvents(): array
+    {
+        $schedule = app(\Illuminate\Console\Scheduling\Schedule::class);
+        $list = [];
+        foreach ($schedule->events() as $i => $event) {
+            $label = $event->description ?: $event->command ?: 'Tâche planifiée #' . ($i + 1);
+            $key   = Str::slug($label) ?: 'event-' . $i;
+            $list[] = [
+                'key'        => $key,
+                'label'      => $label,
+                'expression' => $event->expression,
+                'event'      => $event,
+            ];
+        }
+        return $list;
     }
 
     public function update(Request $request)
@@ -137,20 +160,30 @@ class ParametreController extends Controller
         $p->save();
     }
 
-    public function runCron(): \Illuminate\Http\JsonResponse
+    public function runCron(?string $key = null): \Illuminate\Http\JsonResponse
     {
-        $schedule = app(\Illuminate\Console\Scheduling\Schedule::class);
+        $events = $this->cronEvents();
+
+        if ($key !== null) {
+            $events = array_values(array_filter($events, fn ($e) => $e['key'] === $key));
+            if (empty($events)) {
+                return response()->json([
+                    'exit_code' => 1,
+                    'output'    => "Tâche introuvable : {$key}",
+                ], 404);
+            }
+        }
+
         $outputs  = [];
         $exitCode = 0;
 
-        foreach ($schedule->events() as $event) {
-            $description = $event->description ?: $event->command ?: 'Closure';
+        foreach ($events as $entry) {
             try {
-                $event->run(app());
-                $outputs[] = "✓ {$description}";
+                $entry['event']->run(app());
+                $outputs[] = "✓ {$entry['label']}";
             } catch (\Throwable $e) {
                 $exitCode  = 1;
-                $outputs[] = "✗ {$description} : {$e->getMessage()}";
+                $outputs[] = "✗ {$entry['label']} : {$e->getMessage()}";
             }
         }
 
