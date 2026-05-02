@@ -34,6 +34,19 @@ class HelloAssoService
     }
 
     /**
+     * Headers communs pour les appels API HelloAsso.
+     * Sans User-Agent explicite, Cloudflare renvoie un challenge 403 sur certains endpoints.
+     */
+    private function apiHeaders(string $accessToken, array $extra = []): array
+    {
+        return array_merge([
+            'Authorization' => 'Bearer ' . $accessToken,
+            'Accept'        => 'application/json',
+            'User-Agent'    => 'MonClubPlaneur/1.0 (Laravel; +helloasso-integration)',
+        ], $extra);
+    }
+
+    /**
      * Créer une intention de paiement HelloAsso Checkout
      *
      * @param array $data Données du paiement
@@ -48,10 +61,9 @@ class HelloAssoService
                 return null;
             }
 
-            $response = Http::withHeaders([
+            $response = Http::withHeaders($this->apiHeaders($accessToken, [
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . $accessToken,
-            ])->post($this->apiUrl . '/organizations/' . $this->organizationSlug . '/checkout-intents', $data);
+            ]))->post($this->apiUrl . '/organizations/' . $this->organizationSlug . '/checkout-intents', $data);
 
             if ($response->successful()) {
                 return $response->json();
@@ -90,9 +102,8 @@ class HelloAssoService
                 return null;
             }
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-            ])->get($this->apiUrl . '/organizations/' . $this->organizationSlug . '/checkout-intents/' . $checkoutIntentId);
+            $response = Http::withHeaders($this->apiHeaders($accessToken))
+                ->get($this->apiUrl . '/organizations/' . $this->organizationSlug . '/checkout-intents/' . $checkoutIntentId);
 
             if ($response->successful()) {
                 return $response->json();
@@ -131,9 +142,8 @@ class HelloAssoService
                 return null;
             }
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-            ])->get($this->apiUrl . '/organizations/' . $this->organizationSlug . '/orders/' . $orderId);
+            $response = Http::withHeaders($this->apiHeaders($accessToken))
+                ->get($this->apiUrl . '/organizations/' . $this->organizationSlug . '/orders/' . $orderId);
 
             if ($response->successful()) {
                 return $response->json();
@@ -442,9 +452,8 @@ class HelloAssoService
 
             // Utiliser l'endpoint correct selon la documentation HelloAsso
             // GET https://api.helloasso.com/v5/payments/{paymentId}
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-            ])->get($this->apiUrl . '/payments/' . $paymentId);
+            $response = Http::withHeaders($this->apiHeaders($accessToken))
+                ->get($this->apiUrl . '/payments/' . $paymentId);
 
             if ($response->successful()) {
                 $paymentData = $response->json();
