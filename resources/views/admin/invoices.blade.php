@@ -104,6 +104,12 @@
                     @if($latestInvoices->isEmpty())
                         <div class="alert alert-info mb-0">Aucune facture à envoyer.</div>
                     @else
+                    @php
+                        $prevMonthStart = \Carbon\Carbon::now()->subMonthNoOverflow()->startOfMonth()->timestamp;
+                        $prevMonthEnd   = \Carbon\Carbon::now()->subMonthNoOverflow()->endOfMonth()->timestamp;
+                        $inPrevMonth    = fn($i) => $i->emittedAt && $i->emittedAt >= $prevMonthStart && $i->emittedAt <= $prevMonthEnd;
+                        $allInPrevMonth = $latestInvoices->every($inPrevMonth);
+                    @endphp
                     <form id="sendInvoicesForm" method="POST">
                         @csrf
                         <div class="table-responsive mb-3">
@@ -111,7 +117,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th class="text-center" style="width:40px">
-                                            <input type="checkbox" id="checkAll" checked
+                                            <input type="checkbox" id="checkAll" @checked($allInPrevMonth)
                                                    onchange="document.querySelectorAll('.invoice-check').forEach(c => c.checked = this.checked); updateSendButtons();">
                                         </th>
                                         <th>Membre</th>
@@ -120,11 +126,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($latestInvoices->sortBy(fn($i) => $i->user->name ?? '') as $inv)
+                                    @foreach($latestInvoices->sortByDesc('emittedAt') as $inv)
                                     <tr>
                                         <td class="text-center">
                                             <input type="checkbox" class="invoice-check" name="invoiceIds[]"
-                                                   value="{{ $inv->id }}" checked onchange="updateSendButtons()">
+                                                   value="{{ $inv->id }}" @checked($inPrevMonth($inv)) onchange="updateSendButtons()">
                                         </td>
                                         <td>{{ $inv->user->name ?? '—' }}</td>
                                         <td>{{ $inv->invoiceNumber }}</td>
@@ -157,6 +163,7 @@
                             const allChecked = document.querySelectorAll('.invoice-check:checked').length === document.querySelectorAll('.invoice-check').length;
                             document.getElementById('checkAll').checked = allChecked;
                         }
+                        updateSendButtons();
                     </script>
                     @endif
                 </div>
