@@ -72,5 +72,9 @@
         </tr>
     </table>
 
+    @if(!empty($trackingUrl))
+    <img src="{{ $trackingUrl }}" width="1" height="1" alt="" style="display:none;border:0;width:1px;height:1px;">
+    @endif
+
 </body>
 </html>

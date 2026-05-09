@@ -111,6 +111,7 @@ Route::post('/invoiceCancel', [App\Http\Controllers\admin::class, 'cancelInvoice
 Route::get('/invoicePdf/{id}', [App\Http\Controllers\admin::class, 'invoicePdf'])->name('invoicePdf')->middleware('can:admin:invoices');
 Route::post('/admin/invoices/send-test', [App\Http\Controllers\admin::class, 'sendInvoicesTest'])->name('admin.invoices.sendTest')->middleware('can:admin:invoices');
 Route::post('/admin/invoices/send', [App\Http\Controllers\admin::class, 'sendInvoices'])->name('admin.invoices.send')->middleware('can:admin:invoices');
+Route::get('/track/invoice/{invoice}/opened', [App\Http\Controllers\InvoiceTrackingController::class, 'opened'])->name('invoice.track.opened')->middleware('signed');
 Route::get('/sendAccountState', [App\Http\Controllers\admin::class, 'sendAccountState'])->name('sendAccountState')->middleware('can:admin');
 Route::get('/instruction', [App\Http\Controllers\admin::class, 'instruction'])->name('instruction')->middleware('can:admin');
 Route::get('/addInstructeur-{id}', [App\Http\Controllers\admin::class, 'addInstructeur'])->name('addInstructeur')->middleware('can:admin');

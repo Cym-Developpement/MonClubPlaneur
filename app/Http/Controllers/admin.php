@@ -2562,7 +2562,8 @@ class admin extends Controller
                 Mail::to($invoice->user->email)->send(new SendInvoice(
                     $invoice->user->name,
                     $invoice->invoiceNumber,
-                    $invoice->pdfPath
+                    $invoice->pdfPath,
+                    $invoice->id
                 ));
                 AuditLog::log("facture {$invoice->invoiceNumber} envoyée à {$invoice->user->email} ({$invoice->user->name})");
                 $count++;

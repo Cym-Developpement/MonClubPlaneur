@@ -6,6 +6,7 @@ use App\Models\parametre;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\URL;
 
 class SendInvoice extends Mailable
 {
@@ -14,12 +15,14 @@ class SendInvoice extends Mailable
     public $userName;
     public $invoiceNumber;
     public $pdfPath;
+    public $invoiceId;
 
-    public function __construct(string $userName, string $invoiceNumber, string $pdfPath)
+    public function __construct(string $userName, string $invoiceNumber, string $pdfPath, ?int $invoiceId = null)
     {
         $this->userName      = $userName;
         $this->invoiceNumber = $invoiceNumber;
         $this->pdfPath       = $pdfPath;
+        $this->invoiceId     = $invoiceId;
     }
 
     public function build()
@@ -29,6 +32,10 @@ class SendInvoice extends Mailable
         $tresorier  = parametre::getValue('club-tresorier', 'Yann Challet');
         $email      = parametre::getValue('club-email', 'yann@cymdev.com');
         $logo       = parametre::getValue('club-logo', '');
+
+        $trackingUrl = $this->invoiceId
+            ? URL::signedRoute('invoice.track.opened', ['invoice' => $this->invoiceId])
+            : null;
 
         return $this->subject("Facture {$this->invoiceNumber} — {$nomCourt}")
                     ->attachFromStorage($this->pdfPath)
@@ -41,6 +48,7 @@ class SendInvoice extends Mailable
                         'tresorier'     => $tresorier,
                         'emailClub'     => $email,
                         'logo'          => $logo,
+                        'trackingUrl'   => $trackingUrl,
                     ]);
     }
 }
