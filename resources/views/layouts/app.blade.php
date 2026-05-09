@@ -39,7 +39,7 @@
         z-index: 100000;
       }
       body {
-        background-image: url('/img/back.jpg');
+        background-image: url('/img/IMG_20260425_161256838.jpg');
         background-repeat: no-repeat;
         background-attachment: fixed;
       }
