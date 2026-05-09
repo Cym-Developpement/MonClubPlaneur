@@ -105,10 +105,10 @@
                         <div class="alert alert-info mb-0">Aucune facture à envoyer.</div>
                     @else
                     @php
-                        $prevMonthStart = \Carbon\Carbon::now()->subMonthNoOverflow()->startOfMonth()->timestamp;
-                        $prevMonthEnd   = \Carbon\Carbon::now()->subMonthNoOverflow()->endOfMonth()->timestamp;
-                        $inPrevMonth    = fn($i) => $i->emittedAt && $i->emittedAt >= $prevMonthStart && $i->emittedAt <= $prevMonthEnd;
-                        $allInPrevMonth = $latestInvoices->every($inPrevMonth);
+                        $monthStart    = \Carbon\Carbon::now()->startOfMonth()->timestamp;
+                        $monthEnd      = \Carbon\Carbon::now()->endOfMonth()->timestamp;
+                        $inMonth       = fn($i) => $i->emittedAt && $i->emittedAt >= $monthStart && $i->emittedAt <= $monthEnd;
+                        $allInMonth    = $latestInvoices->every($inMonth);
                     @endphp
                     <form id="sendInvoicesForm" method="POST">
                         @csrf
@@ -117,7 +117,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th class="text-center" style="width:40px">
-                                            <input type="checkbox" id="checkAll" @checked($allInPrevMonth)
+                                            <input type="checkbox" id="checkAll" @checked($allInMonth)
                                                    onchange="document.querySelectorAll('.invoice-check').forEach(c => c.checked = this.checked); updateSendButtons();">
                                         </th>
                                         <th>Membre</th>
@@ -130,7 +130,7 @@
                                     <tr>
                                         <td class="text-center">
                                             <input type="checkbox" class="invoice-check" name="invoiceIds[]"
-                                                   value="{{ $inv->id }}" @checked($inPrevMonth($inv)) onchange="updateSendButtons()">
+                                                   value="{{ $inv->id }}" @checked($inMonth($inv)) onchange="updateSendButtons()">
                                         </td>
                                         <td>{{ $inv->user->name ?? '—' }}</td>
                                         <td>{{ $inv->invoiceNumber }}</td>
