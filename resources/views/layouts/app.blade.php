@@ -42,6 +42,8 @@
         background-image: url('/img/IMG_20260425_161256838.jpg');
         background-repeat: no-repeat;
         background-attachment: fixed;
+        background-position: center center;
+        background-size: cover;
       }
       @media (max-width: 768px) {
         body {
