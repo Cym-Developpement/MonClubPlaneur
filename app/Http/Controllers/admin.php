@@ -2516,18 +2516,33 @@ class admin extends Controller
         $invoices = Invoice::with('user')->whereIn('id', $invoiceIds)->get();
         $adminEmail = auth()->user()->email;
         $count = 0;
+        $errors = 0;
 
         foreach ($invoices as $invoice) {
-            if (!$invoice->user || !$invoice->pdfPath) continue;
-            Mail::to($adminEmail)->send(new SendInvoice(
-                $invoice->user->name,
-                $invoice->invoiceNumber,
-                $invoice->pdfPath
-            ));
-            $count++;
+            if (!$invoice->user || !$invoice->pdfPath) {
+                $errors++;
+                AuditLog::log("envoi test ignoré : facture {$invoice->invoiceNumber} (PDF ou utilisateur manquant)");
+                continue;
+            }
+            try {
+                Mail::to($adminEmail)->send(new SendInvoice(
+                    $invoice->user->name,
+                    $invoice->invoiceNumber,
+                    $invoice->pdfPath
+                ));
+                $count++;
+            } catch (\Throwable $e) {
+                $errors++;
+                AuditLog::log("ÉCHEC envoi test facture {$invoice->invoiceNumber} à {$adminEmail} : {$e->getMessage()}");
+            }
         }
 
-        return back()->with('status', "{$count} facture(s) envoyée(s) en test à {$adminEmail}.");
+        AuditLog::log("envoi test : {$count} facture(s) envoyée(s) à {$adminEmail}" . ($errors > 0 ? ", {$errors} échec(s)/ignorée(s)" : ''));
+
+        $msg = "{$count} facture(s) envoyée(s) en test à {$adminEmail}.";
+        if ($errors > 0) $msg .= " {$errors} échec(s) ou ignorée(s).";
+
+        return back()->with('status', $msg);
     }
 
     public function sendInvoices(Request $request)
@@ -2540,18 +2555,25 @@ class admin extends Controller
         foreach ($invoices as $invoice) {
             if (!$invoice->user || !$invoice->pdfPath || !$invoice->user->email) {
                 $errors++;
+                AuditLog::log("envoi facture {$invoice->invoiceNumber} ignoré (email ou PDF manquant)");
                 continue;
             }
-            Mail::to($invoice->user->email)->send(new SendInvoice(
-                $invoice->user->name,
-                $invoice->invoiceNumber,
-                $invoice->pdfPath
-            ));
-            $count++;
+            try {
+                Mail::to($invoice->user->email)->send(new SendInvoice(
+                    $invoice->user->name,
+                    $invoice->invoiceNumber,
+                    $invoice->pdfPath
+                ));
+                AuditLog::log("facture {$invoice->invoiceNumber} envoyée à {$invoice->user->email} ({$invoice->user->name})");
+                $count++;
+            } catch (\Throwable $e) {
+                $errors++;
+                AuditLog::log("ÉCHEC envoi facture {$invoice->invoiceNumber} à {$invoice->user->email} : {$e->getMessage()}");
+            }
         }
 
         $msg = "{$count} facture(s) envoyée(s) aux membres.";
-        if ($errors > 0) $msg .= " {$errors} ignorée(s) (email ou PDF manquant).";
+        if ($errors > 0) $msg .= " {$errors} échec(s) ou ignorée(s).";
 
         return back()->with('status', $msg);
     }
