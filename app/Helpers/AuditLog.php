@@ -24,6 +24,16 @@ class AuditLog
      */
     public static function observe(Model $model, string $type): void
     {
+        if ($type === self::UPDATED) {
+            $significant = array_diff(
+                array_keys($model->getChanges()),
+                ['remember_token', 'updated_at']
+            );
+            if (empty($significant)) {
+                return;
+            }
+        }
+
         $user     = auth()->user();
         $userName = $user ? $user->name : 'Système';
 
