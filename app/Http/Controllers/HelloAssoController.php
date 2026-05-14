@@ -46,12 +46,14 @@ class HelloAssoController extends Controller
                     'eventType' => $data['eventType']
                 ]);
                 
+                $sourceIps = array_unique(array_merge([$request->ip()], $request->ips()));
+
                 switch ($data['eventType']) {
                     case 'Order':
                         $this->handleOrderNotification($data);
                         break;
                     case 'Payment':
-                        $this->handlePaymentNotification($data);
+                        $this->handlePaymentNotification($data, $sourceIps);
                         break;
                     default:
                         Log::warning('Type de notification HelloAsso non géré', [
@@ -149,7 +151,7 @@ class HelloAssoController extends Controller
     /**
      * Gérer les notifications de paiement
      */
-    private function handlePaymentNotification(array $data)
+    private function handlePaymentNotification(array $data, array $sourceIps = [])
     {
         $paymentId = $data['data']['id'] ?? null;
         $orderId = $data['data']['order']['id'] ?? null;
@@ -158,7 +160,7 @@ class HelloAssoController extends Controller
         $installmentNumber = $data['data']['installmentNumber'] ?? 'N/A';
         $payerEmail = $data['data']['payer']['email'] ?? 'N/A';
         $payerName = ($data['data']['payer']['firstName'] ?? '') . ' ' . ($data['data']['payer']['lastName'] ?? '');
-        
+
         Log::info('=== NOTIFICATION PAIEMENT HELLOASSO ===', [
             'payment_id' => $paymentId,
             'payment_status' => $paymentStatus,
@@ -167,59 +169,101 @@ class HelloAssoController extends Controller
             'order_id' => $orderId,
             'payer_email' => $payerEmail,
             'payer_name' => trim($payerName),
+            'source_ips' => $sourceIps,
             'full_data' => $data
         ]);
-        
-        // Vérifier le paiement via l'API HelloAsso
-        if ($paymentId && $orderId) {
-            // Anti-doublon : vérifier si ce paiement a déjà été crédité ou est en attente
-            if ($this->isPaymentAlreadyProcessed($paymentId)) {
-                Log::info('Paiement HelloAsso déjà traité, ignoré (doublon)', [
-                    'payment_id' => $paymentId,
-                ]);
-                return;
-            }
 
-            $verifiedPayment = $this->helloAssoService->verifyPayment($paymentId, $orderId);
-
-            if ($verifiedPayment) {
-                Log::info('Paiement HelloAsso vérifié et validé', [
-                    'payment_id' => $paymentId,
-                    'order_id' => $orderId,
-                    'verified_amount' => $verifiedPayment['amount'] ?? 'N/A',
-                    'verified_state' => $verifiedPayment['state'] ?? 'N/A',
-                    'verified_installment' => $verifiedPayment['installmentNumber'] ?? 'N/A'
-                ]);
-
-                // Traiter le paiement vérifié
-                $this->processVerifiedPayment($verifiedPayment, $payerEmail);
-
-            } else {
-                // Fallback : stocker le paiement pour retry ultérieur
-                Log::warning('Échec de la vérification API HelloAsso, paiement mis en attente pour retry', [
-                    'payment_id' => $paymentId,
-                    'order_id' => $orderId
-                ]);
-
-                HelloAssoPendingPayment::updateOrCreate(
-                    ['payment_id' => $paymentId],
-                    [
-                        'order_id' => $orderId,
-                        'amount' => is_numeric($amount) ? (int) $amount : 0,
-                        'payer_email' => $payerEmail,
-                        'payer_name' => trim($payerName),
-                        'installment_number' => is_numeric($installmentNumber) ? (int) $installmentNumber : 1,
-                        'webhook_data' => $data,
-                        'status' => 'pending',
-                    ]
-                );
-            }
-        } else {
+        if (! $paymentId || ! $orderId) {
             Log::error('Données de paiement HelloAsso incomplètes', [
                 'payment_id' => $paymentId,
                 'order_id' => $orderId
             ]);
+            return;
         }
+
+        // Anti-doublon : vérifier si ce paiement a déjà été crédité ou est en attente
+        if ($this->isPaymentAlreadyProcessed($paymentId)) {
+            Log::info('Paiement HelloAsso déjà traité, ignoré (doublon)', [
+                'payment_id' => $paymentId,
+            ]);
+            return;
+        }
+
+        // Si le webhook arrive depuis une IP HelloAsso de confiance, on peut faire
+        // confiance au payload directement et éviter l'appel API (bloqué par Cloudflare).
+        if ($this->isTrustedHelloAssoIp($sourceIps) && $paymentStatus === 'Authorized') {
+            Log::info('Webhook HelloAsso depuis IP de confiance — traitement direct sans vérification API', [
+                'payment_id' => $paymentId,
+                'source_ips' => $sourceIps,
+            ]);
+            $this->processVerifiedPayment($data['data'], $payerEmail);
+            return;
+        }
+
+        // Récupérer le checkoutIntentId si on l'a (cache /return ou row pending pré-existante).
+        $existingPending = HelloAssoPendingPayment::where('payment_id', $paymentId)
+            ->orWhere('order_id', $orderId)
+            ->first();
+        $checkoutIntentId = $existingPending?->checkout_intent_id
+            ?? \Cache::get('helloasso_intent_for_order_' . $orderId);
+
+        $verifiedPayment = $this->helloAssoService->verifyPayment($paymentId, $orderId, $checkoutIntentId);
+
+        if ($verifiedPayment) {
+            Log::info('Paiement HelloAsso vérifié et validé', [
+                'payment_id' => $paymentId,
+                'order_id' => $orderId,
+                'verified_amount' => $verifiedPayment['amount'] ?? 'N/A',
+                'verified_state' => $verifiedPayment['state'] ?? 'N/A',
+                'verified_installment' => $verifiedPayment['installmentNumber'] ?? 'N/A'
+            ]);
+
+            $this->processVerifiedPayment($verifiedPayment, $payerEmail);
+            return;
+        }
+
+        // Fallback : stocker le paiement pour retry ultérieur
+        Log::warning('Échec de la vérification API HelloAsso, paiement mis en attente pour retry', [
+            'payment_id' => $paymentId,
+            'order_id' => $orderId
+        ]);
+
+        HelloAssoPendingPayment::updateOrCreate(
+            ['payment_id' => $paymentId],
+            [
+                'order_id' => $orderId,
+                'checkout_intent_id' => $this->resolveCheckoutIntentId($orderId),
+                'amount' => is_numeric($amount) ? (int) $amount : 0,
+                'payer_email' => $payerEmail,
+                'payer_name' => trim($payerName),
+                'installment_number' => is_numeric($installmentNumber) ? (int) $installmentNumber : 1,
+                'webhook_data' => $data,
+                'status' => 'pending',
+            ]
+        );
+    }
+
+    /**
+     * Récupère le checkoutIntentId stocké en cache par la route /helloasso/return
+     * pour cette commande. Permet d'enrichir la row pending même si le webhook
+     * arrive avant que la route return ne soit hit.
+     */
+    private function resolveCheckoutIntentId(string $orderId): ?string
+    {
+        return \Cache::pull('helloasso_intent_for_order_' . $orderId);
+    }
+
+    /**
+     * Vérifie si l'IP source du webhook fait partie des IPs HelloAsso de confiance.
+     * Liste configurable via le paramètre `helloasso-trusted_ips` (séparées par virgule).
+     * Par défaut : IP production HelloAsso documentée.
+     */
+    private function isTrustedHelloAssoIp(array $sourceIps): bool
+    {
+        $configured = parametre::getValue('helloasso-trusted_ips', '51.138.206.200');
+        $trustedIps = array_filter(array_map('trim', explode(',', $configured)));
+
+        return (bool) array_intersect($trustedIps, array_filter($sourceIps));
     }
     
     /**
@@ -273,11 +317,25 @@ class HelloAssoController extends Controller
                     : "CB Échéance {$installmentNumber} - HelloAsso";
                 $observation = 'paiement : '.$paymentId.' / Commande : '.$orderId;
                 transaction::add($user->id, $amount, $description, $observation);
-                
-                // Marquer le pending payment comme traité si existant
-                HelloAssoPendingPayment::where('payment_id', $paymentId)
-                    ->where('status', 'pending')
-                    ->update(['status' => 'processed', 'processed_at' => now()]);
+
+                // Toujours laisser une trace en base, en conservant le checkout_intent_id
+                // si on l'a (depuis la route /helloasso/return ou déjà stocké).
+                $existing = HelloAssoPendingPayment::where('payment_id', $paymentId)->first();
+                HelloAssoPendingPayment::updateOrCreate(
+                    ['payment_id' => $paymentId],
+                    [
+                        'order_id'           => $orderId,
+                        'checkout_intent_id' => $existing?->checkout_intent_id ?? $this->resolveCheckoutIntentId((string) $orderId),
+                        'amount'             => is_numeric($amount) ? (int) $amount : 0,
+                        'payer_email'        => $payerEmail,
+                        'payer_name'         => $existing?->payer_name ?? '',
+                        'installment_number' => is_numeric($installmentNumber) ? (int) $installmentNumber : 1,
+                        'webhook_data'       => $paymentData,
+                        'status'             => 'processed',
+                        'processed_at'       => now(),
+                        'error_message'      => null,
+                    ]
+                );
 
                 Log::info('Paiement traité avec succès', [
                     'user_id' => $user->id,
@@ -339,7 +397,29 @@ class HelloAssoController extends Controller
             'all_params' => $request->all()
         ]);
 
-        // Rediriger vers la page HelloAsso avec une notification de traitement
+        // Stocker le checkoutIntentId sur la row pending si elle existe (le webhook
+        // peut être arrivé avant ce retour). Sinon, on l'écrira au prochain webhook
+        // via le cache ci-dessous.
+        if ($checkoutIntentId && $orderId) {
+            $updated = HelloAssoPendingPayment::where('order_id', $orderId)
+                ->whereNull('checkout_intent_id')
+                ->update(['checkout_intent_id' => $checkoutIntentId]);
+
+            if ($updated) {
+                Log::info('HelloAsso retour: checkout_intent_id stocké sur la row pending', [
+                    'order_id'           => $orderId,
+                    'checkout_intent_id' => $checkoutIntentId,
+                ]);
+            } else {
+                // Pas encore de row → on garde le mapping en cache pour que le webhook le récupère
+                \Cache::put('helloasso_intent_for_order_' . $orderId, $checkoutIntentId, now()->addDay());
+                Log::info('HelloAsso retour: checkout_intent_id mis en cache (webhook pas encore arrivé)', [
+                    'order_id'           => $orderId,
+                    'checkout_intent_id' => $checkoutIntentId,
+                ]);
+            }
+        }
+
         return redirect()->route('helloasso.page')->with('info', 'Votre paiement est en cours de traitement. Vous recevrez une confirmation par email une fois le traitement terminé.');
     }
 

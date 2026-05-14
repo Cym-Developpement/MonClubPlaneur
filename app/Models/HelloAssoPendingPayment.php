@@ -11,6 +11,7 @@ class HelloAssoPendingPayment extends Model
     protected $fillable = [
         'payment_id',
         'order_id',
+        'checkout_intent_id',
         'amount',
         'payer_email',
         'payer_name',

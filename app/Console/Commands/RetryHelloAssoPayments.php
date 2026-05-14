@@ -94,9 +94,10 @@ class RetryHelloAssoPayments extends Command
             return;
         }
 
-        // Try API verification
-        $this->line("  Appel API HelloAsso verifyPayment({$pending->payment_id}, {$pending->order_id})…");
-        $verifiedPayment = $helloAssoService->verifyPayment($pending->payment_id, $pending->order_id);
+        // Try API verification — use checkout-intent endpoint if we have the id (Cloudflare-friendlier scope).
+        $checkoutIntentId = $pending->checkout_intent_id;
+        $this->line("  Appel API HelloAsso verifyPayment({$pending->payment_id}, order={$pending->order_id}, intent=" . ($checkoutIntentId ?: 'none') . ")…");
+        $verifiedPayment = $helloAssoService->verifyPayment($pending->payment_id, $pending->order_id, $checkoutIntentId);
 
         Log::info('HelloAsso retry: réponse verifyPayment', [
             'payment_id' => $pending->payment_id,

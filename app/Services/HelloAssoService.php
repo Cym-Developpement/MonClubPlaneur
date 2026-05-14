@@ -468,10 +468,17 @@ class HelloAssoService
      * @param string $orderId
      * @return array|null
      */
-    public function verifyPayment(string $paymentId, string $orderId)
+    public function verifyPayment(string $paymentId, string $orderId, ?string $checkoutIntentId = null)
     {
         $this->lastApiError = null;
-        $endpoint = $this->apiUrl . '/orders/' . $orderId;
+
+        // Flow privilégié quand on a le checkoutIntentId : endpoint Checkout-scope documenté
+        // GET /v5/organizations/{slug}/checkout-intents/{checkoutIntentId}
+        // Scope Cloudflare différent du couple /payments + /orders qui sont bloqués.
+        $useCheckoutIntent = ! empty($checkoutIntentId);
+        $endpoint = $useCheckoutIntent
+            ? $this->apiUrl . '/organizations/' . $this->organizationSlug . '/checkout-intents/' . $checkoutIntentId
+            : $this->apiUrl . '/orders/' . $orderId;
 
         try {
             $accessToken = $this->getValidAccessToken();
@@ -486,20 +493,19 @@ class HelloAssoService
                 return null;
             }
 
-            // Flow documenté HelloAsso : GET /v5/orders/{orderId}
-            // Renvoie la commande complète avec sa liste de paiements.
             $response = Http::withHeaders($this->apiHeaders($accessToken))->get($endpoint);
 
             if (! $response->successful()) {
                 $status = $response->status();
                 $body   = $response->body();
 
-                Log::error('Erreur HelloAsso Get Order', [
-                    'status'        => $status,
-                    'body'          => $body,
-                    'payment_id'    => $paymentId,
-                    'order_id'      => $orderId,
-                    'api_endpoint'  => $endpoint,
+                Log::error('Erreur HelloAsso verifyPayment', [
+                    'status'             => $status,
+                    'body'               => $body,
+                    'payment_id'         => $paymentId,
+                    'order_id'           => $orderId,
+                    'checkout_intent_id' => $checkoutIntentId,
+                    'api_endpoint'       => $endpoint,
                 ]);
 
                 $this->lastApiError = [
@@ -512,14 +518,34 @@ class HelloAssoService
                 return null;
             }
 
-            $orderData = $response->json();
+            $payload = $response->json();
+
+            // Quand on passe par /checkout-intents/{id}, l'order est imbriqué dans la
+            // réponse sous la clé "order" (présente uniquement si paiement autorisé).
+            // Quand on passe par /orders/{id}, c'est directement l'order.
+            $orderData = $useCheckoutIntent ? ($payload['order'] ?? null) : $payload;
+
+            if (! $orderData) {
+                Log::warning('verifyPayment: pas d\'order dans la réponse checkout-intent', [
+                    'payment_id'         => $paymentId,
+                    'checkout_intent_id' => $checkoutIntentId,
+                ]);
+                $this->lastApiError = [
+                    'status'   => 200,
+                    'summary'  => "Le checkout-intent {$checkoutIntentId} n'a pas (encore) d'order associé — paiement probablement non autorisé",
+                    'body'     => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                    'endpoint' => $endpoint,
+                ];
+                return null;
+            }
 
             Log::info('Commande HelloAsso récupérée via API', [
-                'order_id'      => $orderId,
-                'payment_id'    => $paymentId,
-                'api_endpoint'  => $endpoint,
-                'order_state'   => $orderData['state'] ?? 'N/A',
-                'payment_count' => count($orderData['payments'] ?? []),
+                'order_id'           => $orderId,
+                'payment_id'         => $paymentId,
+                'checkout_intent_id' => $checkoutIntentId,
+                'api_endpoint'       => $endpoint,
+                'order_state'        => $orderData['state'] ?? 'N/A',
+                'payment_count'      => count($orderData['payments'] ?? []),
             ]);
 
             // Retrouver le paiement individuel dans la liste payments[] de la commande
@@ -549,6 +575,7 @@ class HelloAssoService
             Log::info('Paiement HelloAsso vérifié via la commande', [
                 'payment_id'         => $paymentId,
                 'order_id'           => $orderId,
+                'checkout_intent_id' => $checkoutIntentId,
                 'order_state'        => $orderData['state'] ?? 'N/A',
                 'payment_state'      => $matchedPayment['state'] ?? 'N/A',
                 'amount'             => $matchedPayment['amount'] ?? 'N/A',
@@ -567,7 +594,7 @@ class HelloAssoService
                 'orderState'        => $orderData['state']                  ?? null,
             ];
         } catch (Exception $e) {
-            Log::error('Exception HelloAsso Get Order', [
+            Log::error('Exception HelloAsso verifyPayment', [
                 'message'      => $e->getMessage(),
                 'payment_id'   => $paymentId,
                 'order_id'     => $orderId,

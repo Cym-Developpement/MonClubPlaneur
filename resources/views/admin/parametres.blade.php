@@ -231,6 +231,9 @@
                                         <div class="fw-semibold">{{ $p->payer_name ?: '—' }}</div>
                                         <small class="text-muted">{{ $p->payer_email }}</small><br>
                                         <small class="text-muted">paiement {{ $p->payment_id }} / commande {{ $p->order_id }}</small>
+                                        @if($p->checkout_intent_id)
+                                            <br><small class="text-muted">checkout intent {{ $p->checkout_intent_id }}</small>
+                                        @endif
                                     </td>
                                     <td><strong>{{ number_format($p->amount / 100, 2, ',', ' ') }} €</strong></td>
                                     <td><small>{{ $p->created_at?->format('d/m/Y H:i') }}</small></td>
