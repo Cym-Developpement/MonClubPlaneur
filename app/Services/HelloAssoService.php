@@ -471,94 +471,114 @@ class HelloAssoService
     public function verifyPayment(string $paymentId, string $orderId)
     {
         $this->lastApiError = null;
+        $endpoint = $this->apiUrl . '/organizations/' . $this->organizationSlug . '/orders/' . $orderId;
 
         try {
             $accessToken = $this->getValidAccessToken();
             if (!$accessToken) {
                 Log::error('HelloAssoService: Impossible d\'obtenir un jeton d\'accès pour vérifier le paiement.');
                 $this->lastApiError = [
-                    'status'  => 0,
-                    'summary' => 'Échec d\'obtention du jeton OAuth',
-                    'body'    => '',
-                    'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
+                    'status'   => 0,
+                    'summary'  => 'Échec d\'obtention du jeton OAuth',
+                    'body'     => '',
+                    'endpoint' => $endpoint,
                 ];
                 return null;
             }
 
-            // Utiliser l'endpoint correct selon la documentation HelloAsso
-            // GET https://api.helloasso.com/v5/payments/{paymentId}
-            $response = Http::withHeaders($this->apiHeaders($accessToken))
-                ->get($this->apiUrl . '/payments/' . $paymentId);
+            // Flow documenté HelloAsso : GET /v5/organizations/{slug}/orders/{orderId}
+            // Renvoie la commande complète avec sa liste de paiements.
+            $response = Http::withHeaders($this->apiHeaders($accessToken))->get($endpoint);
 
-            if ($response->successful()) {
-                $paymentData = $response->json();
-                
-                Log::info('Paiement HelloAsso récupéré via API', [
-                    'payment_id' => $paymentId,
-                    'api_endpoint' => $this->apiUrl . '/payments/' . $paymentId,
-                    'response_data' => $paymentData
+            if (! $response->successful()) {
+                $status = $response->status();
+                $body   = $response->body();
+
+                Log::error('Erreur HelloAsso Get Order', [
+                    'status'        => $status,
+                    'body'          => $body,
+                    'payment_id'    => $paymentId,
+                    'order_id'      => $orderId,
+                    'api_endpoint'  => $endpoint,
                 ]);
-                
-                // Vérifier que le paiement correspond à la commande
-                if (isset($paymentData['order']['id']) && $paymentData['order']['id'] == $orderId) {
-                    Log::info('Paiement HelloAsso vérifié avec succès', [
-                        'payment_id' => $paymentId,
-                        'order_id' => $orderId,
-                        'amount' => $paymentData['amount'] ?? 'N/A',
-                        'state' => $paymentData['state'] ?? 'N/A',
-                        'installment_number' => $paymentData['installmentNumber'] ?? 'N/A',
-                        'payment_means' => $paymentData['paymentMeans'] ?? 'N/A',
-                        'date' => $paymentData['date'] ?? 'N/A'
-                    ]);
-                    
-                    return $paymentData;
-                } else {
-                    Log::error('Paiement HelloAsso ne correspond pas à la commande', [
-                        'payment_id' => $paymentId,
-                        'expected_order_id' => $orderId,
-                        'actual_order_id' => $paymentData['order']['id'] ?? 'N/A'
-                    ]);
-                    $this->lastApiError = [
-                        'status'  => 200,
-                        'summary' => 'L\'order_id retourné par l\'API ne correspond pas à celui attendu',
-                        'body'    => json_encode($paymentData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
-                        'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
-                    ];
-                    return null;
+
+                $this->lastApiError = [
+                    'status'   => $status,
+                    'summary'  => $this->summarizeResponse($status, $body),
+                    'body'     => mb_substr($body, 0, 4000),
+                    'endpoint' => $endpoint,
+                ];
+
+                return null;
+            }
+
+            $orderData = $response->json();
+
+            Log::info('Commande HelloAsso récupérée via API', [
+                'order_id'      => $orderId,
+                'payment_id'    => $paymentId,
+                'api_endpoint'  => $endpoint,
+                'order_state'   => $orderData['state'] ?? 'N/A',
+                'payment_count' => count($orderData['payments'] ?? []),
+            ]);
+
+            // Retrouver le paiement individuel dans la liste payments[] de la commande
+            $matchedPayment = null;
+            foreach ($orderData['payments'] ?? [] as $p) {
+                if ((string) ($p['id'] ?? '') === (string) $paymentId) {
+                    $matchedPayment = $p;
+                    break;
                 }
             }
 
-            $status = $response->status();
-            $body   = $response->body();
+            if (! $matchedPayment) {
+                Log::error('Paiement HelloAsso introuvable dans la commande', [
+                    'payment_id'      => $paymentId,
+                    'order_id'        => $orderId,
+                    'payments_in_order' => array_column($orderData['payments'] ?? [], 'id'),
+                ]);
+                $this->lastApiError = [
+                    'status'   => 200,
+                    'summary'  => "Le paiement {$paymentId} n'apparaît pas dans la liste des paiements de la commande {$orderId}",
+                    'body'     => json_encode($orderData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                    'endpoint' => $endpoint,
+                ];
+                return null;
+            }
 
-            Log::error('Erreur HelloAsso Get Payment', [
-                'status' => $status,
-                'body' => $body,
-                'payment_id' => $paymentId,
-                'api_endpoint' => $this->apiUrl . '/payments/' . $paymentId
+            Log::info('Paiement HelloAsso vérifié via la commande', [
+                'payment_id'         => $paymentId,
+                'order_id'           => $orderId,
+                'order_state'        => $orderData['state'] ?? 'N/A',
+                'payment_state'      => $matchedPayment['state'] ?? 'N/A',
+                'amount'             => $matchedPayment['amount'] ?? 'N/A',
+                'installment_number' => $matchedPayment['installmentNumber'] ?? 'N/A',
             ]);
 
-            $this->lastApiError = [
-                'status'   => $status,
-                'summary'  => $this->summarizeResponse($status, $body),
-                'body'     => mb_substr($body, 0, 4000),
-                'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
+            // Retourner une structure compatible avec l'ancien retour de verifyPayment()
+            return [
+                'id'                => $matchedPayment['id']                ?? $paymentId,
+                'state'             => $matchedPayment['state']             ?? null,
+                'amount'            => $matchedPayment['amount']            ?? null,
+                'installmentNumber' => $matchedPayment['installmentNumber'] ?? 1,
+                'paymentMeans'      => $matchedPayment['paymentMeans']      ?? null,
+                'date'              => $matchedPayment['date']              ?? null,
+                'order'             => ['id' => $orderData['id'] ?? $orderId],
+                'orderState'        => $orderData['state']                  ?? null,
             ];
-
-            return null;
-
         } catch (Exception $e) {
-            Log::error('Exception HelloAsso Get Payment', [
-                'message' => $e->getMessage(),
-                'payment_id' => $paymentId,
-                'api_endpoint' => $this->apiUrl . '/payments/' . $paymentId
+            Log::error('Exception HelloAsso Get Order', [
+                'message'      => $e->getMessage(),
+                'payment_id'   => $paymentId,
+                'order_id'     => $orderId,
+                'api_endpoint' => $endpoint,
             ]);
 
             $this->lastApiError = [
                 'status'   => 0,
                 'summary'  => 'Exception : ' . $e->getMessage(),
                 'body'     => '',
-                'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
+                'endpoint' => $endpoint,
             ];
 
             return null;
