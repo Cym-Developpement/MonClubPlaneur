@@ -63,6 +63,10 @@ class usersAttributes extends Model
             'name'        => 'Transactions',
             'description' => 'Validation et suppression des transactions en attente',
         ],
+        'admin:paiement' => [
+            'name'        => 'Paiements HelloAsso',
+            'description' => 'Validation manuelle des paiements HelloAsso en échec, reçoit les notifications par email',
+        ],
         'admin:flights' => [
             'name'        => 'Carnets de vol & Remorquage',
             'description' => 'Carnet de route appareil, carnet de vol pilote, remorquage',

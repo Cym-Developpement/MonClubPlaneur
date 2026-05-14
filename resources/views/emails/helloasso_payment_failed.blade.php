@@ -43,11 +43,31 @@
                                             <tr><td style="padding:3px 0;font-size:14px;color:#666;">Reçu le</td><td style="padding:3px 0;font-size:14px;color:#333;">{{ $pending->created_at?->format('d/m/Y H:i') }}</td></tr>
                                             <tr><td style="padding:3px 0;font-size:14px;color:#666;">Payment ID</td><td style="padding:3px 0;font-size:13px;color:#333;font-family:monospace;">{{ $pending->payment_id }}</td></tr>
                                             <tr><td style="padding:3px 0;font-size:14px;color:#666;">Order ID</td><td style="padding:3px 0;font-size:13px;color:#333;font-family:monospace;">{{ $pending->order_id }}</td></tr>
+                                            <tr><td style="padding:3px 0;font-size:14px;color:#666;">Tentatives</td><td style="padding:3px 0;font-size:14px;color:#333;">{{ $pending->attempts }}/5</td></tr>
                                             <tr><td style="padding:3px 0;font-size:14px;color:#666;vertical-align:top;">Dernière erreur</td><td style="padding:3px 0;font-size:13px;color:#666;">{{ $pending->error_message ?: '—' }}</td></tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
+
+                            @if($apiError)
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fff5f3;border:1px solid #f5c2b8;border-radius:6px;margin-bottom:24px;">
+                                <tr>
+                                    <td style="padding:18px 22px;">
+                                        <p style="margin:0 0 10px;font-size:13px;font-weight:bold;color:#b8331c;text-transform:uppercase;letter-spacing:0.5px;">Réponse HelloAsso (dernière tentative)</p>
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr><td style="padding:3px 0;font-size:14px;color:#666;width:140px;">Endpoint</td><td style="padding:3px 0;font-size:13px;color:#333;font-family:monospace;word-break:break-all;">{{ $apiError['endpoint'] ?? '—' }}</td></tr>
+                                            <tr><td style="padding:3px 0;font-size:14px;color:#666;">Statut HTTP</td><td style="padding:3px 0;font-size:14px;color:#333;font-weight:bold;">{{ ($apiError['status'] ?? 0) ?: '—' }}</td></tr>
+                                            <tr><td style="padding:3px 0;font-size:14px;color:#666;vertical-align:top;">Résumé</td><td style="padding:3px 0;font-size:14px;color:#333;">{{ $apiError['summary'] ?? '—' }}</td></tr>
+                                        </table>
+                                        @if(!empty($apiError['body']))
+                                            <p style="margin:14px 0 6px;font-size:12px;font-weight:bold;color:#666;text-transform:uppercase;letter-spacing:0.5px;">Corps de la réponse (extrait)</p>
+                                            <pre style="margin:0;padding:10px 12px;background-color:#1e1e1e;color:#d4d4d4;font-size:11px;font-family:Consolas,Monaco,monospace;line-height:1.4;border-radius:4px;max-height:280px;overflow:auto;white-space:pre-wrap;word-break:break-all;">{{ \Illuminate\Support\Str::limit(strip_tags($apiError['body']), 2000) }}</pre>
+                                        @endif
+                                    </td>
+                                </tr>
+                            </table>
+                            @endif
 
                             <p style="text-align:center;margin:0 0 12px;">
                                 <a href="{{ $adminUrl }}" style="display:inline-block;background-color:#1a3a6b;color:#ffffff;padding:12px 28px;text-decoration:none;border-radius:4px;font-size:14px;font-weight:bold;">

@@ -12,8 +12,10 @@ class HelloAssoPaymentFailedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public HelloAssoPendingPayment $pending)
-    {
+    public function __construct(
+        public HelloAssoPendingPayment $pending,
+        public ?array $apiError = null,
+    ) {
     }
 
     public function build()
@@ -27,6 +29,7 @@ class HelloAssoPaymentFailedMail extends Mailable
                     ->view('emails.helloasso_payment_failed')
                     ->with([
                         'pending'    => $this->pending,
+                        'apiError'   => $this->apiError,
                         'nomCourt'   => $nomCourt,
                         'nomComplet' => $nomComplet,
                         'logo'       => $logo,

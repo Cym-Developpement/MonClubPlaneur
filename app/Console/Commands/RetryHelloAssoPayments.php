@@ -5,9 +5,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Mail\HelloAssoPaymentFailedMail;
 use App\Models\HelloAssoPendingPayment;
-use App\Models\parametre;
 use App\Models\transaction;
 use App\Models\User;
+use App\Models\usersAttributes;
 use App\Services\HelloAssoService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -110,8 +110,11 @@ class RetryHelloAssoPayments extends Command
             return;
         }
 
-        // API still failing
-        $pending->error_message = 'API verification failed on attempt ' . $pending->attempts;
+        // API still failing — capture the actual API error for traceability
+        $apiError = $helloAssoService->getLastApiError();
+        $pending->error_message = $apiError
+            ? "Tentative {$pending->attempts} : " . ($apiError['summary'] ?? 'Erreur inconnue')
+            : 'API verification failed on attempt ' . $pending->attempts;
 
         if ($pending->attempts >= 5) {
             $pending->status = 'failed';
@@ -121,9 +124,10 @@ class RetryHelloAssoPayments extends Command
                 'order_id' => $pending->order_id,
                 'amount' => $pending->amount,
                 'payer_email' => $pending->payer_email,
+                'last_api_error' => $apiError,
             ]);
             $this->error("Payment {$pending->payment_id} FAILED after 5 attempts.");
-            $this->notifyAdmin($pending);
+            $this->notifyAdmin($pending, $apiError);
         } else {
             $pending->save();
             Log::warning('HelloAsso retry: échec tentative ' . $pending->attempts, [
@@ -185,30 +189,43 @@ class RetryHelloAssoPayments extends Command
         $this->info("Payment {$paymentId} credited to user {$user->id} ({$amount} cts).");
     }
 
-    private function notifyAdmin(HelloAssoPendingPayment $pending): void
+    private function notifyAdmin(HelloAssoPendingPayment $pending, ?array $apiError = null): void
     {
-        $adminEmail = parametre::getValue('club-email', '');
-        if (! $adminEmail) {
-            Log::warning('HelloAsso retry: notif admin non envoyée (club-email vide)', [
+        $adminUserIds = usersAttributes::whereIn('attributeName', ['admin:paiement', 'admin:super'])
+            ->pluck('userId')
+            ->unique();
+
+        $admins = User::where('isAdmin', 1)
+            ->whereIn('id', $adminUserIds)
+            ->whereNotNull('email')
+            ->where('email', '!=', '')
+            ->get();
+
+        if ($admins->isEmpty()) {
+            Log::warning('HelloAsso retry: aucun admin avec admin:paiement ou admin:super à notifier', [
                 'payment_id' => $pending->payment_id,
             ]);
             return;
         }
 
-        try {
-            Mail::to($adminEmail)->send(new HelloAssoPaymentFailedMail($pending));
-            Log::info('HelloAsso retry: notif admin envoyée', [
-                'payment_id' => $pending->payment_id,
-                'to'         => $adminEmail,
-            ]);
-            $this->info("  → Notification envoyée à {$adminEmail}");
-        } catch (\Throwable $e) {
-            Log::error('HelloAsso retry: échec envoi notif admin', [
-                'payment_id' => $pending->payment_id,
-                'to'         => $adminEmail,
-                'error'      => $e->getMessage(),
-            ]);
-            $this->warn("  → Échec envoi notification : {$e->getMessage()}");
+        foreach ($admins as $admin) {
+            try {
+                Mail::to($admin->email)->send(new HelloAssoPaymentFailedMail($pending, $apiError));
+                Log::info('HelloAsso retry: notif admin envoyée', [
+                    'payment_id' => $pending->payment_id,
+                    'admin_id'   => $admin->id,
+                    'to'         => $admin->email,
+                ]);
+                $this->info("  → Notification envoyée à {$admin->email}");
+            } catch (\Throwable $e) {
+                Log::error('HelloAsso retry: échec envoi notif admin', [
+                    'payment_id' => $pending->payment_id,
+                    'admin_id'   => $admin->id,
+                    'to'         => $admin->email,
+                    'error'      => $e->getMessage(),
+                ]);
+                $this->warn("  → Échec envoi notification à {$admin->email} : {$e->getMessage()}");
+            }
         }
     }
 }

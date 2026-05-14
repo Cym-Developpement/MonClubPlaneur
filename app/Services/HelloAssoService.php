@@ -14,6 +14,7 @@ class HelloAssoService
     private $clientId;
     private $clientSecret;
     private $isSandbox;
+    private ?array $lastApiError = null;
 
     public function __construct()
     {
@@ -44,6 +45,32 @@ class HelloAssoService
             'Accept'        => 'application/json',
             'User-Agent'    => 'MonClubPlaneur/1.0 (Laravel; +helloasso-integration)',
         ], $extra);
+    }
+
+    /** Retourne le détail de la dernière erreur API (null si aucun appel ou succès). */
+    public function getLastApiError(): ?array
+    {
+        return $this->lastApiError;
+    }
+
+    /** Construit un résumé court à partir d'une réponse HTTP (détecte les challenges Cloudflare). */
+    private function summarizeResponse(int $status, string $body): string
+    {
+        $trimmed = ltrim($body);
+        $isHtml  = str_starts_with($trimmed, '<');
+        $isCloudflareChallenge = $isHtml && (
+            stripos($body, 'cf_chl_opt') !== false
+            || stripos($body, 'challenge-platform') !== false
+            || stripos($body, 'Cloudflare') !== false
+        );
+
+        if ($isCloudflareChallenge) {
+            return "HTTP {$status} — Challenge Cloudflare (bot management) sur l'endpoint";
+        }
+        if ($isHtml) {
+            return "HTTP {$status} — Réponse HTML inattendue";
+        }
+        return "HTTP {$status} — " . mb_substr(trim($body), 0, 200);
     }
 
     /**
@@ -443,10 +470,18 @@ class HelloAssoService
      */
     public function verifyPayment(string $paymentId, string $orderId)
     {
+        $this->lastApiError = null;
+
         try {
             $accessToken = $this->getValidAccessToken();
             if (!$accessToken) {
                 Log::error('HelloAssoService: Impossible d\'obtenir un jeton d\'accès pour vérifier le paiement.');
+                $this->lastApiError = [
+                    'status'  => 0,
+                    'summary' => 'Échec d\'obtention du jeton OAuth',
+                    'body'    => '',
+                    'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
+                ];
                 return null;
             }
 
@@ -483,16 +518,32 @@ class HelloAssoService
                         'expected_order_id' => $orderId,
                         'actual_order_id' => $paymentData['order']['id'] ?? 'N/A'
                     ]);
+                    $this->lastApiError = [
+                        'status'  => 200,
+                        'summary' => 'L\'order_id retourné par l\'API ne correspond pas à celui attendu',
+                        'body'    => json_encode($paymentData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+                        'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
+                    ];
                     return null;
                 }
             }
 
+            $status = $response->status();
+            $body   = $response->body();
+
             Log::error('Erreur HelloAsso Get Payment', [
-                'status' => $response->status(),
-                'body' => $response->body(),
+                'status' => $status,
+                'body' => $body,
                 'payment_id' => $paymentId,
                 'api_endpoint' => $this->apiUrl . '/payments/' . $paymentId
             ]);
+
+            $this->lastApiError = [
+                'status'   => $status,
+                'summary'  => $this->summarizeResponse($status, $body),
+                'body'     => mb_substr($body, 0, 4000),
+                'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
+            ];
 
             return null;
 
@@ -502,6 +553,13 @@ class HelloAssoService
                 'payment_id' => $paymentId,
                 'api_endpoint' => $this->apiUrl . '/payments/' . $paymentId
             ]);
+
+            $this->lastApiError = [
+                'status'   => 0,
+                'summary'  => 'Exception : ' . $e->getMessage(),
+                'body'     => '',
+                'endpoint' => $this->apiUrl . '/payments/' . $paymentId,
+            ];
 
             return null;
         }

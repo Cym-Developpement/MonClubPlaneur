@@ -166,8 +166,8 @@ Route::get('/admin/parametres', [App\Http\Controllers\ParametreController::class
 Route::post('/admin/parametres', [App\Http\Controllers\ParametreController::class, 'update'])->name('admin.parametres.update')->middleware('can:admin:super');
 Route::post('/admin/parametres/autres', [App\Http\Controllers\ParametreController::class, 'updateAutres'])->name('admin.parametres.autres')->middleware('can:admin:super');
 Route::post('/admin/parametres/cron/{key?}', [App\Http\Controllers\ParametreController::class, 'runCron'])->name('admin.parametres.cron')->middleware('can:admin:super');
-Route::post('/admin/parametres/helloasso/{id}/validate', [App\Http\Controllers\ParametreController::class, 'validateHelloAssoPayment'])->name('admin.parametres.helloasso.validate')->middleware('can:admin:super');
-Route::delete('/admin/parametres/helloasso/{id}', [App\Http\Controllers\ParametreController::class, 'deleteHelloAssoPayment'])->name('admin.parametres.helloasso.delete')->middleware('can:admin:super');
+Route::post('/admin/parametres/helloasso/{id}/validate', [App\Http\Controllers\ParametreController::class, 'validateHelloAssoPayment'])->name('admin.parametres.helloasso.validate')->middleware('can:admin:paiement');
+Route::delete('/admin/parametres/helloasso/{id}', [App\Http\Controllers\ParametreController::class, 'deleteHelloAssoPayment'])->name('admin.parametres.helloasso.delete')->middleware('can:admin:paiement');
 
 // GESTION DES ADMINISTRATEURS
 Route::get('/admin/admins', [App\Http\Controllers\admin::class, 'getAdmins'])->name('admins.index')->middleware('can:admin:super');
