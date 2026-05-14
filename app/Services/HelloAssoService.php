@@ -471,7 +471,7 @@ class HelloAssoService
     public function verifyPayment(string $paymentId, string $orderId)
     {
         $this->lastApiError = null;
-        $endpoint = $this->apiUrl . '/organizations/' . $this->organizationSlug . '/orders/' . $orderId;
+        $endpoint = $this->apiUrl . '/orders/' . $orderId;
 
         try {
             $accessToken = $this->getValidAccessToken();
@@ -486,7 +486,7 @@ class HelloAssoService
                 return null;
             }
 
-            // Flow documenté HelloAsso : GET /v5/organizations/{slug}/orders/{orderId}
+            // Flow documenté HelloAsso : GET /v5/orders/{orderId}
             // Renvoie la commande complète avec sa liste de paiements.
             $response = Http::withHeaders($this->apiHeaders($accessToken))->get($endpoint);
 
