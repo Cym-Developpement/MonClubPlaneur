@@ -139,6 +139,21 @@ class transaction extends Model
     }
 
     /**
+     * Scope pour les transactions de cotisation d'une année donnée.
+     * Accepte aussi bien `name = "Cotisation"` que `name = "Cotisation 2026"` ou
+     * toute variante préfixée ("Cotisation tarif réduit", etc.), à condition que
+     * la colonne `year` corresponde.
+     */
+    public function scopeCotisationForYear($query, int $year)
+    {
+        return $query->where('year', $year)
+            ->where(function ($q) {
+                $q->where('name', 'Cotisation')
+                  ->orWhere('name', 'LIKE', 'Cotisation %');
+            });
+    }
+
+    /**
      * Ajoute une nouvelle transaction
      *
      * @param int $userId ID de l'utilisateur

@@ -119,7 +119,7 @@ class admin extends Controller
         if (is_numeric($filter) && (int) $filter >= $currentYear - 4 && (int) $filter <= $currentYear) {
             $filterYear  = (int) $filter;
             $filterLabel = 'Adhérents ' . $filterYear;
-            $userIds     = transaction::where('name', 'Cotisation ' . $filterYear)->pluck('idUser')->unique();
+            $userIds     = transaction::cotisationForYear($filterYear)->pluck('idUser')->unique();
             $users       = User::whereIn('id', $userIds);
         } else {
             switch ($filter) {
@@ -246,7 +246,7 @@ class admin extends Controller
 
         if (str_starts_with($filter, 'year:')) {
             $year = (int) substr($filter, 5);
-            $userIds = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+            $userIds = transaction::cotisationForYear($year)->pluck('idUser')->unique();
             $users = User::whereIn('id', $userIds);
         } elseif ($filter === 'all') {
             $users = User::where('id', '>', 0);
@@ -686,7 +686,7 @@ class admin extends Controller
         if (is_numeric($request->filter) && (int) $request->filter >= $currentYear - 4 && (int) $request->filter <= $currentYear) {
             $filterYear  = (int) $request->filter;
             $filterLabel = 'adherents_' . $filterYear;
-            $userIds     = transaction::where('name', 'Cotisation ' . $filterYear)->pluck('idUser')->unique();
+            $userIds     = transaction::cotisationForYear($filterYear)->pluck('idUser')->unique();
             $users       = User::whereIn('id', $userIds);
         } else {
             switch ($request->filter) {
@@ -1472,7 +1472,7 @@ class admin extends Controller
     public function sendAccountStatePreview(Request $request, $year)
     {
         $year = intval($year);
-        $userIds = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+        $userIds = transaction::cotisationForYear($year)->pluck('idUser')->unique();
         $users = User::whereIn('id', $userIds)->orderBy('name')->get();
         return view('admin.sendAccountStatePreview', compact('users', 'year'));
     }
@@ -1480,7 +1480,7 @@ class admin extends Controller
     public function sendAccountStateForYear(Request $request, $year)
     {
         $year    = intval($year);
-        $userIds = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+        $userIds = transaction::cotisationForYear($year)->pluck('idUser')->unique();
         $users   = User::whereIn('id', $userIds)->get();
 
         $file = new Filesystem;
@@ -1533,7 +1533,7 @@ class admin extends Controller
     {
         $testEmail = auth()->user()->email;
         $year      = intval($year);
-        $userIds   = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+        $userIds   = transaction::cotisationForYear($year)->pluck('idUser')->unique();
         $users     = User::whereIn('id', $userIds)->get();
 
         $file = new Filesystem;

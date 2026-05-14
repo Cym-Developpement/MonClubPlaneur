@@ -128,7 +128,7 @@ class MailingController extends Controller
     {
         if (str_starts_with($filter, 'year:')) {
             $year    = (int) substr($filter, 5);
-            $userIds = transaction::where('name', 'Cotisation ' . $year)->pluck('idUser')->unique();
+            $userIds = transaction::cotisationForYear($year)->pluck('idUser')->unique();
             return User::whereIn('id', $userIds)->orderBy('name')->get();
         }
 

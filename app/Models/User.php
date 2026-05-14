@@ -271,7 +271,9 @@ class User extends Authenticatable
 
     public function getCotisationStateAttribute()
     {
-        $tr = transaction::where('idUser', $this->id)->where('name', 'Cotisation '.$this->year_state_value)->first();
+        $tr = transaction::where('idUser', $this->id)
+            ->cotisationForYear((int) $this->year_state_value)
+            ->first();
         return (!is_null($tr));
     }
 
