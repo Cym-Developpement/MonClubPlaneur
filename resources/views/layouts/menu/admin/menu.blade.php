@@ -100,6 +100,12 @@
 </a>
 @endcan
 
+@can('admin:produits')
+<a class="dropdown-item" href="{{ route('admin.produits.index') }}">
+    <i class="fas fa-box me-2"></i>Produits & paiements
+</a>
+@endcan
+
 @can('admin:mailing')
 <a class="dropdown-item" href="/admin/mailing">
     <i class="fas fa-envelope-open-text me-2"></i>Emailing groupé

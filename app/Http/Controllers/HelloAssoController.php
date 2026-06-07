@@ -9,6 +9,11 @@ use App\Models\transaction;
 use App\Models\VolInitiation;
 use App\Models\parametre;
 use App\Models\HelloAssoPendingPayment;
+use App\Models\ProductPurchase;
+use App\Models\usersAttributes;
+use App\Mail\ProductPurchaseConfirmation;
+use App\Mail\ProductPurchaseAdminNotification;
+use Illuminate\Support\Facades\Mail;
 
 class HelloAssoController extends Controller
 {
@@ -178,6 +183,15 @@ class HelloAssoController extends Controller
                 'payment_id' => $paymentId,
                 'order_id' => $orderId
             ]);
+            return;
+        }
+
+        // Paiement d'un produit public ? (corrélation via les metadata du checkout-intent)
+        $metadata = $data['data']['metadata']
+            ?? $data['data']['order']['metadata']
+            ?? [];
+        if (($metadata['type'] ?? null) === 'product') {
+            $this->handleProductPayment($data['data'], $metadata, $sourceIps);
             return;
         }
 
@@ -358,6 +372,130 @@ class HelloAssoController extends Controller
                 'message' => $e->getMessage(),
                 'payment_data' => $paymentData,
                 'payer_email' => $payerEmail
+            ]);
+        }
+    }
+
+    /**
+     * Traiter un paiement de produit public (baptême, etc.).
+     * Ne crédite aucun compte membre : marque l'achat comme payé et envoie les emails.
+     */
+    private function handleProductPayment(array $payment, array $metadata, array $sourceIps): void
+    {
+        try {
+            $paymentId  = $payment['id'] ?? null;
+            $orderId    = $payment['order']['id'] ?? null;
+            $state      = $payment['state'] ?? 'Unknown';
+            $purchaseId = $metadata['purchase_id'] ?? null;
+
+            $purchase = $purchaseId ? ProductPurchase::find($purchaseId) : null;
+            if (!$purchase) {
+                Log::error('Achat produit introuvable pour le paiement HelloAsso', [
+                    'payment_id'  => $paymentId,
+                    'order_id'    => $orderId,
+                    'purchase_id' => $purchaseId,
+                ]);
+                return;
+            }
+
+            // Anti-doublon
+            if ($purchase->status === 'paid') {
+                Log::info('Achat produit déjà payé, webhook ignoré (doublon)', [
+                    'purchase_id' => $purchase->id,
+                    'payment_id'  => $paymentId,
+                ]);
+                return;
+            }
+
+            // Confirmation du paiement : IP de confiance OU vérification API
+            $authorized = false;
+            if ($this->isTrustedHelloAssoIp($sourceIps) && $state === 'Authorized') {
+                $authorized = true;
+            } else {
+                $checkoutIntentId = $purchase->helloasso_checkout_intent_id
+                    ?? \Cache::get('helloasso_intent_for_order_' . $orderId);
+                $verified = $this->helloAssoService->verifyPayment($paymentId, $orderId, $checkoutIntentId);
+                if ($verified && ($verified['state'] ?? null) === 'Authorized') {
+                    $authorized = true;
+                }
+            }
+
+            if (!$authorized) {
+                $purchase->update([
+                    'helloasso_order_id'   => $orderId,
+                    'helloasso_payment_id' => $paymentId,
+                    'webhook_data'         => $payment,
+                    'error_message'        => 'Paiement non confirmé (état : ' . $state . ')',
+                ]);
+                Log::warning('Paiement produit non confirmé, achat laissé en attente', [
+                    'purchase_id' => $purchase->id,
+                    'payment_id'  => $paymentId,
+                    'state'       => $state,
+                ]);
+                return;
+            }
+
+            $purchase->update([
+                'helloasso_order_id'   => $orderId,
+                'helloasso_payment_id' => $paymentId,
+                'status'               => 'paid',
+                'paid_at'              => now(),
+                'webhook_data'         => $payment,
+                'error_message'        => null,
+            ]);
+
+            Log::info('Achat produit confirmé et payé', [
+                'purchase_id' => $purchase->id,
+                'product'     => $purchase->product_title,
+                'amount'      => $purchase->amount_cts / 100,
+                'payer_email' => $purchase->payer_email,
+            ]);
+
+            $this->sendProductPurchaseEmails($purchase);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du traitement du paiement produit', [
+                'message'  => $e->getMessage(),
+                'metadata' => $metadata,
+            ]);
+        }
+    }
+
+    /**
+     * Envoie l'email de confirmation au payeur + la notification aux admins.
+     */
+    private function sendProductPurchaseEmails(ProductPurchase $purchase): void
+    {
+        // Email de confirmation au payeur
+        try {
+            Mail::to($purchase->payer_email)->send(new ProductPurchaseConfirmation($purchase));
+        } catch (\Throwable $e) {
+            Log::error('Erreur envoi email confirmation achat produit', [
+                'purchase_id' => $purchase->id,
+                'email'       => $purchase->payer_email,
+                'message'     => $e->getMessage(),
+            ]);
+        }
+
+        // Notification aux admins disposant du droit produits
+        try {
+            $adminUserIds = usersAttributes::whereIn('attributeName', ['admin:produits', 'admin:super'])
+                ->pluck('userId')
+                ->unique();
+
+            $admins = User::where('isAdmin', 1)
+                ->whereIn('id', $adminUserIds)
+                ->whereNotNull('email')
+                ->where('email', '!=', '')
+                ->get();
+
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new ProductPurchaseAdminNotification($purchase));
+            }
+        } catch (\Throwable $e) {
+            Log::error('Erreur envoi notification admin achat produit', [
+                'purchase_id' => $purchase->id,
+                'message'     => $e->getMessage(),
             ]);
         }
     }

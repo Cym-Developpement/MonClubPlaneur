@@ -95,6 +95,10 @@ class usersAttributes extends Model
             'name'        => 'Vols d\'initiation',
             'description' => 'Gestion des bons de vol d\'initiation',
         ],
+        'admin:produits' => [
+            'name'        => 'Produits & paiements en ligne',
+            'description' => 'Création de produits publics payables par CB et suivi des achats',
+        ],
         'admin:export' => [
             'name'        => 'Export CSV',
             'description' => 'Export CSV configurable des utilisateurs',

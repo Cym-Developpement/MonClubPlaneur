@@ -58,6 +58,11 @@ Route::get('/cb', [App\Http\Controllers\PublicPaymentController::class, 'index']
 Route::post('/cb', [App\Http\Controllers\PublicPaymentController::class, 'processPayment'])->name('public.payment.process');
 Route::post('/cb/callback', [App\Http\Controllers\PublicPaymentController::class, 'callback'])->name('public.payment.callback');
 Route::get('/cb/check-member', [App\Http\Controllers\PublicPaymentController::class, 'checkMember'])->name('public.payment.check-member');
+
+// Produits publics payables par CB (sans authentification)
+Route::get('/produits', [App\Http\Controllers\PublicProductController::class, 'list'])->name('public.products');
+Route::post('/produit/pay', [App\Http\Controllers\PublicProductController::class, 'pay'])->name('public.product.pay');
+Route::get('/payer/{slug}', [App\Http\Controllers\PublicProductController::class, 'show'])->name('public.product.show');
 Route::get('/getPrice', [App\Http\Controllers\HomeController::class, 'getPrice']);
 Route::post('/getAddFlightInfoTime', [App\Http\Controllers\HomeController::class, 'getAddFlightInfoTime']);
 
@@ -256,5 +261,13 @@ Route::put('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::clas
 Route::post('/admin/vi/{id}/realise', [App\Http\Controllers\VolInitiationController::class, 'marquerRealise'])->name('admin.vi.realise')->middleware('can:admin:vi');
 Route::delete('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::class, 'destroy'])->name('admin.vi.destroy')->middleware('can:admin:vi');
 Route::post('/admin/vi-types', [App\Http\Controllers\VolInitiationController::class, 'viTypeStore'])->name('admin.vi.type.store')->middleware('can:admin:vi');
+
+// Produits & paiements en ligne — administration
+Route::get('/admin/produits', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('admin.produits.index')->middleware('can:admin:produits');
+Route::get('/admin/produits/creer', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('admin.produits.create')->middleware('can:admin:produits');
+Route::post('/admin/produits', [App\Http\Controllers\Admin\ProductController::class, 'store'])->name('admin.produits.store')->middleware('can:admin:produits');
+Route::get('/admin/produits/{id}/edit', [App\Http\Controllers\Admin\ProductController::class, 'edit'])->name('admin.produits.edit')->middleware('can:admin:produits');
+Route::put('/admin/produits/{id}', [App\Http\Controllers\Admin\ProductController::class, 'update'])->name('admin.produits.update')->middleware('can:admin:produits');
+Route::delete('/admin/produits/{id}', [App\Http\Controllers\Admin\ProductController::class, 'destroy'])->name('admin.produits.destroy')->middleware('can:admin:produits');
 Route::put('/admin/vi-types/{id}', [App\Http\Controllers\VolInitiationController::class, 'viTypeUpdate'])->name('admin.vi.type.update')->middleware('can:admin:vi');
 Route::delete('/admin/vi-types/{id}', [App\Http\Controllers\VolInitiationController::class, 'viTypeDestroy'])->name('admin.vi.type.destroy')->middleware('can:admin:vi');
