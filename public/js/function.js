@@ -76,7 +76,9 @@ document.addEventListener("DOMContentLoaded", function() {
 	
 
 
-	getFlightDayBoard();
+	if ($('#flightDayBoardContent').length) {
+		getFlightDayBoard();
+	}
 
 	$('#adminAddFlight').on('hide.bs.modal', function (e) {
 	  resetAdminAddFlightForm();
@@ -126,7 +128,7 @@ function saveNewUser()
 		return;
 	}
 
-	$.post( "admin/addUser", { name: name, mail: mail, state: userState, licence: licence})
+	$.post( "/admin/addUser", { name: name, mail: mail, state: userState, licence: licence})
 	  .done(function( data ) {
 	  	result = data.split('|');
 	  	if (result[0] == 'OK') {
@@ -170,7 +172,7 @@ function saveFlightDay()
 
 	var attribute = $('#addFlightDayAttributes').val();
 	var observation = $('#addFlightDayObservation').val();
-	$.post( "flightDay", { date: date, attribute: attribute, observation: observation})
+	$.post( "/flightDay", { date: date, attribute: attribute, observation: observation})
 	  .done(function( data ) {
 	  	result = data.split('|');
 	  	if (result[0] == 'OK') {
@@ -186,7 +188,7 @@ function saveFlightDay()
 
 function getFlightDayBoard()
 {
-	$.get( "flightDayBoard")
+	$.get( "/flightDayBoard")
 	  .done(function( data ) {
 	  	$('#flightDayBoardContent').html(data);
 	  	feather.replace();
@@ -200,7 +202,7 @@ function deleteFlightDayRegister(id)
 	        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
 	    }
 	});
-	$.post( "flightDay/delete", { id: id})
+	$.post( "/flightDay/delete", { id: id})
 	  .done(function( data ) {
 	  	getFlightDayBoard();
 	});
@@ -230,7 +232,7 @@ function pay()
 		return;
 	}
 
-	$.post( "pay/add", { amount: amount, type: type, mail: mail, observation: observation})
+	$.post( "/pay/add", { amount: amount, type: type, mail: mail, observation: observation})
 	  .done(function( data ) {
 	  	if(type != 'CB')
 	  	{
@@ -248,7 +250,7 @@ function validTransactions(id)
 	    }
 	});
 
-	$.post( "validTransactionPost", { id: id})
+	$.post( "/validTransactionPost", { id: id})
 	  .done(function( data ) {
 	  	document.location.reload(false);
 	});
@@ -262,7 +264,7 @@ function deleteTransactions(id)
 	    }
 	});
 
-	$.post( "deleteTransactionPost", { id: id})
+	$.post( "/deleteTransactionPost", { id: id})
 	  .done(function( data ) {
 	  	document.location.reload(false);
 	});
@@ -284,7 +286,7 @@ function validNewTrDate(id)
 	        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
 	    }
 	});
-	$.post( "validNewTrDate", { id: id, date: newDate})
+	$.post( "/validNewTrDate", { id: id, date: newDate})
 	  .done(function( data ) {
 	  	window.location = window.location.href.split("#")[0];
 	});
@@ -379,7 +381,7 @@ function priceAdminFlight()
 	    }
 	});
 
-	$.get( "getPrice", { aircraft: aircraft, 
+	$.get( "/getPrice", { aircraft: aircraft, 
 						takeOffDate: takeOffDate, 
 						landingDate: landingDate, 
 						flightTime: flightTime, 
@@ -489,7 +491,7 @@ function validNewAdminFlight(close)
 
 	var supervisor = $('#userSupervisor').val();
 
-	$.post( "validNewAdminFlight", {user: user, userPay: userPay, aircraft: aircraft, aircraftType: aircraftType, takeOffDate: takeOffDate, landingDate: landingDate,
+	$.post( "/validNewAdminFlight", {user: user, userPay: userPay, aircraft: aircraft, aircraftType: aircraftType, takeOffDate: takeOffDate, landingDate: landingDate,
 									flightTime: flightTime, nbTakeOff: nbTakeOff, startType: startType, startMotor: startMotor, endMotor: endMotor, supervisor: supervisor})
 	  .done(function( data ) {
 	  	console.log(data);
@@ -511,7 +513,7 @@ function selectFilterFlightBoard()
 
 function controlBDDData()
 {
-	$.get( "controlData")
+	$.get( "/controlData")
 	  .done(function( data ) {
 	  	console.log(data);
 	  	$('#controlDataResult').html(data);
@@ -527,7 +529,7 @@ function markReadAlert(id)
 	    }
 	});
 
-	$.post( "alertRead", { id: id})
+	$.post( "/alertRead", { id: id})
 	  .done(function( data ) {
 	  	console.log(data);
 	});
