@@ -103,7 +103,7 @@
                     </div>
 
                     <div class="d-flex justify-content-center">
-                        {{ $transactions->appends(request()->query())->links() }}
+                        {{ $transactions->appends(request()->query())->links('pagination::simple-centered') }}
                     </div>
                     @else
                     <p class="text-muted">Aucun encaissement trouvé pour ces critères.</p>

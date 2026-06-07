@@ -12,6 +12,7 @@
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#3490dc">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
@@ -25,8 +26,8 @@
   src="https://code.jquery.com/jquery-3.4.1.min.js"
   integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
   crossorigin="anonymous"></script>
-    <script src="js/jquery.inputmask.min.js"></script>
-    <script src="js/bindings/inputmask.binding.js"></script>
+    <script src="{{ asset('js/jquery.inputmask.min.js') }}"></script>
+    <script src="{{ asset('js/bindings/inputmask.binding.js') }}"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -432,8 +433,8 @@
     </div>
 
     <script src="https://kit.fontawesome.com/9724d9dada.js" crossorigin="anonymous"></script>
-    <script src="js/jquery.mask.js"></script>
-    <script src="js/function.js"></script>
+    <script src="{{ asset('js/jquery.mask.js') }}"></script>
+    <script src="{{ asset('js/function.js') }}"></script>
     <script type="text/javascript">
        document.querySelectorAll('input[type="file"].form-control').forEach(function(input) {
           input.addEventListener('change', function() {

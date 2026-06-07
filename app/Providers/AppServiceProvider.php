@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Mail\Events\MessageSending;
 use App\Models\parametre;
 use App\Models\refundCategory;
@@ -38,6 +39,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        Paginator::useBootstrapFive();
+
         transaction::observe(TransactionObserver::class);
         User::observe(UserObserver::class);
         flight::observe(FlightObserver::class);
