@@ -259,7 +259,15 @@ class admin extends Controller
 
     public function encaissementsPage(Request $request)
     {
+        // Exclure les comptes techniques : on ne garde que les vrais membres
+        $techniqueUserIds = \App\Models\usersAttributes::where('attributeName', 'user:technique')
+            ->pluck('userId')
+            ->all();
+
         $query = transaction::where('value', '>', 0);
+        if (!empty($techniqueUserIds)) {
+            $query->whereNotIn('idUser', $techniqueUserIds);
+        }
 
         // Filtre par type de paiement
         $type = $request->input('type', 'all');
@@ -304,6 +312,9 @@ class admin extends Controller
 
         // Total des montants filtrés (en centimes)
         $totalQuery = transaction::where('value', '>', 0);
+        if (!empty($techniqueUserIds)) {
+            $totalQuery->whereNotIn('idUser', $techniqueUserIds);
+        }
         // Reproduire les mêmes filtres pour le total
         switch ($type) {
             case 'cb':
