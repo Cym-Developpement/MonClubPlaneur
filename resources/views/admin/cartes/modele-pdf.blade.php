@@ -15,9 +15,8 @@
     $boxGap    = 2;                                          // espace entre cases (mm)
     $perRow    = max(1, (int) ceil($nbCases / 2));           // 2 lignes, même nombre par ligne
     $availW    = $layout['cardW'] - 2 * $inset;
-    $boxSize   = max(6, min(22, (int) floor($availW / $perRow) - $boxGap)); // côté case (mm)
+    $boxSize   = max(6, min(22, (int) floor(($availW - ($perRow + 1) * $boxGap) / $perRow))); // côté case (mm)
     $caseFont  = max(8, (int) round($boxSize * 1.4));        // le « 1 » dans la case (pt)
-    $caseLine  = (int) round($boxSize * 2.83);               // hauteur de ligne (pt) pour centrer
     $caseRows  = $nbCases > 0 ? array_chunk(range(1, $nbCases), $perRow) : [];
     $prixLabel = ($prix == floor($prix))
         ? number_format($prix, 0, ',', ' ') . ' €'
@@ -103,24 +102,20 @@
         }
         .field-label { font-weight: bold; color: #1a3a6b; }
 
-        /* Cases : 2 lignes de même longueur, un « 1 » par case. */
+        /* Cases : 2 lignes de même longueur, un « 1 » centré par case. */
         .cases {
             width: 100%;
             table-layout: fixed;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: {{ $boxGap }}mm;
         }
-        .cases td {
-            text-align: center;
-            padding: 0 0 {{ $boxGap }}mm 0;
-            vertical-align: top;
-        }
-        .case {
-            width: {{ $boxSize }}mm;
+        .cases td { padding: 0; }
+        .cases td.case {
             height: {{ $boxSize }}mm;
             border: 1px solid #1a3a6b;
-            margin: 0 auto;
             text-align: center;
-            line-height: {{ $caseLine }}pt;
+            vertical-align: middle;
+            line-height: 1;
             font-size: {{ $caseFont }}pt;
             font-weight: bold;
             color: #1a3a6b;
@@ -153,7 +148,7 @@
                             @foreach($caseRows as $row)
                                 <tr>
                                     @foreach($row as $n)
-                                        <td><div class="case">1</div></td>
+                                        <td class="case">1</td>
                                     @endforeach
                                     @for($k = count($row); $k < $perRow; $k++)
                                         <td></td>
