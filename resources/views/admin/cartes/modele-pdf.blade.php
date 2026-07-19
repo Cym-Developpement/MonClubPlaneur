@@ -4,7 +4,7 @@
     $inset     = 2;                                          // marge intérieure (mm)
     $textLeft  = round($inset + $logoWidth + 3, 1);          // début du texte, à droite du logo (mm)
     $titleSize = max(9, (int) round($layout['cardW'] / 5));  // taille du titre (pt)
-    $clubSize  = max(6, (int) round($layout['cardW'] / 9));  // taille du nom du club (pt)
+    $clubSize  = max(6, (int) round($layout['cardW'] / 11)); // taille du nom du club (pt)
 @endphp
 <!DOCTYPE html>
 <html lang="fr">
@@ -52,8 +52,10 @@
         }
         .card-club {
             font-size: {{ $clubSize }}pt;
-            color: #555;
+            font-weight: bold;
+            color: #1a3a6b;
             margin-top: 1mm;
+            text-align: center;
         }
     </style>
 </head>
