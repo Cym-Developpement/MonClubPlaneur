@@ -173,6 +173,7 @@ Route::post('/admin/parametres/autres', [App\Http\Controllers\ParametreControlle
 Route::post('/admin/parametres/cron/{key?}', [App\Http\Controllers\ParametreController::class, 'runCron'])->name('admin.parametres.cron')->middleware('can:admin:super');
 Route::post('/admin/parametres/helloasso/{id}/validate', [App\Http\Controllers\ParametreController::class, 'validateHelloAssoPayment'])->name('admin.parametres.helloasso.validate')->middleware('can:admin:paiement');
 Route::delete('/admin/parametres/helloasso/{id}', [App\Http\Controllers\ParametreController::class, 'deleteHelloAssoPayment'])->name('admin.parametres.helloasso.delete')->middleware('can:admin:paiement');
+Route::post('/admin/parametres/cache/clear', [App\Http\Controllers\ParametreController::class, 'clearCache'])->name('admin.parametres.cache.clear')->middleware('can:admin:super');
 
 // CARTES DE BAR — modèle imprimable (imposition + pointillés de découpe)
 Route::post('/admin/cartes-bar/config', [App\Http\Controllers\Admin\CarteBarController::class, 'saveConfig'])->name('admin.cartebar.config')->middleware('can:admin:super');

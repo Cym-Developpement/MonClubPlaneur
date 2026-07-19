@@ -7,6 +7,7 @@ use App\Models\parametre;
 use App\Models\transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -218,6 +219,37 @@ class ParametreController extends Controller
         if (empty($outputs)) {
             $outputs[] = 'Aucune tâche planifiée définie.';
         }
+
+        return response()->json([
+            'exit_code' => $exitCode,
+            'output'    => implode("\n", $outputs),
+        ]);
+    }
+
+    /**
+     * Vide tous les caches Laravel (config, application, routes, vues, événements,
+     * classes compilées). Déclenché par le bouton « Vider le cache » des paramètres.
+     * Utile après une mise à jour du code pour forcer la prise en compte des changements.
+     */
+    public function clearCache(): \Illuminate\Http\JsonResponse
+    {
+        $commands = ['config:clear', 'cache:clear', 'route:clear', 'view:clear', 'event:clear', 'clear-compiled'];
+
+        $outputs  = [];
+        $exitCode = 0;
+
+        foreach ($commands as $command) {
+            try {
+                Artisan::call($command);
+                $captured  = trim(Artisan::output());
+                $outputs[] = "✓ php artisan {$command}" . ($captured !== '' ? "\n" . $captured : '');
+            } catch (\Throwable $e) {
+                $exitCode  = 1;
+                $outputs[] = "✗ php artisan {$command} : " . $e->getMessage();
+            }
+        }
+
+        Log::info('Caches Laravel vidés depuis /admin/parametres', ['admin' => auth()->id()]);
 
         return response()->json([
             'exit_code' => $exitCode,

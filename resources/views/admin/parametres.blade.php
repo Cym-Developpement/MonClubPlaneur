@@ -441,6 +441,58 @@
             </div>
             @endif
 
+            <div class="card mt-4">
+                <div class="card-header"><i class="fas fa-broom me-2"></i>Maintenance — Cache Laravel</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Vide tous les caches Laravel (configuration, routes, vues, application, événements,
+                        classes compilées). À utiliser après une mise à jour du code pour forcer la prise
+                        en compte des changements — par exemple si une nouvelle page renvoie « Route non définie ».
+                    </p>
+
+                    <button type="button" class="btn btn-warning" id="btnClearCache" onclick="clearLaravelCache(this)">
+                        <i class="fas fa-broom me-2"></i>Vider le cache
+                    </button>
+
+                    <div id="clearCacheResult" class="mt-3 d-none">
+                        <pre class="bg-dark text-light p-3 rounded mb-0" style="font-size:0.8rem; max-height:300px; overflow-y:auto; white-space:pre-wrap;" id="clearCacheOutput"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+            function clearLaravelCache(btn) {
+                const resultDiv = document.getElementById('clearCacheResult');
+                const outputPre = document.getElementById('clearCacheOutput');
+                const originalHtml = btn.innerHTML;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Nettoyage…';
+                resultDiv.classList.add('d-none');
+
+                fetch('{{ route("admin.parametres.cache.clear") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(r => r.json())
+                .then(data => {
+                    outputPre.textContent = data.output || '(aucune sortie)';
+                    resultDiv.classList.remove('d-none');
+                })
+                .catch(err => {
+                    outputPre.textContent = 'Erreur : ' + err.message;
+                    resultDiv.classList.remove('d-none');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                });
+            }
+            </script>
+
         </div>
     </div>
 </div>
