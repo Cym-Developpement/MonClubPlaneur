@@ -51,6 +51,7 @@ class ParametreController extends Controller
         $params['paiement-especes_actif']    = (bool) parametre::getValue('paiement-especes_actif', '0');
 
         $autresParams = parametre::whereNotIn('nom', $this->managedKeys)
+            ->where('nom', 'not like', 'cartebar-%')
             ->orderBy('nom')
             ->get()
             ->groupBy(function ($p) {

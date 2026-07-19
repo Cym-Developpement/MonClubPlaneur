@@ -174,6 +174,10 @@ Route::post('/admin/parametres/cron/{key?}', [App\Http\Controllers\ParametreCont
 Route::post('/admin/parametres/helloasso/{id}/validate', [App\Http\Controllers\ParametreController::class, 'validateHelloAssoPayment'])->name('admin.parametres.helloasso.validate')->middleware('can:admin:paiement');
 Route::delete('/admin/parametres/helloasso/{id}', [App\Http\Controllers\ParametreController::class, 'deleteHelloAssoPayment'])->name('admin.parametres.helloasso.delete')->middleware('can:admin:paiement');
 
+// CARTES DE BAR — modèle imprimable (imposition + pointillés de découpe)
+Route::post('/admin/cartes-bar/config', [App\Http\Controllers\Admin\CarteBarController::class, 'saveConfig'])->name('admin.cartebar.config')->middleware('can:admin:super');
+Route::get('/admin/cartes-bar/modele.pdf', [App\Http\Controllers\Admin\CarteBarController::class, 'download'])->name('admin.cartebar.download')->middleware('can:admin:super');
+
 // GESTION DES ADMINISTRATEURS
 Route::get('/admin/admins', [App\Http\Controllers\admin::class, 'getAdmins'])->name('admins.index')->middleware('can:admin:super');
 Route::post('/admin/admins/{id?}', [App\Http\Controllers\admin::class, 'saveAdmin'])->name('admins.save')->middleware('can:admin:super');

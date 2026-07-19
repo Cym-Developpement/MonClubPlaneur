@@ -130,6 +130,105 @@
                 </div>
             </div>
 
+            @php
+                $cbConfig = \App\Services\CarteBarService::config();
+                $cbLayout = \App\Services\CarteBarService::layout($cbConfig);
+            @endphp
+            <div class="card mt-4" id="cartes-bar">
+                <div class="card-header"><i class="fas fa-id-card me-2"></i>Cartes de bar</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Définissez le format d'une carte et celui de la planche imprimable : la planche
+                        assemble automatiquement le maximum de cartes, séparées par des pointillés de découpe.
+                        Le contenu des cartes reste vierge pour l'instant.
+                    </p>
+
+                    <form method="post" action="{{ route('admin.cartebar.config') }}">
+                        @csrf
+
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">Format d'une carte</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-auto">
+                                <label class="form-label">Modèle</label>
+                                <select class="form-select" id="cartebar-preset">
+                                    <option value="">Personnalisé…</option>
+                                    <option value="105x148">A6 — 105 × 148 mm</option>
+                                    <option value="74x105">A7 — 74 × 105 mm</option>
+                                    <option value="86x54">Carte bancaire — 86 × 54 mm</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <label class="form-label">Largeur (mm)</label>
+                                <input type="number" min="20" max="420" step="1" name="largeur_mm" id="cartebar-largeur"
+                                       class="form-control" style="max-width:120px;" value="{{ $cbConfig['largeur_mm'] }}">
+                            </div>
+                            <div class="col-auto">
+                                <label class="form-label">Hauteur (mm)</label>
+                                <input type="number" min="20" max="420" step="1" name="hauteur_mm" id="cartebar-hauteur"
+                                       class="form-control" style="max-width:120px;" value="{{ $cbConfig['hauteur_mm'] }}">
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">Planche imprimable</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-auto">
+                                <label class="form-label">Format</label>
+                                <select class="form-select" name="format_page" style="max-width:110px;">
+                                    @foreach(\App\Services\CarteBarService::formats() as $fmt)
+                                        <option value="{{ $fmt }}" {{ $cbConfig['format_page'] === $fmt ? 'selected' : '' }}>{{ $fmt }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <label class="form-label">Orientation</label>
+                                <select class="form-select" name="orientation" style="max-width:150px;">
+                                    <option value="portrait" {{ $cbConfig['orientation'] === 'portrait' ? 'selected' : '' }}>Portrait</option>
+                                    <option value="paysage"  {{ $cbConfig['orientation'] === 'paysage' ? 'selected' : '' }}>Paysage</option>
+                                </select>
+                            </div>
+                            <div class="col-auto">
+                                <label class="form-label">Marge (mm)</label>
+                                <input type="number" min="0" max="50" step="1" name="marge_mm"
+                                       class="form-control" style="max-width:110px;" value="{{ $cbConfig['marge_mm'] }}">
+                            </div>
+                            <div class="col-auto">
+                                <label class="form-label">Espacement (mm)</label>
+                                <input type="number" min="0" max="50" step="1" name="espacement_mm"
+                                       class="form-control" style="max-width:130px;" value="{{ $cbConfig['espacement_mm'] }}">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-secondary py-2 small mb-3">
+                            <i class="fas fa-th me-1"></i>
+                            @if($cbLayout['count'] > 0)
+                                Disposition enregistrée : <strong>{{ $cbLayout['count'] }}</strong> carte(s) par planche
+                                ({{ $cbLayout['cols'] }} colonne(s) × {{ $cbLayout['rows'] }} ligne(s))
+                                sur {{ $cbConfig['format_page'] }} {{ $cbConfig['orientation'] }}.
+                            @else
+                                Aucune carte ne tient sur la planche avec ce format — réduisez les dimensions ou la marge.
+                            @endif
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Enregistrer le format
+                        </button>
+                        <a href="{{ route('admin.cartebar.download') }}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-file-pdf me-2"></i>Télécharger le modèle (PDF)
+                        </a>
+                        <div class="form-text mt-2">Le PDF utilise le dernier format enregistré : pensez à enregistrer avant de télécharger.</div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+            document.getElementById('cartebar-preset').addEventListener('change', function () {
+                if (!this.value) return;
+                const [w, h] = this.value.split('x');
+                document.getElementById('cartebar-largeur').value = w;
+                document.getElementById('cartebar-hauteur').value = h;
+            });
+            </script>
+
             <div class="card mt-4">
                 <div class="card-header"><i class="fas fa-clock me-2"></i>Tâches planifiées (Cron)</div>
                 <div class="card-body">
