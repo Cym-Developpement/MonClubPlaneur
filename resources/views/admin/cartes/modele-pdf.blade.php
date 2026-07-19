@@ -6,13 +6,19 @@
     $titleSize = max(9, (int) round($layout['cardW'] / 5));  // taille du titre (pt)
     $clubSize  = max(6, (int) round($layout['cardW'] / 11)); // taille du nom du club (pt)
 
-    // Corps : prix + cases à cocher (consommations).
+    // Corps : champs à remplir + prix + cases à cocher (consommations).
     $prix      = isset($prix) ? (float) $prix : 0;
     $nbCases   = isset($nbCases) ? (int) $nbCases : 0;
     $bodyTop   = round($inset + $logoWidth + 3, 1);          // corps sous l'en-tête (mm)
-    $priceSize = max(9, (int) round($layout['cardW'] / 8));  // taille du prix (pt)
-    $boxSize   = max(5, (int) round($layout['cardW'] / 12)); // côté d'une case (mm)
+    $fieldSize = max(7, (int) round($layout['cardW'] / 12)); // champs NOM/DATE (pt)
+    $priceSize = max(9, (int) round($layout['cardW'] / 4));  // taille du prix (doublée)
     $boxGap    = 2;                                          // espace entre cases (mm)
+    $perRow    = max(1, (int) ceil($nbCases / 2));           // 2 lignes, même nombre par ligne
+    $availW    = $layout['cardW'] - 2 * $inset;
+    $boxSize   = max(6, min(22, (int) floor($availW / $perRow) - $boxGap)); // côté case (mm)
+    $caseFont  = max(8, (int) round($boxSize * 1.4));        // le « 1 » dans la case (pt)
+    $caseLine  = (int) round($boxSize * 2.83);               // hauteur de ligne (pt) pour centrer
+    $caseRows  = $nbCases > 0 ? array_chunk(range(1, $nbCases), $perRow) : [];
     $prixLabel = ($prix == floor($prix))
         ? number_format($prix, 0, ',', ' ') . ' €'
         : number_format($prix, 2, ',', ' ') . ' €';
@@ -85,13 +91,39 @@
             color: #1a3a6b;
             margin-bottom: 2mm;
         }
+
+        /* Champs à remplir à la main (NOM/PRÉNOM, DATE). */
+        .fields { text-align: left; margin-bottom: 3mm; }
+        .field {
+            border-bottom: 1px dotted #444;
+            padding-bottom: 0.5mm;
+            margin-bottom: 3mm;
+            font-size: {{ $fieldSize }}pt;
+            color: #333;
+        }
+        .field-label { font-weight: bold; color: #1a3a6b; }
+
+        /* Cases : 2 lignes de même longueur, un « 1 » par case. */
+        .cases {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+        .cases td {
+            text-align: center;
+            padding: 0 0 {{ $boxGap }}mm 0;
+            vertical-align: top;
+        }
         .case {
-            display: inline-block;
             width: {{ $boxSize }}mm;
             height: {{ $boxSize }}mm;
             border: 1px solid #1a3a6b;
-            margin: 0 {{ $boxGap }}mm {{ $boxGap }}mm 0;
-            vertical-align: top;
+            margin: 0 auto;
+            text-align: center;
+            line-height: {{ $caseLine }}pt;
+            font-size: {{ $caseFont }}pt;
+            font-weight: bold;
+            color: #1a3a6b;
         }
     </style>
 </head>
@@ -109,12 +141,27 @@
                     @endif
                 </div>
                 <div class="card-body-content">
+                    <div class="fields">
+                        <div class="field"><span class="field-label">NOM / PRÉNOM :</span></div>
+                        <div class="field"><span class="field-label">DATE :</span></div>
+                    </div>
                     @if($prix > 0)
                         <div class="card-price">{{ $prixLabel }}</div>
                     @endif
-                    @for($i = 0; $i < $nbCases; $i++)
-                        <span class="case"></span>
-                    @endfor
+                    @if($nbCases > 0)
+                        <table class="cases">
+                            @foreach($caseRows as $row)
+                                <tr>
+                                    @foreach($row as $n)
+                                        <td><div class="case">1</div></td>
+                                    @endforeach
+                                    @for($k = count($row); $k < $perRow; $k++)
+                                        <td></td>
+                                    @endfor
+                                </tr>
+                            @endforeach
+                        </table>
+                    @endif
                 </div>
             </div>
         @endforeach
