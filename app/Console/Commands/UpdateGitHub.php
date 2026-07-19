@@ -122,6 +122,9 @@ class UpdateGitHub extends Command
             $this->executeGitCommand(['git', 'pull', 'origin', $branch], 'Pull');
             
             $this->info('✓ Pull réussi');
+
+            $this->refreshCaches();
+
             return 0;
         } catch (ProcessFailedException $e) {
             $this->error('✗ Erreur lors du pull: ' . $e->getMessage());
@@ -204,6 +207,30 @@ class UpdateGitHub extends Command
         } else {
             $this->warn('⚠ Synchronisation partielle (vérifiez les erreurs ci-dessus)');
             return 1;
+        }
+    }
+
+    /**
+     * Régénère les caches Laravel après une mise à jour du code.
+     *
+     * Indispensable après un pull : le cache de routes (bootstrap/cache/routes-*.php)
+     * n'est jamais rafraîchi automatiquement, donc une nouvelle route reste
+     * introuvable (RouteNotFoundException) tant qu'il n'est pas régénéré.
+     * On reproduit la séquence de mise en cache de sh/install.sh.
+     *
+     * @return void
+     */
+    private function refreshCaches()
+    {
+        $this->info('Rafraîchissement des caches Laravel...');
+
+        foreach (['config:cache', 'route:cache', 'view:cache'] as $command) {
+            try {
+                $this->call($command);
+                $this->info("✓ {$command}");
+            } catch (\Throwable $e) {
+                $this->warn("⚠ Échec {$command} : " . $e->getMessage());
+            }
         }
     }
 
