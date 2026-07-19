@@ -12,10 +12,21 @@
     $bodyTop   = round($inset + $logoWidth + 3, 1);          // corps sous l'en-tête (mm)
     $fieldSize = max(7, (int) round($layout['cardW'] / 12)); // champs NOM/DATE (pt)
     $priceSize = max(9, (int) round($layout['cardW'] / 4));  // taille du prix (doublée)
+    $footSize  = max(6, (int) round($layout['cardW'] / 16)); // texte d'explication (pt)
     $boxGap    = 2;                                          // espace entre cases (mm)
+
+    // Réservation verticale (mm) : en-tête + champs + prix + explication en bas.
+    $fieldsH   = (int) round(2 * ($fieldSize * 0.42 + 3.5) + 3);
+    $priceH    = (int) round($priceSize * 0.42 + 4);
+    $footerH   = (int) round(3 * $footSize * 0.5 + 5);
+    $casesH    = max(12, $layout['cardH'] - $bodyTop - $fieldsH - $priceH - $footerH - $inset);
+
+    // Taille de case : limitée par la largeur ET la hauteur restante (2 lignes).
     $perRow    = max(1, (int) ceil($nbCases / 2));           // 2 lignes, même nombre par ligne
     $availW    = $layout['cardW'] - 2 * $inset;
-    $boxSize   = max(6, min(22, (int) floor(($availW - ($perRow + 1) * $boxGap) / $perRow))); // côté case (mm)
+    $boxByW    = (int) floor(($availW - ($perRow + 1) * $boxGap) / $perRow);
+    $boxByH    = (int) floor(($casesH - 3 * $boxGap) / 2);
+    $boxSize   = max(6, min(22, $boxByW, $boxByH));          // côté case (mm)
     $caseFont  = max(8, (int) round($boxSize * 1.4));        // le « 1 » dans la case (pt)
     $caseRows  = $nbCases > 0 ? array_chunk(range(1, $nbCases), $perRow) : [];
     $prixLabel = ($prix == floor($prix))
@@ -120,6 +131,18 @@
             font-weight: bold;
             color: #1a3a6b;
         }
+
+        /* Explication du fonctionnement, réservée en bas de la carte. */
+        .card-footer {
+            position: absolute;
+            left: {{ $inset }}mm;
+            right: {{ $inset }}mm;
+            bottom: {{ $inset }}mm;
+            font-size: {{ $footSize }}pt;
+            color: #555;
+            text-align: center;
+            line-height: 1.25;
+        }
     </style>
 </head>
 <body>
@@ -158,6 +181,7 @@
                         </table>
                     @endif
                 </div>
+                <div class="card-footer">Chaque case correspond à une consommation : cochez-en une à chaque boisson servie. Carte nominative, valable uniquement au bar du club.</div>
             </div>
         @endforeach
     </div>
