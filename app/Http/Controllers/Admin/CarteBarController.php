@@ -22,6 +22,8 @@ class CarteBarController extends Controller
             'orientation'   => 'required|in:portrait,paysage',
             'marge_mm'      => 'required|integer|min:0|max:50',
             'espacement_mm' => 'required|integer|min:0|max:50',
+            'prix'          => 'required|numeric|min:0|max:10000',
+            'nb_cases'      => 'required|integer|min:0|max:100',
         ]);
 
         [$pageW, $pageH] = CarteBarService::pageSize($data['format_page'], $data['orientation']);
@@ -37,6 +39,8 @@ class CarteBarController extends Controller
         $this->saveStr('cartebar-orientation', $data['orientation']);
         $this->saveInt('cartebar-marge_mm', $data['marge_mm']);
         $this->saveInt('cartebar-espacement_mm', $data['espacement_mm']);
+        $this->saveFloat('cartebar-prix', (float) $data['prix']);
+        $this->saveInt('cartebar-nb_cases', (int) $data['nb_cases']);
 
         return redirect('/admin/parametres#cartes-bar')
             ->with('success', 'Format des cartes de bar enregistré.');
@@ -58,7 +62,13 @@ class CarteBarController extends Controller
         $logo     = parametre::getValue('club-logo', '');
         $clubName = parametre::getValue('club-nom_complet', '') ?: parametre::getValue('club-nom_court', '');
 
-        $pdf = Pdf::loadView('admin.cartes.modele-pdf', ['layout' => $layout, 'logo' => $logo, 'clubName' => $clubName])
+        $pdf = Pdf::loadView('admin.cartes.modele-pdf', [
+            'layout'   => $layout,
+            'logo'     => $logo,
+            'clubName' => $clubName,
+            'prix'     => $config['prix'],
+            'nbCases'  => $config['nb_cases'],
+        ])
             ->setPaper(
                 strtolower($config['format_page']),
                 $config['orientation'] === 'paysage' ? 'landscape' : 'portrait'
@@ -80,6 +90,14 @@ class CarteBarController extends Controller
         $p = parametre::firstOrNew(['nom' => $key]);
         $p->type  = 'string';
         $p->value = $value;
+        $p->save();
+    }
+
+    private function saveFloat(string $key, float $value): void
+    {
+        $p = parametre::firstOrNew(['nom' => $key]);
+        $p->type  = 'double';
+        $p->value = (string) $value;
         $p->save();
     }
 }

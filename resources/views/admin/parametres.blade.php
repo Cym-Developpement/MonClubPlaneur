@@ -169,6 +169,20 @@
                             </div>
                         </div>
 
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">Contenu de la carte</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-auto">
+                                <label class="form-label">Prix de la carte (€)</label>
+                                <input type="number" min="0" max="10000" step="0.01" name="prix"
+                                       class="form-control" style="max-width:130px;" value="{{ $cbConfig['prix'] }}">
+                            </div>
+                            <div class="col-auto">
+                                <label class="form-label">Nombre de cases (consommations)</label>
+                                <input type="number" min="0" max="100" step="1" name="nb_cases"
+                                       class="form-control" style="max-width:150px;" value="{{ $cbConfig['nb_cases'] }}">
+                            </div>
+                        </div>
+
                         <h6 class="text-muted text-uppercase small fw-bold mb-3">Planche imprimable</h6>
                         <div class="row g-3 mb-3">
                             <div class="col-auto">

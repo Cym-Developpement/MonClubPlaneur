@@ -27,6 +27,8 @@ class CarteBarService
         'orientation'   => 'portrait',
         'marge_mm'      => 0,
         'espacement_mm' => 0,
+        'prix'          => 10,   // prix de la carte (€)
+        'nb_cases'      => 10,   // nombre de cases à cocher (consommations)
     ];
 
     /** Lit la configuration courante depuis les paramètres du club. */
@@ -39,6 +41,8 @@ class CarteBarService
             'orientation'   => (string) parametre::getValue('cartebar-orientation', self::DEFAULTS['orientation']),
             'marge_mm'      => (int) parametre::getValue('cartebar-marge_mm', self::DEFAULTS['marge_mm']),
             'espacement_mm' => (int) parametre::getValue('cartebar-espacement_mm', self::DEFAULTS['espacement_mm']),
+            'prix'          => (float) parametre::getValue('cartebar-prix', self::DEFAULTS['prix']),
+            'nb_cases'      => (int) parametre::getValue('cartebar-nb_cases', self::DEFAULTS['nb_cases']),
         ];
     }
 
