@@ -55,7 +55,10 @@ class CarteBarController extends Controller
                 ->with('error', 'Aucune carte ne tient sur la planche avec ce format. Ajustez les dimensions.');
         }
 
-        $pdf = Pdf::loadView('admin.cartes.modele-pdf', ['layout' => $layout])
+        $logo     = parametre::getValue('club-logo', '');
+        $clubName = parametre::getValue('club-nom_complet', '') ?: parametre::getValue('club-nom_court', '');
+
+        $pdf = Pdf::loadView('admin.cartes.modele-pdf', ['layout' => $layout, 'logo' => $logo, 'clubName' => $clubName])
             ->setPaper(
                 strtolower($config['format_page']),
                 $config['orientation'] === 'paysage' ? 'landscape' : 'portrait'
