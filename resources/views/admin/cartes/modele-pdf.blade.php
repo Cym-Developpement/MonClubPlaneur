@@ -21,11 +21,14 @@
     $footerH   = (int) round(3 * $footSize * 0.5 + 5);
     $casesH    = max(12, $layout['cardH'] - $bodyTop - $fieldsH - $priceH - $footerH - $inset);
 
-    // Taille de case : limitée par la largeur ET la hauteur restante (2 lignes).
-    $perRow    = max(1, (int) ceil($nbCases / 2));           // 2 lignes, même nombre par ligne
+    // Grille : ~5 cases par ligne, le nombre de lignes suit (10→2, 20→4), réparties également.
+    $perLine   = 5;
+    $rows      = max(1, (int) ceil($nbCases / $perLine));
+    $perRow    = max(1, (int) ceil($nbCases / $rows));
     $availW    = $layout['cardW'] - 2 * $inset;
+    // Taille de case : limitée par la largeur ET la hauteur restante.
     $boxByW    = (int) floor(($availW - ($perRow + 1) * $boxGap) / $perRow);
-    $boxByH    = (int) floor(($casesH - 3 * $boxGap) / 2);
+    $boxByH    = (int) floor(($casesH - ($rows + 1) * $boxGap) / $rows);
     $boxSize   = max(6, min(22, $boxByW, $boxByH));          // côté case (mm)
     $caseFont  = max(8, (int) round($boxSize * 1.4));        // le « 1 » dans la case (pt)
     $caseRows  = $nbCases > 0 ? array_chunk(range(1, $nbCases), $perRow) : [];
