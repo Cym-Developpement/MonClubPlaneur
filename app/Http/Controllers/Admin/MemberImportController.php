@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\AccountCreated;
 use App\MemberImport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Import de membres à partir d'un fichier CSV : dépôt du fichier,
@@ -46,12 +49,14 @@ class MemberImportController extends Controller
     }
 
     /**
-     * Crée les membres cochés dans la prévisualisation.
+     * Crée les membres cochés dans la prévisualisation et leur envoie
+     * l'email d'ouverture de compte.
      */
     public function save(Request $request)
     {
-        $imported = [];
-        $ignored  = [];
+        $imported   = [];
+        $ignored    = [];
+        $mailFailed = [];
 
         foreach ($request->input('import', []) as $json) {
             $row = json_decode($json, true);
@@ -66,10 +71,25 @@ class MemberImportController extends Controller
                 continue;
             }
 
-            $role       = $request->input('role.' . ($row['idx'] ?? ''), null);
-            $imported[] = MemberImport::createUser($row, $role);
+            $role = $request->input('role.' . ($row['idx'] ?? ''), null);
+            $user = MemberImport::createUser($row, $role);
+
+            // Un email en échec ne doit pas empêcher la suite de l'import :
+            // le compte est créé, seul l'envoi est signalé à l'administrateur.
+            try {
+                Mail::to($user->email)->send(new AccountCreated($user));
+            } catch (\Throwable $e) {
+                $mailFailed[$user->id] = $e->getMessage();
+                Log::error('Import membres : envoi de l\'email d\'ouverture de compte échoué pour ' . $user->email . ' : ' . $e->getMessage());
+            }
+
+            $imported[] = $user;
         }
 
-        return view('admin.importMembres', ['imported' => $imported, 'ignored' => $ignored]);
+        return view('admin.importMembres', [
+            'imported'   => $imported,
+            'ignored'    => $ignored,
+            'mailFailed' => $mailFailed,
+        ]);
     }
 }

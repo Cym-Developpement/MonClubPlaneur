@@ -112,8 +112,9 @@
                         </div>
 
                         <div class="alert alert-info">
-                            Les membres importés reçoivent un mot de passe aléatoire et aucun email :
-                            ils devront utiliser « mot de passe oublié » pour activer leur accès.
+                            <i class="fas fa-envelope me-1"></i>
+                            Chaque membre créé recevra un email lui confirmant l'ouverture de son compte
+                            et l'invitant à définir son mot de passe.
                         </div>
 
                         <div class="row justify-content-center">
@@ -128,7 +129,8 @@
 
                     @isset($imported)
                     <p>
-                        <b>{{ count($imported) }}</b> membre(s) créé(s).
+                        <b>{{ count($imported) }}</b> membre(s) créé(s),
+                        <b>{{ count($imported) - count($mailFailed) }}</b> email(s) d'ouverture de compte envoyé(s).
                     </p>
                     @if(count($imported) > 0)
                     <ul class="list-group mb-3">
@@ -137,6 +139,12 @@
                             <i class="fas fa-check text-success me-2"></i>
                             <a href="/userMod/{{ $user->id }}">{{ $user->name }}</a>
                             <span class="text-muted">— {{ $user->email }}</span>
+                            @if(isset($mailFailed[$user->id]))
+                            <span class="badge rounded-pill bg-warning text-dark ms-2">
+                                <i class="fas fa-envelope me-1"></i>Email non envoyé
+                            </span>
+                            <div class="small text-muted">{{ $mailFailed[$user->id] }}</div>
+                            @endif
                         </li>
                         @endforeach
                     </ul>

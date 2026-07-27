@@ -29,6 +29,11 @@
                   <a href="{{ route('usersExportCsv', request()->only('filter')) }}" class="btn btn-sm btn-success float-end me-1 text-white">
                     <i class="fas fa-file-csv"></i> Export CSV
                   </a>
+                  @can('admin:users')
+                  <a href="/admin/importMembres" class="btn btn-sm btn-primary float-end me-1">
+                    <i class="fas fa-file-import"></i> Import CSV
+                  </a>
+                  @endcan
                   <div class="dropdown float-end me-1">
                     <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                       Filtres
