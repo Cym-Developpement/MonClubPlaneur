@@ -34,6 +34,9 @@
 <a class="dropdown-item" href="/usersList">
     <i class="fas fa-users me-2"></i>Liste des utilisateurs
 </a>
+<a class="dropdown-item" href="/admin/importMembres">
+    <i class="fas fa-file-csv me-2"></i>Import de membres (CSV)
+</a>
 @endcan
 
 @can('admin:export')
