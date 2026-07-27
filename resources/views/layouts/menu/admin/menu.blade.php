@@ -53,6 +53,9 @@
 <a class="dropdown-item" href="/admin/encaissements">
     <i class="fas fa-coins me-2"></i>Encaissements
 </a>
+<a class="dropdown-item" href="/admin/facturationProduits">
+    <i class="fas fa-cash-register me-2"></i>Facturer un produit en lot
+</a>
 @endcan
 
 @can('admin:flights')

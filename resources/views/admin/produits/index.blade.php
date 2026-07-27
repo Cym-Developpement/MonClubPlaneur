@@ -16,9 +16,16 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-box me-2"></i>Produits & paiements en ligne</span>
-                    <a href="{{ route('admin.produits.create') }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus me-1"></i>Nouveau produit
-                    </a>
+                    <span>
+                        @can('admin:transactions')
+                        <a href="/admin/facturationProduits" class="btn btn-outline-primary btn-sm me-1">
+                            <i class="fas fa-cash-register me-1"></i>Facturer en lot
+                        </a>
+                        @endcan
+                        <a href="{{ route('admin.produits.create') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Nouveau produit
+                        </a>
+                    </span>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

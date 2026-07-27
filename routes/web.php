@@ -271,6 +271,8 @@ Route::delete('/admin/vi/{id}', [App\Http\Controllers\VolInitiationController::c
 Route::post('/admin/vi-types', [App\Http\Controllers\VolInitiationController::class, 'viTypeStore'])->name('admin.vi.type.store')->middleware('can:admin:vi');
 
 // Produits & paiements en ligne — administration
+Route::get('/admin/facturationProduits',  [App\Http\Controllers\Admin\ProductBillingController::class, 'form'])->middleware('can:admin:transactions');
+Route::post('/admin/facturationProduits', [App\Http\Controllers\Admin\ProductBillingController::class, 'store'])->middleware('can:admin:transactions');
 Route::get('/admin/produits', [App\Http\Controllers\Admin\ProductController::class, 'index'])->name('admin.produits.index')->middleware('can:admin:produits');
 Route::get('/admin/produits/creer', [App\Http\Controllers\Admin\ProductController::class, 'create'])->name('admin.produits.create')->middleware('can:admin:produits');
 Route::post('/admin/produits', [App\Http\Controllers\Admin\ProductController::class, 'store'])->name('admin.produits.store')->middleware('can:admin:produits');
