@@ -3,6 +3,8 @@ namespace App;
 
 use App\Models\aircraft;
 use App\Models\flight;
+use App\Models\sailplaneStartPrice;
+use App\Models\transaction;
 use App\Models\User;
 
 /**
@@ -10,6 +12,33 @@ use App\Models\User;
  */
 class Gesasso
 {
+    /**
+     * Durée du remorqueur, en minutes, au-delà de laquelle le vol n'est plus
+     * un remorquage simple mais un convoyage (facturé à la minute).
+     */
+    public const CONVOYAGE_MINUTES = 12;
+
+    /**
+     * Durée du remorqueur en minutes (le CSV la donne en centièmes d'heure).
+     *
+     * @param array $csv Les données du vol au format CSV
+     * @return int
+     */
+    public static function towingMinutes($csv)
+    {
+        return \App\H::centiToMinutes(intval($csv[15]));
+    }
+
+    /**
+     * Indique si le remorqueur a dépassé le seuil de convoyage.
+     *
+     * @param array $csv Les données du vol au format CSV
+     * @return bool
+     */
+    public static function isConvoyage($csv)
+    {
+        return self::towingMinutes($csv) > self::CONVOYAGE_MINUTES;
+    }
 
     /**
      * Vérifie si un vol existe déjà dans la base de données
@@ -43,7 +72,7 @@ class Gesasso
         $flight->landing          = intval($csv[13]);
         $flight->aircraftId       = self::csvToAircraft($csv);
         $flight->motorStartTime   = 0;
-        $flight->motorEndTime     = intval($csv[15]) <= 15 ? 0 : (intval($csv[15])/100);
+        $flight->motorEndTime     = self::isConvoyage($csv) ? (intval($csv[15])/100) : 0;
         $flight->airPortStartCode = $csv[11];
         $flight->airPortEndCode   = $csv[12];
         $flight->flightTimestamp  = strtotime(str_replace('/', '-', $flight->takeOffTime));
@@ -57,6 +86,49 @@ class Gesasso
         $flight->idInstructor = self::csvToInstructorId($csv);
         //dd($flight);
         return $flight;
+    }
+
+    /**
+     * Transaction de mise en l'air seule, utilisée quand le planeur n'est pas
+     * connu de la base : les heures de vol ne peuvent pas être tarifées, seul
+     * le remorquage est facturé au pilote remorqué.
+     *
+     * Le calcul reprend celui de aircraft::price() pour le poste « départ » :
+     * basePrice x nombre de lancements, multiplié par les minutes de remorqueur
+     * pour les tarifs à la minute (convoyage).
+     *
+     * @param array $csv Les données du vol au format CSV
+     * @param int $userPayId L'utilisateur facturé
+     * @param int $startTypeId Le moyen de mise en l'air retenu
+     * @return \App\Models\transaction
+     */
+    public static function towingOnlyTransaction($csv, $userPayId, $startTypeId)
+    {
+        $startTypeElem = sailplaneStartPrice::find($startTypeId);
+        $nbTakeOff     = max(1, intval($csv[13]));
+        $value         = $startTypeElem->basePrice * $nbTakeOff;
+        $minutes       = self::towingMinutes($csv);
+
+        if ($startTypeElem->byMinutes == 1) {
+            $value = $value * $minutes;
+        }
+
+        $observation = 'Aéronef inconnu (' . trim($csv[1]) . ') - '
+            . $nbTakeOff . ' X ' . $startTypeElem->name
+            . ($minutes > 0 ? ' - Remorqueur : ' . $minutes . ' minutes' : '');
+
+        $transaction              = new transaction();
+        $transaction->idUser      = $userPayId;
+        $transaction->name        = 'Remorquage seul';
+        $transaction->value       = 0 - intval($value);
+        $transaction->quantity    = 1;
+        $transaction->valid       = 1;
+        $transaction->solde       = 0.0;
+        $transaction->time        = strtotime(str_replace('/', '-', self::csvToTakeOff($csv)));
+        $transaction->year        = date('Y', $transaction->time);
+        $transaction->observation = $observation;
+
+        return $transaction;
     }
 
     /**
@@ -84,42 +156,69 @@ class Gesasso
     }
 
     /**
-     * Récupère l'ID de l'utilisateur à partir des données CSV
+     * Indique si la ligne est un vol d'instruction : la colonne « École » est
+     * cochée et un second pilote est présent à bord.
+     *
+     * @param array $csv Les données du vol au format CSV
+     * @return bool
+     */
+    public static function isSchoolFlight($csv)
+    {
+        return ($csv[7] == "1" && trim($csv[5]) !== "");
+    }
+
+    /**
+     * Utilisateur correspondant à une cellule « Nom (Licence) », créé s'il
+     * n'existe pas encore. Retourne null si la cellule ne porte pas de licence.
+     *
+     * @param string $cell
+     * @return \App\Models\User|null
+     */
+    private static function userFromCell($cell)
+    {
+        if (strpos($cell, '(') === false) {
+            return null;
+        }
+
+        $part    = explode('(', $cell)[1];
+        $licence = substr($part, 0, (strlen($part) - 1));
+        $user    = User::where('licenceNumber', $licence)->first();
+
+        return is_null($user) ? self::createUser($cell) : $user;
+    }
+
+    /**
+     * Récupère l'ID de l'utilisateur porté par le vol (celui qui est facturé
+     * par défaut). En instruction, c'est l'élève : celui des deux pilotes qui
+     * n'est pas instructeur, quel que soit son rang dans le fichier.
      *
      * @param array $csv Les données du vol au format CSV
      * @return int L'ID de l'utilisateur ou -1 si non trouvé
      */
     public static function csvToUser($csv)
     {
-        //dd(strlen(explode('(', $csv[3])[1]) - 1);
-        if (strpos($csv[3], '(') === false) {
+        $pilot1 = self::userFromCell($csv[3]);
+        if (is_null($pilot1)) {
             return -1;
         }
 
-        $first = substr(explode('(', $csv[3])[1], 0, (strlen(explode('(', $csv[3])[1]) - 1));
-        $user  = User::where('licenceNumber', $first)->first();
-        if (is_null($user)) {
-            $user = self::createUser($csv[3]);
-        }
-        if ($csv[5] !== "" && $csv[7] == "1") {
-            if (strpos($csv[5], '(') === false) {
-                return -1;
-            }
-            $second = substr(explode('(', $csv[5])[1], 0, (strlen(explode('(', $csv[5])[1]) - 1));
-            $user2  = User::where('licenceNumber', $second)->first();
-            if (is_null($user2)) {
-                $user2 = self::createUser($csv[5]);
-            }
-            if ($user->isSupervisor == 1) {
-                return $user2->id;
-            }
+        if (! self::isSchoolFlight($csv)) {
+            return $pilot1->id;
         }
 
-        return (! is_null($user)) ? $user->id : -1;
+        $pilot2 = self::userFromCell($csv[5]);
+        if (is_null($pilot2)) {
+            return -1;
+        }
+
+        return ($pilot1->isSupervisor == 1) ? $pilot2->id : $pilot1->id;
     }
 
     /**
-     * Récupère l'ID de l'instructeur à partir des données CSV
+     * Récupère l'ID de l'instructeur à partir des données CSV.
+     *
+     * L'instructeur peut être saisi indifféremment en pilote 1 ou en pilote 2
+     * dans le fichier : les deux places sont examinées.
      *
      * @param array $csv Les données du vol au format CSV
      * @return int|null L'ID de l'instructeur ou null si pas d'instructeur
@@ -127,11 +226,13 @@ class Gesasso
     public static function csvToInstructorId($csv)
     {
         $id = null;
-        if ($csv[5] !== "" && $csv[7] == "1") {
-            $first = substr(explode('(', $csv[3])[1], 0, (strlen(explode('(', $csv[3])[1]) - 1));
-            $user  = User::where('licenceNumber', $first)->first();
-            if ($user->isSupervisor == 1) {
-                $id = $user->id;
+        if (self::isSchoolFlight($csv)) {
+            foreach ([$csv[3], $csv[5]] as $cell) {
+                $user = self::userFromCell($cell);
+                if (! is_null($user) && $user->isSupervisor == 1) {
+                    $id = $user->id;
+                    break;
+                }
             }
         }
 

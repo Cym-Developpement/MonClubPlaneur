@@ -58,34 +58,45 @@
                       <tbody>
                         @php $totalMin = 0; $i = 0; @endphp
                         @foreach($data as $elem)
-                        @php $styleClass = ''; @endphp
+                        @php
+                          $styleClass      = '';
+                          $isExisting      = in_array($loop->index, $existList);
+                          $unknowAircraft  = ($elem[30] == -1);
+                          $unknowUser      = ($elem[29] == -1);
+                          // Un aéronef inconnu reste importable : seul le remorquage sera facturé.
+                          $importable      = (!$isExisting && !$unknowUser);
+                        @endphp
                         @if(!$loop->first && count($elem) >= 28)
                           <tr
-                          @if(in_array($loop->index, $existList))
+                          @if($isExisting)
                           style="display: none;"
                           @endif
                           >
                             <th scope="row">
-                              @if(!in_array($loop->index, $existList) && $elem[30] !== -1 && $elem[29] !== -1)
+                              @if($importable)
                               @php array_push($elem, $i); $i++; @endphp
 
                               <div class="form-check">
                                 <input class="form-check-input importGesassoFlight" type="checkbox" id="defaultCheck-{{ $loop->iteration }}" name="import[]" value="{{ json_encode($elem) }}">
                                 <label class="form-check-label" for="defaultCheck-{{ $loop->iteration }}"></label>
                               </div>
+                              @if($unknowAircraft)
+                                @php $styleClass = 'text-warning unknowAircraft'; @endphp
+                                <span class="badge rounded-pill bg-warning text-dark">Aéronef inconnu &mdash; remorquage seul</span>
+                              @endif
                               @else
                                 @php $styleClass = 'text-danger'; @endphp
 
-                                @if(in_array($loop->index, $existList))
+                                @if($isExisting)
                                   @php $styleClass .= ' existFlight'; @endphp
                                 @endif
 
-                                @if($elem[30] == -1)
+                                @if($unknowAircraft)
                                   @php $styleClass .= ' unknowAircraft'; @endphp
                                   <span class="badge rounded-pill bg-danger">Aéronef Inconnu</span>
                                 @endif
 
-                                @if($elem[29] == -1)
+                                @if($unknowUser)
                                   @php $styleClass .= ' unknowUser'; @endphp
                                   <span class="badge rounded-pill bg-danger">Pilote Inconnu</span>
                                 @endif
@@ -102,12 +113,12 @@
                             <td class="{{ $styleClass }}">{{ $elem[7] }}</td>
                             <td class="{{ $styleClass }}">{{ $elem[15] }}</td>
                             <td>
-                              @if(!in_array($loop->index, $existList) && $elem[30] !== -1 && $elem[29] !== -1)
-                              {{ $elem[13] }} X 
+                              @if($importable)
+                              {{ $elem[13] }} X
                               <select class="form-select form-select-sm" name="startType[]" required>
                                 @foreach(App\Models\sailplaneStartPrice::all() as $start)
                                   <option value="{{ $start->id }}"
-                                    @if(intval($elem[15]) > 15 && $start->byMinutes == 1)
+                                    @if(App\Gesasso::isConvoyage($elem) && $start->byMinutes == 1)
                                     selected
                                     @endif
                                   >{{ $start->name }} ({{ ($start->byMinutes == 1 ? ($start->basePrice * \App\H::centiToMinutes(intval($elem[15])) / 100) : ($start->basePrice/100)) }} €)
@@ -117,8 +128,8 @@
                               @endif
                             </td>
                             <td>
-                              @if(!in_array($loop->index, $existList) && $elem[30] !== -1 && $elem[29] !== -1)
-                              
+                              @if($importable)
+
                               <select class="form-select form-select-sm" name="userPayId[]" required>
                                 <option>Choisir un utilisateur</option>
                                 @foreach(App\Models\User::where('state', 1)->get() as $user)

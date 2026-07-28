@@ -2146,41 +2146,67 @@ class admin extends Controller
             foreach ($request->import as $key => $value) {
                 
                 $gess           = json_decode($value);
-                if (is_null(User::find($request->userPayId[$gess[31]]))) {
+                $userPayId      = $request->userPayId[$gess[31]];
+                $startTypeId    = $request->startType[$gess[31]];
+                if (is_null(User::find($userPayId))) {
                     abort(500, 'Utilisateur non trouvé');
                 }
-                
-                $flight         = Gesasso::exportToFlight($gess, $request->userPayId[$gess[31]], $request->startType[$gess[31]]);
-                $transaction    = transaction::getFlightTransaction($flight);
+
+                $flightTimestamp = strtotime(str_replace('/', '-', Gesasso::csvToTakeOff($gess)));
+
+                if (Gesasso::csvToAircraft($gess) === -1) {
+                    // Aéronef inconnu : les heures de vol ne sont pas tarifables,
+                    // seul le remorquage est facturé au pilote remorqué.
+                    $flight      = null;
+                    $transaction = Gesasso::towingOnlyTransaction($gess, $userPayId, $startTypeId);
+                    $isTowLaunch = trim($gess[17]) !== '';
+                } else {
+                    $flight      = Gesasso::exportToFlight($gess, $userPayId, $startTypeId);
+                    $transaction = transaction::getFlightTransaction($flight);
+                    $isTowLaunch = $flight->startType > 0;
+                }
                 $resultImport[] = [$flight, $transaction];
-                if ($flight->startType > 0) {
+
+                if ($isTowLaunch) {
                     $gess[1]           = $gess[17];
                     $gess[3]           = $gess[19];
                     // $gess[15] est en centièmes d'heures → conversion en minutes
-                    $minutesFromHundredths = \App\H::centiToMinutes($gess[15]);
-                    if ($minutesFromHundredths <= 15) {
-                        $gess[9]  = date('H:i', ($flight->flightTimestamp + (60 * 7)));
+                    $minutesFromHundredths = Gesasso::towingMinutes($gess);
+                    if (! Gesasso::isConvoyage($gess)) {
+                        $gess[9]  = date('H:i', ($flightTimestamp + (60 * 7)));
                         $gess[10] = '00:07';
                     } else {
-                        $gess[9]  = date('H:i', ($flight->flightTimestamp + (60 * $minutesFromHundredths)));
+                        $gess[9]  = date('H:i', ($flightTimestamp + (60 * $minutesFromHundredths)));
                         $gess[10] = sprintf('00:%02d', $minutesFromHundredths);
                     }
                     $gess[14]          = '';
                     $gess[17]          = '';
                     $gess[19]          = '';
-                    $towing            = Gesasso::exportToFlight($gess);
-                    
-                    $towing->userPayId = 24;
-                    $transactionTowing = transaction::getFlightTransaction($towing);
-                    $transactionTowing->save();
-                    $towing->transactionID = $transactionTowing->id;
-                    $towing->save();
-                    transaction::add(24, 2800, 'remorquage', '', date('Y-m-d H:i', $flight->flightTimestamp));
+                    // Le remorqueur n'a qu'un pilote et n'est jamais un vol
+                    // d'instruction : sans cela, un remorqueur piloté par un
+                    // instructeur récupérait le 2e pilote et l'école du planeur.
+                    $gess[5]           = '';
+                    $gess[7]           = '0';
+
+                    // Sans remorqueur connu, le vol de remorquage n'est pas tarifable :
+                    // on n'enregistre alors que la facturation du remorqué.
+                    if (Gesasso::csvToAircraft($gess) !== -1) {
+                        $towing            = Gesasso::exportToFlight($gess);
+
+                        $towing->userPayId = 24;
+                        $transactionTowing = transaction::getFlightTransaction($towing);
+                        $transactionTowing->save();
+                        $towing->transactionID = $transactionTowing->id;
+                        $towing->save();
+                        transaction::add(24, 2800, 'remorquage', '', date('Y-m-d H:i', $flightTimestamp));
+                    }
                 }
 
                 $transaction->save();
-                $flight->transactionID = $transaction->id;
-                $flight->save();
+                if (! is_null($flight)) {
+                    $flight->transactionID = $transaction->id;
+                    $flight->save();
+                }
 
             }
         }
