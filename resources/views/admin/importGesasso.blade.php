@@ -58,15 +58,17 @@
                       <tbody>
                         @php $totalMin = 0; $i = 0; @endphp
                         @foreach($data as $elem)
-                        @php
-                          $styleClass      = '';
-                          $isExisting      = in_array($loop->index, $existList);
-                          $unknowAircraft  = ($elem[30] == -1);
-                          $unknowUser      = ($elem[29] == -1);
-                          // Un aéronef inconnu reste importable : seul le remorquage sera facturé.
-                          $importable      = (!$isExisting && !$unknowUser);
-                        @endphp
-                        @if(!$loop->first && count($elem) >= 28)
+                        {{-- Les index 29 et 30 (pilote et aéronef résolus) ne sont
+                             renseignés par le contrôleur que sur les lignes de vol. --}}
+                        @if(!$loop->first && count($elem) > 28)
+                          @php
+                            $styleClass      = '';
+                            $isExisting      = in_array($loop->index, $existList);
+                            $unknowAircraft  = ($elem[30] == -1);
+                            $unknowUser      = ($elem[29] == -1);
+                            // Un aéronef inconnu reste importable : seul le remorquage sera facturé.
+                            $importable      = (!$isExisting && !$unknowUser);
+                          @endphp
                           <tr
                           @if($isExisting)
                           style="display: none;"
