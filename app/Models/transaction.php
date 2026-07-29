@@ -161,9 +161,10 @@ class transaction extends Model
      * @param string $name Libellé de la transaction
      * @param string|null $observation Observation optionnelle
      * @param string|null $date Date de la transaction (format Y-m-d)
+     * @param int $quantity Quantité facturée (le montant reste le total)
      * @return void
      */
-    public static function add($userId, $value, $name, $observation = null, $date = null)
+    public static function add($userId, $value, $name, $observation = null, $date = null, $quantity = 1)
     {
         $user = User::find($userId);
         $tr = new transaction();
@@ -171,7 +172,7 @@ class transaction extends Model
         $tr->name = $name;
         $tr->observation = $observation;
         $tr->value = $value;
-        $tr->quantity = 1;
+        $tr->quantity = $quantity;
         $tr->valid = 1;
         $tr->time = (is_null($date)) ? time() : (strtotime($date));
         $tr->year = (is_null($date)) ? date('Y') : date('Y', strtotime($date));
