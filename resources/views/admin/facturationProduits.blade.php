@@ -53,13 +53,6 @@
                                    value="{{ $price }}" step="0.01" min="0.01" placeholder="0,00" required>
                         </div>
                         <div class="col-md-2">
-                            <label for="quantityInput" class="form-label text-muted small text-uppercase fw-bold mb-1">
-                                Quantité
-                            </label>
-                            <input type="number" class="form-control" name="quantity" id="quantityInput"
-                                   value="{{ $quantity }}" step="1" min="1" required>
-                        </div>
-                        <div class="col-md-2">
                             <label for="dateInput" class="form-label text-muted small text-uppercase fw-bold mb-1">
                                 Date
                             </label>
@@ -86,20 +79,13 @@
                         @csrf
                         <input type="hidden" name="label" value="{{ $label }}">
                         <input type="hidden" name="price" id="billingPrice" value="{{ $price }}">
-                        <input type="hidden" name="quantity" id="billingQuantity" value="{{ $quantity }}">
                         <input type="hidden" name="date" value="{{ $date }}">
                         <input type="hidden" name="observation" value="{{ $observation }}">
 
                         <div class="alert alert-info">
-                            <b>{{ $label }}</b> —
-                            @if(intval($quantity) > 1)
-                                {{ intval($quantity) }} &times; {{ number_format(floatval($price), 2, ',', ' ') }} €
-                                = {{ number_format(floatval($price) * intval($quantity), 2, ',', ' ') }} €
-                            @else
-                                {{ number_format(floatval($price), 2, ',', ' ') }} €
-                            @endif
+                            <b>{{ $label }}</b> — {{ number_format(floatval($price), 2, ',', ' ') }} € l'unité
                             au {{ date('d/m/Y', strtotime($date)) }}.
-                            Chaque membre coché sera débité de ce montant.
+                            Chaque membre coché sera débité de ce prix multiplié par sa quantité.
                         </div>
 
                         <div class="row mb-2">
@@ -125,6 +111,8 @@
                                             </div>
                                         </th>
                                         <th scope="col">Membre</th>
+                                        <th scope="col">Quantité</th>
+                                        <th scope="col">Montant</th>
                                         <th scope="col">Solde actuel</th>
                                         <th scope="col"></th>
                                     </tr>
@@ -141,6 +129,14 @@
                                             </div>
                                         </th>
                                         <td>{{ $user->name }}</td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm billingQuantity"
+                                                   style="max-width: 6rem;"
+                                                   name="quantity[{{ $user->id }}]" value="1" min="1" step="1"
+                                                   aria-label="Quantité pour {{ $user->name }}"
+                                                   onchange="updateBillingTotal();" onkeyup="updateBillingTotal();">
+                                        </td>
+                                        <td class="memberAmount text-muted">—</td>
                                         <td class="{{ $soldes[$user->id] < 0 ? 'text-danger' : '' }}">
                                             {{ number_format($soldes[$user->id] / 100, 2, ',', ' ') }} €
                                         </td>
@@ -201,11 +197,26 @@
 
     function updateBillingTotal()
     {
-        var price    = parseFloat(document.getElementById('billingPrice').value) || 0;
-        var quantity = parseInt(document.getElementById('billingQuantity').value, 10) || 1;
-        var count    = $('.billingMember:checked').length;
+        var price = parseFloat(document.getElementById('billingPrice').value) || 0;
+        var count = 0;
+        var total = 0;
+
+        $('.memberRow').each(function () {
+            var checked  = $(this).find('.billingMember').prop('checked');
+            var quantity = parseInt($(this).find('.billingQuantity').val(), 10) || 1;
+            var amount   = $(this).find('.memberAmount');
+
+            if (checked) {
+                count++;
+                total += price * quantity;
+                amount.removeClass('text-muted').html((price * quantity).toFixed(2).replace('.', ',') + ' €');
+            } else {
+                amount.addClass('text-muted').html('&mdash;');
+            }
+        });
+
         document.getElementById('billingCount').innerHTML = count + ' membre' + (count > 1 ? 's' : '') + ' sélectionné' + (count > 1 ? 's' : '');
-        document.getElementById('billingTotal').innerHTML = (count * price * quantity).toFixed(2).replace('.', ',') + ' €';
+        document.getElementById('billingTotal').innerHTML = total.toFixed(2).replace('.', ',') + ' €';
     }
 
     function confirmBilling()
