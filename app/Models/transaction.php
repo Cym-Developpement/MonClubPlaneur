@@ -154,6 +154,16 @@ class transaction extends Model
     }
 
     /**
+     * Scope pour toutes les transactions d'une année, quel que soit leur libellé.
+     * Sert à identifier les membres ayant eu une activité sur l'exercice : ils
+     * sont considérés adhérents de cette année-là.
+     */
+    public function scopeActiveForYear($query, int $year)
+    {
+        return $query->where('year', $year);
+    }
+
+    /**
      * Ajoute une nouvelle transaction
      *
      * @param int $userId ID de l'utilisateur

@@ -119,7 +119,9 @@ class admin extends Controller
         if (is_numeric($filter) && (int) $filter >= $currentYear - 4 && (int) $filter <= $currentYear) {
             $filterYear  = (int) $filter;
             $filterLabel = 'Adhérents ' . $filterYear;
-            $userIds     = transaction::cotisationForYear($filterYear)->pluck('idUser')->unique();
+            // Est adhérent de l'année tout membre ayant au moins une transaction
+            // sur l'exercice, quel qu'en soit le libellé.
+            $userIds     = transaction::activeForYear($filterYear)->pluck('idUser')->unique();
             $users       = User::whereIn('id', $userIds);
         } else {
             switch ($filter) {
