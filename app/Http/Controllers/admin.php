@@ -1063,7 +1063,7 @@ class admin extends Controller
                 $flight['id']                                             = $value->id;
                 $flight['data']                                           = $value;
                 $flight['aircraft']                                       = $aircraft->name;
-                $flight['pilot']                                          = $user->name;
+                $flight['pilot']                                          = $user ? $user->name : 'Externe';
                 $flight['startDate']                                      = $value->takeOffTime;
                 $flight['endDate']                                        = $value->landingTime;
                 $flight['nbLanding']                                      = $value->landing;
@@ -1087,8 +1087,10 @@ class admin extends Controller
                 $totalTime += $value->totalTime;
                 $totalLanding += $value->landing;
                 $totalPrice += $value->value;
+                // Pilote hors base (idUser à -1) : compté comme sexe non renseigné.
+                $sexe = $user ? $user->sexe : 0;
                 if ($value->idInstructor != 0 && $value->idInstructor != null) {
-                    $totalInstruction[$user->sexe] += $value->totalTime;
+                    $totalInstruction[$sexe] += $value->totalTime;
                     $totalInstruction[2] += $value->totalTime;
                     $totalInstruction[3] += $value->landing;
                     if (! isset($totalInstruction[4][$flight['startType']])) {
@@ -1096,7 +1098,7 @@ class admin extends Controller
                     }
                     $totalInstruction[4][$flight['startType']]++;
                 } else {
-                    $totalNoInstruction[$user->sexe] += $value->totalTime;
+                    $totalNoInstruction[$sexe] += $value->totalTime;
                     $totalNoInstruction[2] += $value->totalTime;
                     $totalNoInstruction[3] += $value->landing;
                     if (! isset($totalNoInstruction[4][$flight['startType']])) {
@@ -1184,7 +1186,7 @@ class admin extends Controller
             if ($flight->idInstructor > 0) {
                 $element[] = $flight->instructor->licenceNumber;
                 $element[] = '';
-                if ($flight->user->FFVP) {
+                if ($flight->user && $flight->user->FFVP) {
                     $element[] = $flight->user->licenceNumber;
                     $element[] = '';
                 } else {
@@ -1193,7 +1195,7 @@ class admin extends Controller
                 }
                 $element[] = 1;
             } else {
-                if ($flight->user->FFVP) {
+                if ($flight->user && $flight->user->FFVP) {
                     $element[] = $flight->user->licenceNumber;
                     $element[] = '';
                 } else {
@@ -1631,7 +1633,7 @@ class admin extends Controller
             $user                = User::find($value->idUser);
             $flight['id']        = $value->id;
             $flight['aircraft']  = $aircraft->name;
-            $flight['pilot']     = $user->name;
+            $flight['pilot']     = $user ? $user->name : 'Externe';
             $flight['startDate'] = $value->takeOffTime;
             $flight['endDate']   = $value->landingTime;
             $flight['nbLanding'] = $value->landing;
@@ -2193,6 +2195,8 @@ class admin extends Controller
                     // Sans remorqueur connu, le vol de remorquage n'est pas tarifable :
                     // on n'enregistre alors que la facturation du remorqué.
                     if (Gesasso::csvToAircraft($gess) !== -1) {
+                        // Pilote remorqueur sans licence connue : csvToUser() renvoie -1 ; le vol
+                        // est conservé et affiché avec un pilote « Externe ».
                         $towing            = Gesasso::exportToFlight($gess);
 
                         $towing->userPayId = 24;

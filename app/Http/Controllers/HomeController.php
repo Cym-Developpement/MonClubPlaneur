@@ -444,7 +444,9 @@ class HomeController extends Controller
         foreach ($flightsData as $key => $value) {
             $flightArray = array();
             $flightArray['aircraft'] = aircraft::find($value->aircraftId)->name;
-            $flightArray['pilot'] = User::find($value->idUser)->name;
+            // idUser à -1 : pilote hors base (ex. remorqueur externe importé depuis Gesasso)
+            $pilot = User::find($value->idUser);
+            $flightArray['pilot'] = $pilot ? $pilot->name : 'Externe';
             $flightArray['startDate'] = $value->takeOffTime;
             $flightArray['endDate'] = $value->landingTime;
             $flightArray['nbLanding'] = $value->landing;
